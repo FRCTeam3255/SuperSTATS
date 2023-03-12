@@ -1,6 +1,8 @@
 import streamlit as st
 import tbapy, os
 
+username = os.getlogin()
+
 fileOrigin = "C:\\Users\ " + username + "\Documents\ " + "encryption.txt"
 filename = fileOrigin.replace(" ", "")
 
@@ -52,7 +54,15 @@ if showCode:
 import streamlit as st
 import tbapy, os
 
-tba = tbapy.TBA('<TBA Auth Key>')
+username = os.getlogin()
+
+fileOrigin = "C:\\Users\ " + username + "\Documents\ " + "encryption.txt"
+filename = fileOrigin.replace(" ", "")
+
+with open(filename) as file:
+    lines = [line.rstrip() for line in file]
+
+tba = tbapy.TBA(lines[0])
 
 def sendError(error, origin):
         st.error('{Error : ' + error + ' : ' + ' "' + origin + '"}')
