@@ -5,7 +5,8 @@ os.system('cls')
 
 username = os.getlogin()
 
-folder = "C:\\Users\ " + username + "\Documents\ " + "Github\ " + "pyScripts\ " + "SN_Stats\ "
+# "C:\Users\kanbarne092\Documents\GitHub\SuperSTATS\Stats_Info.py"
+folder = "C:\\Users\ " + username + "\Documents\ " + "Github\ " + "SN_Stats\ "
 
 main = folder + "Stats_Main.py"
 mainPath = main.replace(" ", "")
