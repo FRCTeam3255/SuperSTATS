@@ -1,6 +1,12 @@
 import streamlit as st
 import tbapy, os
 
+# TODO List:
+# - Make secrets file
+#       - API Key
+#       - Upload Password
+#   - Teleop
+
 tba = tbapy.TBA('cTuS1j02TIfz40I1riOZTLaAR3OwhN88os8JJzvNN56bj8zuDrcdJvN1Cy8vLOQR')
 
 st.set_page_config(
