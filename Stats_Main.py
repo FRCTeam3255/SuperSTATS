@@ -7,7 +7,15 @@ import tbapy, os
 #       - Upload Password
 #   - Teleop
 
-tba = tbapy.TBA('cTuS1j02TIfz40I1riOZTLaAR3OwhN88os8JJzvNN56bj8zuDrcdJvN1Cy8vLOQR')
+username = os.getlogin()
+
+fileOrigin = "C:\\Users\ " + username + "\Documents\ " + "encryption.txt"
+filename = fileOrigin.replace(" ", "")
+
+with open(filename) as file:
+    lines = [line.rstrip() for line in file]
+
+tba = tbapy.TBA(lines[0])
 
 st.set_page_config(
         page_title="Super Stats",
@@ -108,7 +116,7 @@ with st.form("Password"):
     btnResult = st.form_submit_button('Upload')
 
 if btnResult:
-    if(passwordInput.lower() == 'susan'):
+    if(passwordInput.lower() == lines[1]):
         if(autoEngaging == True):
             autoDocking = True
 
