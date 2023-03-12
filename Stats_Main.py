@@ -91,6 +91,8 @@ if btnResult:
     if(autoEngaging == True):
         autoDocking = True
 
+    st.markdown(":green[*Updated Successfully*]")
+
 st.write("---")
 
 # Password Protection

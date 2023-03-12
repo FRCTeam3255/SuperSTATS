@@ -1,3 +1,6 @@
+# Must create folder to save to: C:\Users\<username>\Documents\SN_Stats
+# Must run from directory: C:\Users\<username>\Documents\Github\SuperSTATS\
+
 from tkinter import *
 import time, os
 
@@ -5,7 +8,7 @@ os.system('cls')
 
 username = os.getlogin()
 
-folder = "C:\\Users\ " + username + "\Documents\ " + "Github\ " + "SN_Stats\ "
+folder = "C:\\Users\ " + username + "\Documents\ " + "Github\ " + "SuperSTATS\ "
 
 main = folder + "Stats_Main.py"
 mainPath = main.replace(" ", "")
@@ -13,7 +16,7 @@ mainPath = main.replace(" ", "")
 info = folder + "Stats_Info.py"
 infoPath = info.replace(" ", "")
 
-choice = input('What would you like to run?: ')
+choice = input('What would you like to run? [main, info]: ')
 
 if(choice.lower() == 'main'):
     os.system('py -m streamlit run ' + mainPath +  ' --theme.base dark')
