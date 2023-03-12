@@ -1,7 +1,13 @@
 import streamlit as st
 import tbapy, os
 
-tba = tbapy.TBA('cTuS1j02TIfz40I1riOZTLaAR3OwhN88os8JJzvNN56bj8zuDrcdJvN1Cy8vLOQR')
+fileOrigin = "C:\\Users\ " + username + "\Documents\ " + "encryption.txt"
+filename = fileOrigin.replace(" ", "")
+
+with open(filename) as file:
+    lines = [line.rstrip() for line in file]
+
+tba = tbapy.TBA(lines[0])
 
 def sendError(error, origin):
     st.error('{Error : ' + error + ' : ' + ' "' + origin + '"}')

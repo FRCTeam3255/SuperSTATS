@@ -112,7 +112,7 @@ st.write("---")
 # Password Protection
 
 with st.form("Password"):
-    passwordInput = st.text_input("Insert Password:", placeholder=':D', max_chars=None)
+    passwordInput = st.text_input("Insert Password:", placeholder='Password', max_chars=None)
     btnResult = st.form_submit_button('Upload')
 
 if btnResult:
