@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import os.path
+import os
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -8,13 +9,24 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+os.system('cls')
+username = os.getlogin()
+
+credOrigin = "C:\\Users\ " + username + "\Documents\ " + "Github\ " + "SuperSTATS\ " + "API-testing\ " + "credentials.json"
+credPath = credOrigin.replace(" ", "")
+
+tokenOrigin = "C:\\Users\ " + username + "\Documents\ " + "Github\ " + "SuperSTATS\ " + "API-testing\ " + "token.json"
+tokenPath = tokenOrigin.replace(" ", "")
+
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 # The ID and range of a sample spreadsheet.
 SAMPLE_SPREADSHEET_ID = '1BESNawhGsaBgJi5erxkbdp5yib7a7BUWm5cdeL5ak-M'
-SAMPLE_RANGE_NAME = 'A1'
+SAMPLE_RANGE_NAME = 'TeamList!A2:C'
 
+column_start = 0
+column_end = 2
 
 def main():
     """Shows basic usage of the Sheets API.
@@ -24,18 +36,18 @@ def main():
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    if os.path.exists(tokenPath):
+        creds = Credentials.from_authorized_user_file(tokenPath, SCOPES)
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
+                credPath, SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
-        with open('token.json', 'w') as token:
+        with open(tokenPath, 'w') as token:
             token.write(creds.to_json())
 
     try:
@@ -51,10 +63,9 @@ def main():
             print('No data found.')
             return
 
-        print('Name, Major:')
         for row in values:
-            # Print columns A and E, which correspond to indices 0 and 4.
-            print('%s, %s' % (row[0], row[4]))
+            # Print columns A and E, which correspond to indices 0 and 1.
+            print('%s, %s' % (row[column_start], row[column_end]))
     except HttpError as err:
         print(err)
 
