@@ -12,10 +12,12 @@ from googleapiclient.errors import HttpError
 os.system('cls')
 username = os.getlogin()
 
-credOrigin = "C:\\Users\ " + username + "\Documents\ " + "Github\ " + "SuperSTATS\ " + "API-testing\ " + "credentials.json"
+# C:\Users\kanbarne092\Documents\Sheet_API_Creds\token.json
+
+credOrigin = "C:\\Users\ " + username + "\Documents\ " + "Sheet_API_Creds\ " + "credentials.json"
 credPath = credOrigin.replace(" ", "")
 
-tokenOrigin = "C:\\Users\ " + username + "\Documents\ " + "Github\ " + "SuperSTATS\ " + "API-testing\ " + "token.json"
+tokenOrigin = "C:\\Users\ " + username + "\Documents\ " + "Sheet_API_Creds\ " + "token.json"
 tokenPath = tokenOrigin.replace(" ", "")
 
 # If modifying these scopes, delete the file token.json.
@@ -23,10 +25,7 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 # The ID and range of a sample spreadsheet.
 SAMPLE_SPREADSHEET_ID = '1BESNawhGsaBgJi5erxkbdp5yib7a7BUWm5cdeL5ak-M'
-SAMPLE_RANGE_NAME = 'TeamList!A2:C'
-
-column_start = 0
-column_end = 2
+SAMPLE_RANGE_NAME = 'Sheet1!A2:D7'
 
 def main():
     """Shows basic usage of the Sheets API.
@@ -65,7 +64,7 @@ def main():
 
         for row in values:
             # Print columns A and E, which correspond to indices 0 and 1.
-            print('%s, %s' % (row[column_start], row[column_end]))
+            print('%s, %s, %s, %s' % (row[0], row[1], row[2], row[3]))
     except HttpError as err:
         print(err)
 
