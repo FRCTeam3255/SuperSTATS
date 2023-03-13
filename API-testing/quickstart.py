@@ -22,9 +22,10 @@ tokenPath = tokenOrigin.replace(" ", "")
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 SAMPLE_SPREADSHEET_ID = '1BESNawhGsaBgJi5erxkbdp5yib7a7BUWm5cdeL5ak-M'
-SAMPLE_RANGE_NAME = 'Sheet1!A2:D7'
+SAMPLE_RANGE_NAME = 'TeamList!A2:C8015'
 
 # https://gsheets.readthedocs.io/en/stable/
+# https://www.thebluealliance.com/teams/
 
 def main():
     creds = None
@@ -52,7 +53,7 @@ def main():
             return
 
         for row in values:
-            print('%s, %s, %s, %s' % (row[0], row[1], row[2], row[3]))
+            print('Team %s - %s - %s' % (row[0], row[1], row[2]))
     except HttpError as err:
         print(err)
 
