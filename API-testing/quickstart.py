@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import pygsheets
 import os.path
 import os
 
@@ -12,32 +13,21 @@ from googleapiclient.errors import HttpError
 os.system('cls')
 username = os.getlogin()
 
-# C:\Users\kanbarne092\Documents\Sheet_API_Creds\token.json
-
 credOrigin = "C:\\Users\ " + username + "\Documents\ " + "Sheet_API_Creds\ " + "credentials.json"
 credPath = credOrigin.replace(" ", "")
 
 tokenOrigin = "C:\\Users\ " + username + "\Documents\ " + "Sheet_API_Creds\ " + "token.json"
 tokenPath = tokenOrigin.replace(" ", "")
 
-# If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
-# The ID and range of a sample spreadsheet.
 SAMPLE_SPREADSHEET_ID = '1BESNawhGsaBgJi5erxkbdp5yib7a7BUWm5cdeL5ak-M'
 SAMPLE_RANGE_NAME = 'Sheet1!A2:D7'
 
 def main():
-    """Shows basic usage of the Sheets API.
-    Prints values from a sample spreadsheet.
-    """
     creds = None
-    # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
     if os.path.exists(tokenPath):
         creds = Credentials.from_authorized_user_file(tokenPath, SCOPES)
-    # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
@@ -45,14 +35,11 @@ def main():
             flow = InstalledAppFlow.from_client_secrets_file(
                 credPath, SCOPES)
             creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
         with open(tokenPath, 'w') as token:
             token.write(creds.to_json())
 
     try:
         service = build('sheets', 'v4', credentials=creds)
-
-        # Call the Sheets API
         sheet = service.spreadsheets()
         result = sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID,
                                     range=SAMPLE_RANGE_NAME).execute()
@@ -63,11 +50,11 @@ def main():
             return
 
         for row in values:
-            # Print columns A and E, which correspond to indices 0 and 1.
             print('%s, %s, %s, %s' % (row[0], row[1], row[2], row[3]))
     except HttpError as err:
         print(err)
 
+print('test')
 
 if __name__ == '__main__':
     main()
