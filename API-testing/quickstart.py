@@ -22,6 +22,7 @@ tokenPath = tokenOrigin.replace(" ", "")
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 SAMPLE_SPREADSHEET_ID = '1BESNawhGsaBgJi5erxkbdp5yib7a7BUWm5cdeL5ak-M'
+# All Teams : SAMPLE_RANGE_NAME = 'TeamList!A2:C8015'
 SAMPLE_RANGE_NAME = 'TeamList!A2:C8015'
 
 # https://gsheets.readthedocs.io/en/stable/
