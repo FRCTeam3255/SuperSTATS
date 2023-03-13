@@ -24,6 +24,8 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 SAMPLE_SPREADSHEET_ID = '1BESNawhGsaBgJi5erxkbdp5yib7a7BUWm5cdeL5ak-M'
 SAMPLE_RANGE_NAME = 'Sheet1!A2:D7'
 
+# https://gsheets.readthedocs.io/en/stable/
+
 def main():
     creds = None
     if os.path.exists(tokenPath):
@@ -53,8 +55,6 @@ def main():
             print('%s, %s, %s, %s' % (row[0], row[1], row[2], row[3]))
     except HttpError as err:
         print(err)
-
-print('test')
 
 if __name__ == '__main__':
     main()
