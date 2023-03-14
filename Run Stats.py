@@ -1,14 +1,13 @@
-# Must create folder to save to: C:\Users\<username>\Documents\SN_Stats
-# Must run from directory: C:\Users\<username>\Documents\Github\SuperSTATS\
-
 from tkinter import *
-import time, os
+import os
 
 os.system('cls')
 
 username = os.getlogin()
 
-folder = "C:\\Users\ " + username + "\Documents\ " + "Github\ " + "SuperSTATS\ "
+dir = (os.path.dirname(__file__))
+dir1 = (dir + '\ ')
+folder = dir1.replace(" ", "")
 
 main = folder + "Stats_Main.py"
 mainPath = main.replace(" ", "")

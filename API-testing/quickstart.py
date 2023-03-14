@@ -13,10 +13,10 @@ from googleapiclient.errors import HttpError
 os.system('cls')
 username = os.getlogin()
 
-credOrigin = "C:\\Users\ " + username + "\Documents\ " + "Sheet_API_Creds\ " + "credentials.json"
+credOrigin = "C:\\Users\ " + username + "\Sheet_API_Creds\ " + "credentials.json"
 credPath = credOrigin.replace(" ", "")
 
-tokenOrigin = "C:\\Users\ " + username + "\Documents\ " + "Sheet_API_Creds\ " + "token.json"
+tokenOrigin = "C:\\Users\ " + username + "\Sheet_API_Creds\ " + "token.json"
 tokenPath = tokenOrigin.replace(" ", "")
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']

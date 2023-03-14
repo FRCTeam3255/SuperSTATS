@@ -3,7 +3,7 @@ import tbapy, os
 
 username = os.getlogin()
 
-fileOrigin = "C:\\Users\ " + username + "\Documents\ " + "encryption.txt"
+fileOrigin = "C:\\Users\ " + username + "\encryption.txt"
 filename = fileOrigin.replace(" ", "")
 
 with open(filename) as file:
