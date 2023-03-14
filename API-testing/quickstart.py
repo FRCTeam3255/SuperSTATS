@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-import pygsheets
 import os.path
 import os
 
