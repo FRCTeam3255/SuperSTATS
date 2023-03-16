@@ -209,3 +209,6 @@ if btnResult:
         st.success('Successfully Submitted')
     else:
         st.error('Incorrect Password')
+
+# text_contents = 'Team Number: ' + teamInput
+# st.download_button('Download some text', text_contents)
