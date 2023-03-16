@@ -17,6 +17,16 @@ with open(filename) as file:
 
 tba = tbapy.TBA(lines[0])
 
+cones = 0
+cubes = 0
+hybrids = 0
+
+css = r'''
+    <style>
+        [data-testid="stForm"] {border: 0px}
+    </style>
+'''
+
 st.set_page_config(
         page_title="Super Stats",
         page_icon="https://github.com/FRCTeam3255/GraphicsYearly/blob/main/Exports/SN%20Logos/favicon.png?raw=true",
@@ -53,9 +63,31 @@ if btnResult:
 
 st.header("Autonomous")
 
-autoColumn1, autoColumn2, autoColumn3 = st.columns(3)
+autoColumn1, autoColumn2, autoColumn3, autoColumn4, autoColumn5 = st.columns(5)
 
 with autoColumn1:
+    if 'cones' not in st.session_state:
+        st.session_state.cones = 0
+
+    addCone = st.button('Add Cone')
+    if addCone:
+        st.session_state.cones += 1
+
+    cones = st.session_state.cones
+    st.write('Cones = ', str(cones))
+
+with autoColumn2:
+    if 'cubes' not in st.session_state:
+        st.session_state.cubes = 0
+
+    addCube = st.button('Add Cube')
+    if addCube:
+        st.session_state.cubes += 1
+
+    cubes = st.session_state.cubes
+    st.write('Cones = ', str(cubes))
+
+with autoColumn3:
     mobility = st.checkbox('Mobility')
 
     if mobility:
@@ -65,7 +97,7 @@ with autoColumn1:
         autoMobility = False
         st.text('Mobility: ' + str(autoMobility))
 
-with autoColumn2:
+with autoColumn4:
     autoDock = st.checkbox('Docking')
 
     if autoDock:
@@ -75,7 +107,7 @@ with autoColumn2:
         autoDocking = False
         st.text('Docked: ' + str(autoDocking))
 
-with autoColumn3:
+with autoColumn5:
     autoEngage = st.checkbox('Engage')
 
     if autoEngage:
@@ -84,6 +116,27 @@ with autoColumn3:
     else:
         autoEngaging = False
         st.text('Engaged: ' + str(autoEngaging))
+
+autoGrid1, autoGrid2, autoGrid3 = st.columns(3)
+
+st.markdown(css, unsafe_allow_html=True)
+
+with st.form("HiL"):
+    btnResult = st.form_submit_button('[HiL]')
+if btnResult:
+    print('HiL pressed')
+
+with st.form("HiM"):
+    btnResult = st.form_submit_button('[HiM]')
+if btnResult:
+    print('HiM pressed')
+
+
+with st.form("HiR"):
+    btnResult = st.form_submit_button('[HiR]')
+if btnResult:
+    print('HiR pressed')
+
 
 st.write("---")
 
@@ -142,6 +195,8 @@ if btnResult:
         f.write('\nTeam Number: ' + teamInput)
         f.write('\nName: ' + teamName)
         f.write('\n\n[Autonomous]')
+        f.write('\nCones: ' + cones)
+        f.write('\nCubes: ' + cubes)
         f.write('\nMobility: ' + str(autoMobility))
         f.write('\nDock: ' + str(autoDocking))
         f.write('\nEngage: ' + str(autoEngaging))
