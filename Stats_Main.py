@@ -33,6 +33,8 @@ st.set_page_config(
         layout="wide",
 )
 
+st.markdown(css, unsafe_allow_html=True)
+
 def sendError(error, origin):
     st.error('{Error : ' + error + ' : ' + ' "' + origin + '"}')
 
@@ -59,33 +61,76 @@ if btnResult:
             st.markdown(":red[*Team **NOT** updated successfully*]")
             sendError('Invalid team input', teamInput)
 
+st.write("---")
+
 # Autonomous
 
 st.header("Autonomous")
 
 autoColumn1, autoColumn2, autoColumn3, autoColumn4, autoColumn5 = st.columns(5)
 
-with autoColumn1:
-    if 'cones' not in st.session_state:
-        st.session_state.cones = 0
+# with autoColumn1:
+#     if 'cones' not in st.session_state:
+#         st.session_state.cones = 0
 
-    addCone = st.button('Add Cone')
-    if addCone:
+#     addCone = st.button('Add Cone')
+#     if addCone:
+#         st.session_state.cones += 1
+
+#     cones = st.session_state.cones
+#     st.write('Cones = ', str(cones))
+
+# with autoColumn2:
+#     if 'cubes' not in st.session_state:
+#         st.session_state.cubes = 0
+
+#     addCube = st.button('Add Cube')
+#     if addCube:
+#         st.session_state.cubes += 1
+
+#     cubes = st.session_state.cubes
+#     st.write('Cones = ', str(cubes))
+
+if 'cones' not in st.session_state:
+    st.session_state.cones = 0
+
+if 'cubes' not in st.session_state:
+    st.session_state.cubes = 0
+
+if 'hybrids' not in st.session_state:
+    st.session_state.hybrids = 0
+
+with autoColumn1:
+    with st.form("highCone"):
+        btnResult = st.form_submit_button('▲ High Cone ▲')
+    if btnResult:
         st.session_state.cones += 1
 
-    cones = st.session_state.cones
-    st.write('Cones = ', str(cones))
+    with st.form("midCone"):
+        btnResult = st.form_submit_button('▲ Mid Cone ▲')
+    if btnResult:
+        st.session_state.cones += 1
+
+    with st.form("hybridLeft"):
+        btnResult = st.form_submit_button('※~ Hybrid ~※')
+    if btnResult:
+        st.session_state.hybrids += 1
 
 with autoColumn2:
-    if 'cubes' not in st.session_state:
-        st.session_state.cubes = 0
-
-    addCube = st.button('Add Cube')
-    if addCube:
+    with st.form("highCube"):
+        btnResult = st.form_submit_button(' ■ High Cube ■')
+    if btnResult:
         st.session_state.cubes += 1
 
-    cubes = st.session_state.cubes
-    st.write('Cones = ', str(cubes))
+    with st.form("midCube"):
+        btnResult = st.form_submit_button('■ Mid Cube ■')
+    if btnResult:
+        st.session_state.cubes += 1
+
+    with st.form("hybridRight"):
+        btnResult = st.form_submit_button('※~ Hybrid ~※')
+    if btnResult:
+        st.session_state.hybrids += 1
 
 with autoColumn3:
     mobility = st.checkbox('Mobility')
@@ -116,27 +161,6 @@ with autoColumn5:
     else:
         autoEngaging = False
         st.text('Engaged: ' + str(autoEngaging))
-
-autoGrid1, autoGrid2, autoGrid3 = st.columns(3)
-
-st.markdown(css, unsafe_allow_html=True)
-
-with st.form("HiL"):
-    btnResult = st.form_submit_button('[HiL]')
-if btnResult:
-    print('HiL pressed')
-
-with st.form("HiM"):
-    btnResult = st.form_submit_button('[HiM]')
-if btnResult:
-    print('HiM pressed')
-
-
-with st.form("HiR"):
-    btnResult = st.form_submit_button('[HiR]')
-if btnResult:
-    print('HiR pressed')
-
 
 st.write("---")
 
