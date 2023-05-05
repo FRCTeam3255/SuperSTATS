@@ -1,2 +1,0 @@
-# SuperSTATS
- SuperNURDs Stat Collection
