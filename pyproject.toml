@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "SuperSTATs"
 version = "0.0.1"
 authors = [
-  { name="SuperNURDs Software Team", email="frcteam3255@gmail.com" },
+  { name="SuperNURDs 2023 Software Team", email="frcteam3255@gmail.com" },
 ]
 description = "SuperNURDs stats app"
 readme = "README.md"
