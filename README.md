@@ -1,1 +1,3 @@
-hello world
+Local install
+
+pip install -e .
