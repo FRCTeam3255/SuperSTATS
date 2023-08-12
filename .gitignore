@@ -160,4 +160,4 @@ cython_debug/
 #.idea/
 
 .streamlit/secrets.toml
-src/.streamlit/secrets.toml
+*/secrets.toml
