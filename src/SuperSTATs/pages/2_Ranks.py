@@ -9,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-auto_cols = [   
+auto_cols = [
     "Auton Mobility",
     "Auton Top",
     "Auton Middle",
@@ -18,13 +18,13 @@ auto_cols = [
     "Auton Docked ENGAGED",
 ]
 
-teleop_cols = [   
+teleop_cols = [
     "Top Row",
     "Middle Row",
     "Bottom Row",
 ]
 
-end_game_cols = [   
+end_game_cols = [
     "Parked",
     "Docked NOT engaged",
     "Docked ENGAGED",
@@ -49,6 +49,7 @@ def custom_bar_chart(data):
     )
     return chart
 
+
 def config_chart(column):
     df = stats.download_sheets_raw()
     sum_df = df.groupby("Team")[column].sum()
@@ -64,6 +65,7 @@ def config_chart(column):
     )
     return row_sum
 
+
 def main():
     stats.set_font()
 
@@ -71,29 +73,32 @@ def main():
 
     with st.expander("[ Auto ]"):
         selected_auto_cols = st.multiselect("Filters:", auto_cols, default=auto_cols)
-    
+
         if selected_auto_cols:
             st.altair_chart(custom_bar_chart(config_chart(selected_auto_cols)))
         else:
             st.error("Please select at least one filter for autonomous")
 
-
     with st.expander("[ Teleop ]"):
-        selected_teleop_cols = st.multiselect("Filters:", teleop_cols, default=teleop_cols)
+        selected_teleop_cols = st.multiselect(
+            "Filters:", teleop_cols, default=teleop_cols
+        )
 
         if selected_teleop_cols:
             st.altair_chart(custom_bar_chart(config_chart(selected_teleop_cols)))
         else:
             st.error("Please select at least one filter for teleop")
 
-
     with st.expander("[ End Game ]"):
-        selected_end_game_cols = st.multiselect("Filters:", end_game_cols, default=end_game_cols)
+        selected_end_game_cols = st.multiselect(
+            "Filters:", end_game_cols, default=end_game_cols
+        )
 
         if selected_end_game_cols:
             st.altair_chart(custom_bar_chart(config_chart(selected_end_game_cols)))
         else:
             st.error("Please select at least one filter for end game")
+
 
 if __name__ == "__main__":
     main()
