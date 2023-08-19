@@ -50,11 +50,9 @@ def main():
     team_options = [
         f"{team_name} | {team_num}" for team_name, team_num in teams.items()
     ]
-    selected_team_str = st.sidebar.selectbox(
-        "Select Team:", team_options, index=team_options.index("SuperNURDs | 3255")
-    )
-    team_num = int(selected_team_str.split(" | ")[1])
 
+    selected_team = st.selectbox("Select Team:", sorted(team_options))
+    team_num = int(selected_team.split(" | ")[1])
     st.title(f"📈 Team {team_num} Averages 📉")
 
     with st.expander("[ Auto ]"):

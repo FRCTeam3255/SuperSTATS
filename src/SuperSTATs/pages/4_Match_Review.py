@@ -5,10 +5,17 @@ import tbapy
 st.set_page_config(
     page_title="[REVIEW] SN Stats",
     page_icon="🤖",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
 tba = tbapy.TBA(st.secrets["TBA_API"])
+
+
+def check_win(team, opponent):
+    if team["score"] > opponent["score"]:
+        return " 🏆"
+    else:
+        return ""
 
 
 def check_uni(rp):
@@ -41,7 +48,7 @@ def main():
     sorted_match_numbers = sorted(unique_matches.keys())
 
     selected_team = st.selectbox(
-        "Select Team Number", ["Show All Matches"] + sorted(unique_team_numbers)
+        "Select Team:", ["Show All Matches"] + sorted(unique_team_numbers)
     )
 
     for match_number in sorted_match_numbers:
@@ -59,8 +66,21 @@ def main():
                 red_alliance = match_info["alliances"]["red"]
                 blue_alliance = match_info["alliances"]["blue"]
 
-                st.write(f"🔴 Red Alliance - {' || '.join(red_teams)}")
-                st.write(f"Alliance: Score: {red_alliance['score']}")
+                red_identifier = " || ".join(
+                    [
+                        f"<b style='color:#e81224'>{team}</b>"
+                        if team == selected_team
+                        else team
+                        for team in red_teams
+                    ]
+                )
+                st.markdown(
+                    f"🔴 Red Alliance - {red_identifier}", unsafe_allow_html=True
+                )
+
+                st.write(
+                    f"Alliance: Score: {red_alliance['score']}{check_win(red_alliance, blue_alliance)}"
+                )
 
                 red_rp = match_info["score_breakdown"]["red"]["rp"]
 
@@ -68,8 +88,21 @@ def main():
 
                 st.title("")
 
-                st.write(f"🔵 Blue Alliance - {' || '.join(blue_teams)}")
-                st.write(f"Score: {blue_alliance['score']}")
+                blue_identifier = " || ".join(
+                    [
+                        f"<b style='color:#0078d7'>{team}</b>"
+                        if team == selected_team
+                        else team
+                        for team in blue_teams
+                    ]
+                )
+
+                st.markdown(
+                    f"🔵 Blue Alliance - {blue_identifier}", unsafe_allow_html=True
+                )
+                st.write(
+                    f"Score: {blue_alliance['score']}{check_win(blue_alliance, red_alliance)}"
+                )
 
                 blue_rp = match_info["score_breakdown"]["blue"]["rp"]
                 st.write(f"Ranking Points: {blue_rp} / 4{check_uni(blue_rp)}")
