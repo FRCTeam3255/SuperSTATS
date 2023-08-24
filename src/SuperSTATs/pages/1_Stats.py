@@ -31,11 +31,11 @@ def custom_bar_chart(data):
         alt.Chart(data)
         .mark_bar()
         .encode(
-            x=alt.X("value:Q", title="Sum Value"),
+            x=alt.X("value:Q", title=" "),
             y=alt.Y(
                 "Team:N",
                 sort=alt.EncodingSortField(field="rank", order="ascending"),
-                title="Team Number",
+                title="",
             ),
             color=alt.Color("variable:N", title=" "),
             tooltip=["Team:N", "value:Q", "variable:N"],
@@ -64,18 +64,15 @@ def config_chart(column):
 def main():
     stats.set_font()
 
-    st.header("ALT Ranking")
+    st.header("NURD Stats")
 
-    with st.expander("SN Stats"):
-        selected_filters = st.multiselect("Filters:", filter_cols, default=filter_cols)
+    # with st.expander("SN Stats"):
+    selected_filters = st.multiselect("Filters:", filter_cols, default=filter_cols)
 
-        if selected_filters:
-            st.altair_chart(custom_bar_chart(config_chart(selected_filters)))
-        else:
-            st.error("Please select at least one filter")
-
-    with st.expander("TBA Stats"):
-        st.subheader("TBA Bar Chart Here?")
+    if selected_filters:
+        st.altair_chart(custom_bar_chart(config_chart(selected_filters)))
+    else:
+        st.error("Please select at least one filter")
 
 
 if __name__ == "__main__":
