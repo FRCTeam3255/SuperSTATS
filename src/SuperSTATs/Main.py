@@ -73,12 +73,10 @@ def main():
         unsafe_allow_html=True,
     )
 
-    image_url = "https://raw.githubusercontent.com/FRCTeam3255/GraphicsYearly/main/Exports/SN%20Logos/Official%20SN%20Logo.png"
+    logo_path = "src/SuperSTATs/images/SN_Logo.png"
 
     st.title("")
-    st.markdown(
-        f"<center><img src='{image_url}' width='200'></center>", unsafe_allow_html=True
-    )
+    st.image(logo_path, use_column_width=True)
 
     st.title("")
     st.markdown(
