@@ -19,9 +19,9 @@ def add_cols(org_df, reg, filter):
 
 
 filter_cols = [
-    "autonomous",
-    "teleop",
-    "endgame"
+    # "autonomous",
+    # "teleop",
+    # "endgame"
     # "Auton Mobility",
     # "Auton Top",
     # "Auton Middle",
@@ -82,7 +82,25 @@ def main():
 
     st.header("NURD Stats")
 
-    # with st.expander("SN Stats"):
+    groupFilters = st.checkbox("Group Filters", True)
+    if groupFilters:
+        filter_cols = ["autonomous", "teleop", "endgame"]
+    else:
+        filter_cols = [
+            "Auton Mobility",
+            "Auton Top",
+            "Auton Middle",
+            "Auton Bottom",
+            "Auton Docked NOT engaged",
+            "Auton Docked ENGAGED",
+            "Top Row",
+            "Middle Row",
+            "Bottom Row",
+            "Parked",
+            "Docked NOT engaged",
+            "Docked ENGAGED",
+        ]
+
     selected_filters = st.multiselect("Filters:", filter_cols, default=filter_cols)
 
     if selected_filters:
