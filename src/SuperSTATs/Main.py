@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import tbapy
 
+# [NOTE]
 # from SuperSTATs.app import *
 # df = download_sheets_raw()
 # df = df.dropna(subset="Timestamp")
@@ -9,6 +10,8 @@ import tbapy
 # df.loc[df["Team"]==3255].sum(numeric_only=True)
 # df.groupby("Team").sum(numeric_only=True)
 # df.sort_values("match", ascending=False)
+# df = df.drop(columns=df.filter(regex=".1").columns)
+# df.filter(regex="Auton").sum(axis=1)
 
 st.set_page_config(
     page_title="SN Stats",
