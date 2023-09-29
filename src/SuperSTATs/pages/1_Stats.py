@@ -2,6 +2,7 @@ import SuperSTATs.Main as stats
 import streamlit as st
 import altair as alt
 import pandas as pd
+import numpy as np
 import tbapy
 
 st.set_page_config(
@@ -11,30 +12,26 @@ st.set_page_config(
 )
 
 
+point_values = {
+    "Auton Bottom": 3,
+    "Auton Middle": 4,
+    "Auton Top": 6,
+    "Auton Mobility": 3,
+    "Auton Docked NOT engaged": 8,
+    "Auton Docked ENGAGED": 12,
+    "Bottom Row": 2,
+    "Middle Row": 3,
+    "Top Row": 5,
+    "Parked": 2,
+    "Docked NOT engaged": 6,
+    "Docked ENGAGED": 10,
+}
+
+
 def add_cols(org_df, reg, filter):
-    org_df = stats.download_sheets_raw()
     org_df = org_df.drop(columns=org_df.filter(regex=".1").columns)
     org_df[filter] = org_df.filter(regex=reg).sum(axis=1)
     return org_df[filter]
-
-
-filter_cols = [
-    # "autonomous",
-    # "teleop",
-    # "endgame"
-    # "Auton Mobility",
-    # "Auton Top",
-    # "Auton Middle",
-    # "Auton Bottom",
-    # "Auton Docked NOT engaged",
-    # "Auton Docked ENGAGED",
-    # "Top Row",
-    # "Middle Row",
-    # "Bottom Row",
-    # "Parked",
-    # "Docked NOT engaged",
-    # "Docked ENGAGED",
-]
 
 
 def custom_bar_chart(data):
@@ -56,12 +53,26 @@ def custom_bar_chart(data):
     return chart
 
 
+def value_convert(df, reg, value):
+    for col in df.filter(regex=reg):
+        df[f"{col} conv"] = df[col] * value
+
+
 def config_chart(column):
     df = stats.download_sheets_raw()
 
-    df["autonomous"] = add_cols(df, "Auton", "autonomous")
-    df["teleop"] = add_cols(df, "Row", "teleop")
-    df["endgame"] = add_cols(df, r"(^Docked|^Parked)", "endgame")
+    for point, value in point_values.items():
+        value_convert(df, f"^{point}", value)
+
+    df["Autonomous"] = add_cols(
+        df,
+        r"Auton Bottom conv|^Auton Middle conv|^Auton T^op conv|^Auton Mobility conv|^Auton Docked NOT engaged conv|^Auton Docked ENGAGED conv",
+        "autonomous",
+    )
+    df["Teleop"] = add_cols(df, r"^Bottom Row|^Middle Row|^Top Row", "teleop")
+    df["Endgame"] = add_cols(
+        df, r"^Docked ENGAGED conv|^Docked NOT engaged conv|^Parked conv", "endgame"
+    )
 
     sum_df = df.groupby("Team")[column].sum()
     sum_df["sum"] = sum_df.sum(axis=1)
@@ -84,7 +95,7 @@ def main():
 
     groupFilters = st.checkbox("Group Filters", True)
     if groupFilters:
-        filter_cols = ["autonomous", "teleop", "endgame"]
+        filter_cols = ["Autonomous", "Teleop", "Endgame"]
     else:
         filter_cols = [
             "Auton Mobility",
