@@ -2,11 +2,10 @@ import SuperSTATs.Main as stats
 import streamlit as st
 import altair as alt
 import pandas as pd
-import numpy as np
 import tbapy
 
 st.set_page_config(
-    page_title="[RANKS] SN Stats",
+    page_title="[STATS] SN Stats",
     page_icon="🤖",
     initial_sidebar_state="expanded",
 )
@@ -66,10 +65,12 @@ def config_chart(column):
 
     df["Autonomous"] = add_cols(
         df,
-        r"Auton Bottom conv|^Auton Middle conv|^Auton T^op conv|^Auton Mobility conv|^Auton Docked NOT engaged conv|^Auton Docked ENGAGED conv",
+        r"^Auton Bottom conv|^Auton Middle conv|^Auton Top conv|^Auton Mobility conv|^Auton Docked NOT engaged conv|^Auton Docked ENGAGED conv",
         "autonomous",
     )
-    df["Teleop"] = add_cols(df, r"^Bottom Row|^Middle Row|^Top Row", "teleop")
+    df["Teleop"] = add_cols(
+        df, r"^Bottom Row conv|^Middle Row conv|^Top Row conv", "teleop"
+    )
     df["Endgame"] = add_cols(
         df, r"^Docked ENGAGED conv|^Docked NOT engaged conv|^Parked conv", "endgame"
     )
