@@ -47,7 +47,7 @@ def custom_bar_chart(data):
             color=alt.Color("variable:N", title=" "),
             tooltip=["Team:N", "value:Q", "variable:N"],
         )
-        .properties(height=1500)
+        .properties(width=700, height=1500)
     )
     return chart
 
@@ -57,7 +57,7 @@ def value_convert(df, reg, value):
         df[f"{col} conv"] = df[col] * value
 
 
-def config_chart(column):
+def config_chart(column, agg):
     df = stats.download_sheets_raw()
 
     for point, value in point_values.items():
@@ -75,18 +75,17 @@ def config_chart(column):
         df, r"^Docked ENGAGED conv|^Docked NOT engaged conv|^Parked conv", "endgame"
     )
 
-    sum_df = df.groupby("Team")[column].sum()
-    sum_df["sum"] = sum_df.sum(axis=1)
-    sum_df["rank"] = sum_df["sum"].rank(ascending=False).astype(int)
-    sum_df.reset_index(inplace=True)
-    row_sum = pd.melt(
-        sum_df,
+    calc_df = df.groupby("Team")[column].agg(agg)
+    calc_df["rank"] = calc_df.sum(axis=1).rank(ascending=False).astype(int)
+    calc_df.reset_index(inplace=True)
+    calc_row = pd.melt(
+        calc_df,
         id_vars=["Team", "rank"],
         value_vars=column,
         var_name="variable",
         value_name="value",
     )
-    return row_sum
+    return calc_row
 
 
 def main():
@@ -94,7 +93,9 @@ def main():
 
     st.header("NURD Stats")
 
+    aggType = st.selectbox("Aggregation Type", ("Mean", "Sum")).lower()
     groupFilters = st.checkbox("Group Filters", True)
+
     if groupFilters:
         filter_cols = ["Autonomous", "Teleop", "Endgame"]
     else:
@@ -116,7 +117,7 @@ def main():
     selected_filters = st.multiselect("Filters:", filter_cols, default=filter_cols)
 
     if selected_filters:
-        st.altair_chart(custom_bar_chart(config_chart(selected_filters)))
+        st.altair_chart(custom_bar_chart(config_chart(selected_filters, aggType)))
     else:
         st.error("Please select at least one filter")
 
