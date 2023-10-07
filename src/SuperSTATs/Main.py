@@ -20,7 +20,7 @@ st.set_page_config(
     menu_items={"About": "Developed by FRC Team 3255 - SuperNURDs"},
 )
 
-no_pick_url = f"https://docs.google.com/spreadsheets/d/{st.secrets['GSHEET_DOC_ID']}/edit#gid=1962951229"
+no_pick_url = f"https://docs.google.com/spreadsheets/d/{st.secrets['GSHEET_DOC_ID_ALT']}/edit#gid=1318549794"
 tba = tbapy.TBA(st.secrets["TBA_API"])
 
 
@@ -31,7 +31,7 @@ def build_sheet_url(url):
 
 
 def download_sheets_raw():
-    url = f"https://docs.google.com/spreadsheets/d/{st.secrets['GSHEET_DOC_ID']}/edit#gid=1657585295"
+    url = f"https://docs.google.com/spreadsheets/d/{st.secrets['GSHEET_DOC_ID_ALT']}/edit#gid=1318549794"
     return pd.read_csv(build_sheet_url(url)).dropna(subset="Timestamp")
 
 

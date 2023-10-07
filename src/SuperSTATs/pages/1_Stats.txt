@@ -12,10 +12,10 @@ st.set_page_config(
 
 
 point_values = {
+    "Auton Mobility": 3,
     "Auton Bottom": 3,
     "Auton Middle": 4,
     "Auton Top": 6,
-    "Auton Mobility": 3,
     "Auton Docked NOT engaged": 8,
     "Auton Docked ENGAGED": 12,
     "Bottom Row": 2,
@@ -93,7 +93,7 @@ def main():
 
     st.header("NURD Stats")
 
-    aggType = st.selectbox("Aggregation Type", ("Mean", "Sum")).lower()
+    aggType = st.selectbox("Aggregation Type", ("Mean", "Median", "Sum")).lower()
     groupFilters = st.checkbox("Group Filters", True)
 
     if groupFilters:
