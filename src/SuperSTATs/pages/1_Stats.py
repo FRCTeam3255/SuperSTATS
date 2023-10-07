@@ -21,6 +21,8 @@ def add_cols(org_df, reg, filter):
 
 
 def custom_bar_chart(data):
+    team_count = len(df["Team"].unique())
+
     chart = (
         alt.Chart(data)
         .mark_bar()
