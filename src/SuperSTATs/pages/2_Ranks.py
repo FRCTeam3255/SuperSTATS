@@ -51,7 +51,7 @@ def custom_bar_chart(data):
 
 
 def config_chart(column):
-    df = stats.download_sheets_raw()
+    df = stats.download_sheets_raw("1318549794")
     sum_df = df.groupby("Team")[column].sum()
     sum_df["sum"] = sum_df.sum(axis=1)
     sum_df["rank"] = sum_df["sum"].rank(ascending=False).astype(int)

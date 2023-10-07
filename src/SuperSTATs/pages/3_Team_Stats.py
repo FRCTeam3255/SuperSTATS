@@ -40,7 +40,7 @@ def config_chart(team_num, df, grouped_cols):
 def main():
     stats.set_font()
 
-    df = stats.download_sheets_raw()
+    df = stats.download_sheets_raw("1318549794")
 
     teams = {}
     teams_raw = list(st.session_state.team_info_dict.items())

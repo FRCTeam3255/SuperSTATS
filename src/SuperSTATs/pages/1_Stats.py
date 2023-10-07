@@ -5,10 +5,14 @@ import pandas as pd
 import tbapy
 
 st.set_page_config(
-    page_title="[STATS_ALT] SN Stats",
+    page_title="[STATS] SN Stats",
     page_icon="🤖",
     initial_sidebar_state="expanded",
 )
+
+df = stats.download_sheets_raw("1318549794").dropna(subset="Timestamp")
+df_picked = stats.download_sheets_raw("337514688")
+df = df.merge(df_picked, on="Team", how="left")
 
 
 def add_cols(org_df, reg, filter):
@@ -32,12 +36,12 @@ def custom_bar_chart(data):
         )
         .properties(width=700, height=1500)
     )
+
     return chart
 
 
-def config_chart(column, agg):
-    df = stats.download_sheets_raw()
-
+def config_chart(column, agg, hidePicked=False):
+    global df
     df_split = []
     for list in df.columns.str.split("_"):
         if len(list) > 1:
@@ -68,17 +72,20 @@ def config_chart(column, agg):
         "endgame",
     )
 
+    if hidePicked:
+        df = df[~df["Unavailable"].str.contains("x", case=False, na=False)]
+
     calc_df = df.groupby("Team")[column].agg(agg)
     calc_df["rank"] = calc_df.sum(axis=1).rank(ascending=False).astype(int)
     calc_df.reset_index(inplace=True)
-    calc_row = pd.melt(
+    calc_chart = pd.melt(
         calc_df,
         id_vars=["Team", "rank"],
         value_vars=column,
         var_name="variable",
         value_name="value",
     )
-    return calc_row
+    return calc_chart
 
 
 def main():
@@ -86,35 +93,35 @@ def main():
 
     st.header("NURD Stats")
 
-    aggType = st.selectbox("Aggregation Type", ("Mean", "Median", "Sum")).lower()
-    groupFilters = st.checkbox("Group Filters", True)
+    hidePicked = st.checkbox("Hide Picked Teams", False)
+
+    # TODO: Have "Group Filters" and "Agg Type" next to each other
+
+    col1, col2 = st.columns(2)
+    groupFilters = col2.checkbox("Group Filters", True)
+
+    if groupFilters:
+        aggType = col1.selectbox("Aggregation Type", ("Mean", "Median", "Sum")).lower()
+    else:
+        aggType = col1.selectbox(
+            "Aggregation Type", ("Mean", "Median", "Sum", "Count")
+        ).lower()
 
     if groupFilters:
         filter_cols = ["Autonomous", "Teleop", "Endgame"]
     else:
         filter_cols = [
-            # "INFO_NOTES",
-            # "INFO_DEFENSE",
-            # "INFO_PENALTY",
-            # "INFO_BRICK",
-            # "AUTON_MOBILITY",
-            # "AUTON_BOTTOM",
-            # "AUTON_MIDDLE",
-            # "AUTON_TOP",
-            # "AUTON_DOCKED NOT ENGAGED",
-            # "AUTON_DOCKED AND ENGAGED",
-            "TELEOP_BOTTOM_2",
-            "TELEOP_MIDDLE_3",
-            "TELEOP_TOP_5",
-            # "END_PARKED",
-            # "END_DOCKED NOT ENGAGED",
-            # "END_DOCKED AND ENGAGED",
+            col
+            for col in df.columns
+            if col.startswith(tuple(["AUTON_", "TELEOP_", "END_"]))
         ]
 
     selected_filters = st.multiselect("Filters", filter_cols, default=filter_cols)
 
     if selected_filters:
-        st.altair_chart(custom_bar_chart(config_chart(selected_filters, aggType)))
+        st.altair_chart(
+            custom_bar_chart(config_chart(selected_filters, aggType, hidePicked))
+        )
     else:
         st.error("Please select at least one filter")
 

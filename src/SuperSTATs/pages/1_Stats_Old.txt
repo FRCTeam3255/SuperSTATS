@@ -58,7 +58,7 @@ def value_convert(df, reg, value):
 
 
 def config_chart(column, agg):
-    df = stats.download_sheets_raw()
+    df = stats.download_sheets_raw("1318549794")
 
     for point, value in point_values.items():
         value_convert(df, f"^{point}", value)

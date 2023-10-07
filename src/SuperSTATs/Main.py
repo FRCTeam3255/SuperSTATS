@@ -4,7 +4,7 @@ import tbapy
 
 # [NOTE]
 # from SuperSTATs.app import *
-# df = download_sheets_raw()
+# df = stats.download_sheets_raw("1318549794")
 # df = df.dropna(subset="Timestamp")
 # df.loc[(df["Team"]==3255) | (df["Team"]==254)]
 # df.loc[df["Team"]==3255].sum(numeric_only=True)
@@ -20,7 +20,6 @@ st.set_page_config(
     menu_items={"About": "Developed by FRC Team 3255 - SuperNURDs"},
 )
 
-no_pick_url = f"https://docs.google.com/spreadsheets/d/{st.secrets['GSHEET_DOC_ID_ALT']}/edit#gid=1318549794"
 tba = tbapy.TBA(st.secrets["TBA_API"])
 
 
@@ -30,9 +29,9 @@ def build_sheet_url(url):
     return f"https://docs.google.com/spreadsheets/d/{doc_id}/export?format=csv&gid={sheet_id}"
 
 
-def download_sheets_raw():
-    url = f"https://docs.google.com/spreadsheets/d/{st.secrets['GSHEET_DOC_ID_ALT']}/edit#gid=1318549794"
-    return pd.read_csv(build_sheet_url(url)).dropna(subset="Timestamp")
+def download_sheets_raw(gid):
+    url = f"https://docs.google.com/spreadsheets/d/{st.secrets['GSHEET_DOC_ID_ALT']}/edit#gid={gid}"
+    return pd.read_csv(build_sheet_url(url))
 
 
 def get_team(team):
@@ -41,7 +40,7 @@ def get_team(team):
 
 @st.cache_data
 def download_team_info():
-    df = download_sheets_raw()
+    df = download_sheets_raw("1318549794")
     local_team_info_dict = {}
     for team in df["Team"].unique():
         local_team_info_dict[team] = get_team(team)["nickname"]
