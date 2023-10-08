@@ -3,14 +3,16 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.poetry]
-name = "test"
+name = "SuperSTATs"
 version = "0.1.0"
-description = "test"
-authors = ["Your Name <you@example.com>"]
+description = "SuperNURDs stats app"
+authors = [
+  { name="SuperNURDs 2023 Software Team", email="frcteam3255@gmail.com" },
+]
 
 [project]
 name = "SuperSTATs"
-version = "0.0.1"
+version = "0.1.0"
 authors = [
   { name="SuperNURDs 2023 Software Team", email="frcteam3255@gmail.com" },
 ]
