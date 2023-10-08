@@ -67,7 +67,9 @@ def custom_bar_chart(data, width, height):
                 sort=alt.EncodingSortField(field="rank", order="ascending"),
                 title="",
             ),
-            color=alt.Color("variable:N", title=" "),
+            color=alt.Color(
+                "variable:N", title=" ", legend=alt.Legend(title=None, orient="top")
+            ),
             tooltip=["Team:N", "value:Q", "variable:N"],
         )
         .properties(width=width, height=height)

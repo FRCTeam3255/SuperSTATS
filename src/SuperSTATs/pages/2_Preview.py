@@ -11,6 +11,18 @@ st.set_page_config(
 )
 
 
+def gen_team_chart(df, column, team_df, aggType, filter_cols):
+    column.altair_chart(
+        build.custom_bar_chart(
+            build.config_chart(
+                df.loc[df["Team"].isin(team_df)], filter_cols, aggType, False
+            ),
+            350,
+            300,
+        )
+    )
+
+
 def main():
     stats.set_font()
 
@@ -41,34 +53,35 @@ def main():
     for team in df_blue:
         col_blue.subheader(team)
 
-    # st.header(df_red)
-    # st.header(df_blue)
-    # df_blue = df[df["Team"].isin(df_blue)]
-
     df = stats.download_sheets_raw("1318549794").dropna(subset="Timestamp")
     df_picked = stats.download_sheets_raw("337514688")
     df = df.merge(df_picked, on="Team", how="left")
 
+    col1, col2 = st.columns(2)
+    groupFilters = col2.checkbox("Group Filters", True)
+
+    if groupFilters:
+        aggType = col1.selectbox("Aggregation Type", ("Mean", "Median", "Sum")).lower()
+    else:
+        aggType = col1.selectbox(
+            "Aggregation Type", ("Mean", "Median", "Sum", "Count")
+        ).lower()
+
+    if groupFilters:
+        filter_cols = ["Autonomous", "Teleop", "Endgame"]
+    else:
+        filter_cols = [
+            col
+            for col in df.columns
+            if col.startswith(tuple(["AUTON", "TELEOP", "END"]))
+        ]
+
+    selected_filters = st.multiselect("Filters", filter_cols, default=filter_cols)
+
     filter_cols = ["Autonomous", "Teleop", "Endgame"]
 
-    col_red.altair_chart(
-        build.custom_bar_chart(
-            build.config_chart(
-                df.loc[df["Team"].isin(df_red)], filter_cols, "mean", False
-            ),
-            350,
-            300,
-        )
-    )
-    col_blue.altair_chart(
-        build.custom_bar_chart(
-            build.config_chart(
-                df.loc[df["Team"].isin(df_blue)], filter_cols, "mean", False
-            ),
-            350,
-            300,
-        )
-    )
+    gen_team_chart(df, col_red, df_red, aggType, selected_filters)
+    gen_team_chart(df, col_blue, df_blue, aggType, selected_filters)
 
 
 if __name__ == "__main__":
