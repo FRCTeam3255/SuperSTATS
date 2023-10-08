@@ -74,12 +74,12 @@ def main():
         ).lower()
 
     if groupFilters:
-        filter_cols = ["Autonomous", "Teleop", "Endgame"]
+        filter_cols = ["Autonomous", "Teleop", "Endgame", "Info"]
     else:
         filter_cols = [
             col
             for col in df.columns
-            if col.startswith(tuple(["AUTON", "TELEOP", "END"]))
+            if col.startswith(tuple(["AUTON", "TELEOP", "END", "INFO"]))
         ]
 
     selected_filters = st.multiselect("Filters", filter_cols, default=filter_cols)

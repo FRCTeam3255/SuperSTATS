@@ -21,6 +21,12 @@ def config_chart(df, column, agg, hidePicked):
     for col, point in points.items():
         df[f"{col}_{point}"] *= point
 
+    df["Info"] = add_cols(
+        df,
+        r"INFO_",
+        "info",
+    )
+
     df["Autonomous"] = add_cols(
         df,
         r"AUTON_",
