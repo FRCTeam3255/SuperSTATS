@@ -21,8 +21,6 @@ def add_cols(org_df, reg, filter):
 
 
 def custom_bar_chart(data):
-    team_count = len(df["Team"].unique())
-
     chart = (
         alt.Chart(data)
         .mark_bar()
@@ -87,6 +85,7 @@ def config_chart(column, agg, hidePicked=False):
         var_name="variable",
         value_name="value",
     )
+
     return calc_chart
 
 
@@ -96,8 +95,6 @@ def main():
     st.header("NURD Stats")
 
     hidePicked = st.checkbox("Hide Picked Teams", False)
-
-    # TODO: Have "Group Filters" and "Agg Type" next to each other
 
     col1, col2 = st.columns(2)
     groupFilters = col2.checkbox("Group Filters", True)
