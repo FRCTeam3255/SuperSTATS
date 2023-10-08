@@ -8,6 +8,7 @@ st.set_page_config(
     page_title="[PREVIEW] SN Stats",
     page_icon="🤖",
     initial_sidebar_state="expanded",
+    menu_items={"About": "Kane Was Here 👋"},
 )
 
 
@@ -21,6 +22,16 @@ def gen_team_chart(df, column, team_df, aggType, filter_cols):
             300,
         )
     )
+
+
+def display_team(team_header, column, team_df):
+    column.header(team_header)
+    for team_num in team_df:
+        team_name = stats.get_team(team_num)["nickname"]
+        column.markdown(
+            f"<p style='font-size:20px'><b>[{team_num}]</b> {team_name}</p>",
+            unsafe_allow_html=True,
+        )
 
 
 def main():
@@ -45,13 +56,8 @@ def main():
 
     col_red, col_blue = st.columns(2)
 
-    col_red.header("🔴 Red Alliance 🔴")
-    for team in df_red:
-        col_red.subheader(team)
-
-    col_blue.header("🔵 Blue Alliance 🔵")
-    for team in df_blue:
-        col_blue.subheader(team)
+    display_team("🔴 Red Alliance 🔴", col_red, df_red)
+    display_team("🔵 Blue Alliance 🔵", col_blue, df_blue)
 
     df = stats.download_sheets_raw("1318549794").dropna(subset="Timestamp")
     df_picked = stats.download_sheets_raw("337514688")
