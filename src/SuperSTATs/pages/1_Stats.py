@@ -38,11 +38,11 @@ def main():
             if col.startswith(tuple(["AUTON", "TELEOP", "END", "INFO"]))
         ]
 
-    hide_picked = st.checkbox("Hide Picked Teams", False)
+    hide_picked = col2.checkbox("Hide Picked Teams", False)
 
+    wide_chart = st.checkbox("Wide Mode", False)
     selected_filters = st.multiselect("Filters", filter_cols, default=filter_cols)
 
-    wide_chart = col2.checkbox("Wide Mode", False)
     if selected_filters:
         st.altair_chart(
             build.custom_bar_chart(
