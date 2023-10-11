@@ -96,8 +96,8 @@ def main():
     green_col.text("🟢 Teleop")
     orange_col.text("🟠 Endgame")
 
-    showRaw = st.checkbox("Show Raw Data")
-    if showRaw:
+    show_raw = st.checkbox("Show Raw Data")
+    if show_raw:
         st.table(df_plot)
 
 

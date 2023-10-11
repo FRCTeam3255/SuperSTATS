@@ -7,7 +7,7 @@ def add_cols(org_df, reg, filter):
     return org_df[filter]
 
 
-def config_chart(df, column, agg, hidePicked):
+def config_chart(df, column, agg, hide_picked):
     df_split = []
     for list in df.columns.str.split("_"):
         if len(list) > 1:
@@ -44,7 +44,7 @@ def config_chart(df, column, agg, hidePicked):
         "endgame",
     )
 
-    if hidePicked:
+    if hide_picked:
         df = df[~df["Unavailable"].str.contains("x", case=False, na=False)]
 
     calc_df = df.groupby("Team")[column].agg(agg)

@@ -16,17 +16,16 @@ df = df.merge(df_picked, on="Team", how="left")
 def main():
     stats.set_font()
 
-    st.header("NURD Stats")
-
-    hidePicked = st.checkbox("Hide Picked Teams", False)
+    st.header("🏆 NURD Stats 🏆")
 
     col1, col2 = st.columns(2)
+
     groupFilters = col2.checkbox("Group Filters", True)
 
     if groupFilters:
-        aggType = col1.selectbox("Aggregation Type", ("Mean", "Median", "Sum")).lower()
+        agg_type = col1.selectbox("Aggregation Type", ("Mean", "Median", "Sum")).lower()
     else:
-        aggType = col1.selectbox(
+        agg_type = col1.selectbox(
             "Aggregation Type", ("Mean", "Median", "Sum", "Count")
         ).lower()
 
@@ -39,13 +38,15 @@ def main():
             if col.startswith(tuple(["AUTON", "TELEOP", "END", "INFO"]))
         ]
 
+    hide_picked = st.checkbox("Hide Picked Teams", False)
+
     selected_filters = st.multiselect("Filters", filter_cols, default=filter_cols)
 
     wide_chart = col2.checkbox("Wide Mode", False)
     if selected_filters:
         st.altair_chart(
             build.custom_bar_chart(
-                build.config_chart(df, selected_filters, aggType, hidePicked),
+                build.config_chart(df, selected_filters, agg_type, hide_picked),
                 wide_chart,
                 1500,
             )
