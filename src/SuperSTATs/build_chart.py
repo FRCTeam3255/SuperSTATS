@@ -1,4 +1,3 @@
-from SuperSTATs.Main import download_sheets_raw
 import altair as alt
 import pandas as pd
 
@@ -62,7 +61,12 @@ def config_chart(df, column, agg, hidePicked):
     return calc_chart
 
 
-def custom_bar_chart(data, width, height):
+def custom_bar_chart(data, wide_chart, height):
+    if wide_chart:
+        width = 700
+    else:
+        width = 350
+
     chart = (
         alt.Chart(data)
         .mark_bar()

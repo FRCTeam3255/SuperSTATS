@@ -4,7 +4,7 @@ import tbapy
 
 # [NOTE]
 # from SuperSTATs.app import *
-# df = stats.download_sheets_raw("1318549794")
+# df = stats.download_sheets_raw("st.secrets['GID_RAW']")
 # df = df.dropna(subset="Timestamp")
 # df.loc[(df["Team"]==3255) | (df["Team"]==254)]
 # df.loc[df["Team"]==3255].sum(numeric_only=True)
@@ -16,7 +16,7 @@ import tbapy
 st.set_page_config(
     page_title="SN Stats",
     page_icon="🤖",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
     menu_items={"About": "Developed by FRC Team 3255 - SuperNURDs"},
 )
 
@@ -30,7 +30,7 @@ def build_sheet_url(url):
 
 
 def download_sheets_raw(gid):
-    url = f"https://docs.google.com/spreadsheets/d/{st.secrets['GSHEET_DOC_ID_ALT']}/edit#gid={gid}"
+    url = f"https://docs.google.com/spreadsheets/d/{st.secrets['GSHEET_DOC_ID']}/edit#gid={gid}"
     return pd.read_csv(build_sheet_url(url))
 
 
@@ -40,7 +40,7 @@ def get_team(team):
 
 @st.cache_data
 def download_team_info():
-    df = download_sheets_raw("1318549794")
+    df = download_sheets_raw(st.secrets["GID_RAW"])
     local_team_info_dict = {}
     for team in df["Team"].unique():
         local_team_info_dict[team] = get_team(team)["nickname"]
@@ -71,20 +71,20 @@ def main():
         st.session_state.team_info_dict = download_team_info()
 
     main_title.markdown(
-        "<div style='display: flex; justify-content: center; font-size: 4em;'>🤖 SuperSTATs 🤖</div>",
+        "<div style='display: flex; justify-content: center; font-size: 40px;'><b>🤖 SuperSTATs 🤖</b></div>",
         unsafe_allow_html=True,
     )
 
     logo_path = "src/SuperSTATs/images/SN_Logo.png"
 
     st.title("")
-    st.image(logo_path, use_column_width=True)
+    st.image(logo_path)
 
     st.title("")
     st.markdown(
         """
         <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-            <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ/" style="color: #ffffff; font-size: 2em;">SuperNURDs Website</a>
+            <a href="https://www.frcteam3255.com/" style="color: #ffffff; font-size: 30px;">SuperNURDs Website</a>
         </div>
         """,
         unsafe_allow_html=True,

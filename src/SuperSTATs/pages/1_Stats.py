@@ -2,15 +2,14 @@ import SuperSTATs.build_chart as build
 import SuperSTATs.Main as stats
 import streamlit as st
 
-
 st.set_page_config(
     page_title="[STATS] SN Stats",
     page_icon="🤖",
     initial_sidebar_state="expanded",
 )
 
-df = stats.download_sheets_raw("1318549794").dropna(subset="Timestamp")
-df_picked = stats.download_sheets_raw("337514688")
+df = stats.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
+df_picked = stats.download_sheets_raw(st.secrets["GID_PICKED"])
 df = df.merge(df_picked, on="Team", how="left")
 
 
@@ -42,10 +41,13 @@ def main():
 
     selected_filters = st.multiselect("Filters", filter_cols, default=filter_cols)
 
+    wide_chart = col2.checkbox("Wide Mode", False)
     if selected_filters:
         st.altair_chart(
             build.custom_bar_chart(
-                build.config_chart(df, selected_filters, aggType, hidePicked), 700, 1500
+                build.config_chart(df, selected_filters, aggType, hidePicked),
+                wide_chart,
+                1500,
             )
         )
     else:

@@ -18,7 +18,7 @@ def gen_team_chart(df, column, team_df, aggType, filter_cols):
             build.config_chart(
                 df.loc[df["Team"].isin(team_df)], filter_cols, aggType, False
             ),
-            350,
+            False,
             300,
         )
     )
@@ -39,7 +39,7 @@ def main():
 
     st.header("🔮 Match Preview 🔮")
 
-    df = stats.download_sheets_raw("1965907354")
+    df = stats.download_sheets_raw(st.secrets["GID_MATCHES"])
 
     teams = {}
     teams_raw = list(st.session_state.team_info_dict.items())
@@ -59,8 +59,8 @@ def main():
     display_team("🔴 Red Alliance 🔴", col_red, df_red)
     display_team("🔵 Blue Alliance 🔵", col_blue, df_blue)
 
-    df = stats.download_sheets_raw("1318549794").dropna(subset="Timestamp")
-    df_picked = stats.download_sheets_raw("337514688")
+    df = stats.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
+    df_picked = stats.download_sheets_raw(st.secrets["GID_PICKED"])
     df = df.merge(df_picked, on="Team", how="left")
 
     col1, col2 = st.columns(2)
@@ -83,8 +83,6 @@ def main():
         ]
 
     selected_filters = st.multiselect("Filters", filter_cols, default=filter_cols)
-
-    filter_cols = ["Autonomous", "Teleop", "Endgame"]
 
     gen_team_chart(df, col_red, df_red, aggType, selected_filters)
     gen_team_chart(df, col_blue, df_blue, aggType, selected_filters)
