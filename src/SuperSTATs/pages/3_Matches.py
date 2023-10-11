@@ -29,6 +29,8 @@ def plot_line(df, y_value, color, expand_graph):
 def main():
     stats.set_font()
 
+    st.title(f"📈 Team Matches 📉")
+    
     teams = {}
     teams_raw = st.session_state.team_info_dict.items()
 
@@ -44,7 +46,6 @@ def main():
 
     df_plot = df.loc[(df["Team"] == team_num)]
 
-    st.title(f"📈 Team Matches [{team_num}] 📉")
     
     mask = (
         (df.columns == "Match")
