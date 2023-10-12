@@ -11,7 +11,7 @@ import tbapy
 # df.groupby("Team").sum(numeric_only=True)
 # df.sort_values("match", ascending=False)
 # df = df.drop(columns=df.filter(regex=".1").columns)
-# df.filter(regex="Auton").sum(axis=1)
+# df.filter(regex="Auto").sum(axis=1)
 
 st.set_page_config(
     page_title="SN Stats",

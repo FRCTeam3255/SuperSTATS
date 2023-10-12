@@ -30,7 +30,7 @@ def main():
     stats.set_font()
 
     st.title(f"📈 Team Matches 📉")
-    
+
     teams = {}
     teams_raw = st.session_state.team_info_dict.items()
 
@@ -46,11 +46,10 @@ def main():
 
     df_plot = df.loc[(df["Team"] == team_num)]
 
-    
     mask = (
         (df.columns == "Match")
-        | df.columns.str.startswith("AUTON_")
-        | df.columns.str.startswith("TELEOP_")
+        | df.columns.str.startswith("AUTO_")
+        | df.columns.str.startswith("TELE_")
         | df.columns.str.startswith("END_")
     )
     df_plot = df_plot.loc[:, mask]
@@ -68,22 +67,25 @@ def main():
         if col in df_plot.columns:
             df_plot[col] *= point
 
-    score_types = ["AUTON_", "TELEOP_", "END_"]
+    score_types = ["AUTO_", "TELE_", "END_"]
 
     for score_type in score_types:
         columns = [col for col in df_plot.columns if col.startswith(score_type)]
         df_plot[f"{score_type.strip('_').title()} Score"] = df_plot[columns].sum(axis=1)
 
-    df_plot["Total Score"] = df_plot.drop(["Match", "Auton Score", "Teleop Score", "End Score"], axis=1).sum(axis=1)
+    df_plot["Total Score"] = df_plot.drop(
+        ["Match", "Auto Score", "Tele Score", "End Score"], axis=1
+    ).sum(axis=1)
 
     df_plot = df_plot.reset_index(drop=True)
 
     expand_graph = st.checkbox("Expand Graph", False)
 
-    stage_colors = {"Auton": "cyan", "Teleop": "lime", "End": "orange"}
+    stage_colors = {"Auto": "cyan", "Tele": "lime", "End": "orange"}
 
     line_chart = plot_line(df_plot, "Total Score", "red", expand_graph).properties(
-        title=str(selected_team))
+        title=str(selected_team)
+    )
 
     for stage, color in stage_colors.items():
         line_chart += plot_line(df_plot, f"{stage} Score", color, expand_graph)
@@ -93,11 +95,13 @@ def main():
     red_col, blue_col, green_col, orange_col = st.columns(4)
     red_col.text("🔴 Score")
     blue_col.text("🔵 Auto")
-    green_col.text("🟢 Teleop")
+    green_col.text("🟢 Tele")
     orange_col.text("🟠 Endgame")
 
+    st.title("")
     show_raw = st.checkbox("Show Raw Data")
     if show_raw:
+        st.subheader(f"Raw Data For Team {team_num}")
         st.table(df_plot)
 
 

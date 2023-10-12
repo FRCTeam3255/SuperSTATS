@@ -35,7 +35,7 @@ def main():
         filter_cols = [
             col
             for col in df.columns
-            if col.startswith(tuple(["AUTON", "TELEOP", "END", "INFO"]))
+            if col.startswith(tuple(["AUTO", "TELE", "END", "INFO"]))
         ]
 
     hide_picked = col2.checkbox("Hide Picked Teams", False)
