@@ -28,13 +28,13 @@ def config_chart(df, column, agg, hide_picked):
 
     df["Autonomous"] = add_cols(
         df,
-        r"AUTON_",
+        r"AUTO_",
         "autonomous",
     )
 
     df["Teleop"] = add_cols(
         df,
-        r"TELEOP_",
+        r"TELE_",
         "teleop",
     )
 
