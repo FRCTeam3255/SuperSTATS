@@ -49,8 +49,8 @@ def main():
     
     mask = (
         (df.columns == "Match")
-        | df.columns.str.startswith("AUTON_")
-        | df.columns.str.startswith("TELEOP_")
+        | df.columns.str.startswith("AUTO_")
+        | df.columns.str.startswith("TELE_")
         | df.columns.str.startswith("END_")
     )
     df_plot = df_plot.loc[:, mask]
@@ -68,7 +68,7 @@ def main():
         if col in df_plot.columns:
             df_plot[col] *= point
 
-    score_types = ["AUTON_", "TELEOP_", "END_"]
+    score_types = ["AUTO_", "TELE_", "END_"]
 
     for score_type in score_types:
         columns = [col for col in df_plot.columns if col.startswith(score_type)]
