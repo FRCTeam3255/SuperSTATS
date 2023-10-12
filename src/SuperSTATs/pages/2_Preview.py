@@ -79,7 +79,7 @@ def main():
         filter_cols = [
             col
             for col in df.columns
-            if col.startswith(tuple(["AUTON", "TELEOP", "END", "INFO"]))
+            if col.startswith(tuple(["AUTO", "TELE", "END", "INFO"]))
         ]
 
     selected_filters = st.multiselect("Filters", filter_cols, default=filter_cols)
