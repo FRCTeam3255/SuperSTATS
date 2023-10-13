@@ -61,11 +61,16 @@ def config_chart(df, column, agg, hide_picked):
     return calc_chart
 
 
-def custom_bar_chart(data, wide_chart, height):
+def custom_bar_chart(data, hide_teams, wide_chart, height):
     if wide_chart:
         width = 700
     else:
         width = 350
+
+    if hide_teams:
+        tooltip = ["value:Q", "variable:N"]
+    else:
+        tooltip = ["Team:N", "value:Q", "variable:N"]
 
     chart = (
         alt.Chart(data)
@@ -76,11 +81,12 @@ def custom_bar_chart(data, wide_chart, height):
                 "Team:N",
                 sort=alt.EncodingSortField(field="rank", order="ascending"),
                 title="",
+                axis=alt.Axis(labels=not hide_teams),
             ),
             color=alt.Color(
                 "variable:N", title=" ", legend=alt.Legend(title=None, orient="top")
             ),
-            tooltip=["Team:N", "value:Q", "variable:N"],
+            tooltip=tooltip,
         )
         .properties(width=width, height=height)
     )

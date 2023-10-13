@@ -19,6 +19,7 @@ def gen_team_chart(df, column, team_df, aggType, filter_cols):
                 df.loc[df["Team"].isin(team_df)], filter_cols, aggType, False
             ),
             False,
+            False,
             300,
         )
     )

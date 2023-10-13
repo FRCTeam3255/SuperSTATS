@@ -18,35 +18,33 @@ def main():
 
     st.header("🏆 NURD Stats 🏆")
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3, col4 = st.columns(4)
 
-    groupFilters = col2.checkbox("Group Filters", True)
-
-    if groupFilters:
-        agg_type = col1.selectbox("Aggregation Type", ("Mean", "Median", "Sum")).lower()
-    else:
-        agg_type = col1.selectbox(
-            "Aggregation Type", ("Mean", "Median", "Sum", "Count")
-        ).lower()
+    groupFilters = col1.checkbox("Group Filters", True)
+    hide_teams = col3.checkbox("Hide Teams", False)
+    hide_picked = col2.checkbox("Hide Picked", False)
+    wide_chart = col4.checkbox("Wide Mode", False)
 
     if groupFilters:
+        agg_type = st.selectbox("Aggregation Type:", ("Mean", "Median", "Sum")).lower()
         filter_cols = ["Autonomous", "Teleop", "Endgame", "Info"]
     else:
+        agg_type = st.selectbox(
+            "Aggregation Type:", ("Mean", "Median", "Sum", "Count")
+        ).lower()
         filter_cols = [
             col
             for col in df.columns
             if col.startswith(tuple(["AUTO", "TELE", "END", "INFO"]))
         ]
 
-    hide_picked = col2.checkbox("Hide Picked Teams", False)
-
-    wide_chart = st.checkbox("Wide Mode", False)
-    selected_filters = st.multiselect("Filters", filter_cols, default=filter_cols)
+    selected_filters = st.multiselect("Filters:", filter_cols, default=filter_cols)
 
     if selected_filters:
         st.altair_chart(
             build.custom_bar_chart(
                 build.config_chart(df, selected_filters, agg_type, hide_picked),
+                hide_teams,
                 wide_chart,
                 1500,
             )
