@@ -11,7 +11,9 @@ def add_cols(org_df, reg, filter):
     return org_df[filter]
 
 
-def config_chart(df, column, agg, hide_picked):
+def config_chart(df, column, agg, hide_picked, match_filters):
+    df = df[df["Match Type"].isin(match_filters)]
+
     df_split = []
     for list in df.columns.str.split("_"):
         if len(list) > 1:

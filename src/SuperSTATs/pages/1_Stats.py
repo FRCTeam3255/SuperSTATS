@@ -25,11 +25,15 @@ def main():
     hide_picked = col2.checkbox("Hide Picked", False)
     wide_chart = col4.checkbox("Wide Mode", False)
 
+    col1, col2 = st.columns(2)
+
     if groupFilters:
-        agg_type = st.selectbox("Aggregation Type:", ("Mean", "Median", "Sum")).lower()
+        agg_type = col1.selectbox(
+            "Aggregation Type:", ("Mean", "Median", "Sum")
+        ).lower()
         filter_cols = st.secrets["FILTER_COLS"]
     else:
-        agg_type = st.selectbox(
+        agg_type = col1.selectbox(
             "Aggregation Type:", ("Mean", "Median", "Sum", "Count")
         ).lower()
         filter_cols = [
@@ -38,12 +42,23 @@ def main():
             if col.startswith(tuple(st.secrets["STAT_SECTIONS"]))
         ]
 
+    match_filters = col2.multiselect(
+        "Match Types:", ["Prac", "Quals", "Playoffs"], default=[]
+    )
+
+    if match_filters:
+        pass
+    else:
+        match_filters = ["Prac", "Quals", "Playoffs"]
+
     selected_filters = st.multiselect("Filters:", filter_cols, default=filter_cols)
 
     if selected_filters:
         st.altair_chart(
             build.custom_bar_chart(
-                build.config_chart(df, selected_filters, agg_type, hide_picked),
+                build.config_chart(
+                    df, selected_filters, agg_type, hide_picked, match_filters
+                ),
                 hide_teams,
                 wide_chart,
                 1500,

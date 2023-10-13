@@ -12,11 +12,15 @@ st.set_page_config(
 )
 
 
-def gen_team_chart(df, column, team_df, aggType, filter_cols):
+def gen_team_chart(df, column, team_df, agg_type, filter_cols, match_filters):
     column.altair_chart(
         build.custom_bar_chart(
             build.config_chart(
-                df.loc[df["Team"].isin(team_df)], filter_cols, aggType, False
+                df.loc[df["Team"].isin(team_df)],
+                filter_cols,
+                agg_type,
+                False,
+                match_filters,
             ),
             False,
             False,
@@ -64,13 +68,14 @@ def main():
     df_picked = stats.download_sheets_raw(st.secrets["GID_PICKED"])
     df = df.merge(df_picked, on="Team", how="left")
 
-    col1, col2 = st.columns(2)
-    groupFilters = col2.checkbox("Group Filters", True)
+    col1, col2, col3 = st.columns(3)
+    col3.title("")
+    groupFilters = col3.checkbox("Group Filters", True)
 
     if groupFilters:
-        aggType = col1.selectbox("Aggregation Type", ("Mean", "Median", "Sum")).lower()
+        agg_type = col1.selectbox("Aggregation Type", ("Mean", "Median", "Sum")).lower()
     else:
-        aggType = col1.selectbox(
+        agg_type = col1.selectbox(
             "Aggregation Type", ("Mean", "Median", "Sum", "Count")
         ).lower()
 
@@ -83,10 +88,19 @@ def main():
             if col.startswith(tuple(st.secrets["STAT_SECTIONS"]))
         ]
 
+    match_filters = col2.multiselect(
+        "Match Types:", ["Prac", "Quals", "Playoffs"], default=[]
+    )
+
+    if match_filters:
+        pass
+    else:
+        match_filters = ["Prac", "Quals", "Playoffs"]
+
     selected_filters = st.multiselect("Filters", filter_cols, default=filter_cols)
 
-    gen_team_chart(df, col_red, df_red, aggType, selected_filters)
-    gen_team_chart(df, col_blue, df_blue, aggType, selected_filters)
+    gen_team_chart(df, col_red, df_red, agg_type, selected_filters, match_filters)
+    gen_team_chart(df, col_blue, df_blue, agg_type, selected_filters, match_filters)
 
 
 if __name__ == "__main__":
