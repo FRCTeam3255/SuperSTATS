@@ -75,20 +75,21 @@ def main():
         unsafe_allow_html=True,
     )
 
+    st.markdown(
+        """
+        <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+            <a href="https://forms.gle/xRQNfLQLkCRB5rXZ6" style="color: #0070E0; font-size: 25px;">Stats Input Form</a>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
     logo_path = "src/SuperSTATs/images/SN_Logo.png"
 
     st.title("")
     st.image(logo_path)
 
     st.title("")
-    st.markdown(
-        """
-        <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-            <a href="https://forms.gle/xRQNfLQLkCRB5rXZ6" style="color: #ffffff; font-size: 30px;">SuperNURDs Website</a>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
 
 if __name__ == "__main__":
