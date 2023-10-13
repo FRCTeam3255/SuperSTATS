@@ -84,7 +84,7 @@ def main():
     st.markdown(
         """
         <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-            <a href="https://www.frcteam3255.com/" style="color: #ffffff; font-size: 30px;">SuperNURDs Website</a>
+            <a href="https://forms.gle/xRQNfLQLkCRB5rXZ6" style="color: #ffffff; font-size: 30px;">SuperNURDs Website</a>
         </div>
         """,
         unsafe_allow_html=True,

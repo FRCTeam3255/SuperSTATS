@@ -1,5 +1,9 @@
+import streamlit as st
 import altair as alt
 import pandas as pd
+
+filters = st.secrets["FILTER_COLS"]
+sections = st.secrets["STAT_SECTIONS"]
 
 
 def add_cols(org_df, reg, filter):
@@ -20,29 +24,12 @@ def config_chart(df, column, agg, hide_picked):
     for col, point in points.items():
         df[f"{col}_{point}"] *= point
 
-    df["Info"] = add_cols(
-        df,
-        r"INFO_",
-        "info",
-    )
-
-    df["Autonomous"] = add_cols(
-        df,
-        r"AUTO_",
-        "autonomous",
-    )
-
-    df["Teleop"] = add_cols(
-        df,
-        r"TELE_",
-        "teleop",
-    )
-
-    df["Endgame"] = add_cols(
-        df,
-        r"END_",
-        "endgame",
-    )
+    for i in range(len(filters)):
+        df[filters[i]] = add_cols(
+            df,
+            f"{sections[i]}_",
+            filters[i],
+        )
 
     if hide_picked:
         df = df[~df["Unavailable"].str.contains("x", case=False, na=False)]

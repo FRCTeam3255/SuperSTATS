@@ -11,6 +11,9 @@ st.set_page_config(
 
 df = stats.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
 
+filters = st.secrets["FILTER_COLS"]
+sections = st.secrets["STAT_SECTIONS"]
+
 
 def plot_line(df, y_value, color, expand_graph):
     if expand_graph:
@@ -41,17 +44,16 @@ def main():
         f"{team_name} | {team_num}" for team_name, team_num in teams.items()
     ]
 
-    selected_team = st.selectbox("Select Team:", sorted(team_options))
+    col1, col2 = st.columns(2)
+    selected_team = col1.selectbox("Select Team:", sorted(team_options))
     team_num = int(selected_team.split(" | ")[1])
 
     df_plot = df.loc[(df["Team"] == team_num)]
 
-    mask = (
-        (df.columns == "Match")
-        | df.columns.str.startswith("AUTO_")
-        | df.columns.str.startswith("TELE_")
-        | df.columns.str.startswith("END_")
-    )
+    mask = df.columns == "Match"
+    for section, filter_col in zip(sections, filters):
+        mask = mask | df.columns.str.startswith(f"{section}_")
+
     df_plot = df_plot.loc[:, mask]
 
     df_split = []
@@ -67,36 +69,33 @@ def main():
         if col in df_plot.columns:
             df_plot[col] *= point
 
-    score_types = ["AUTO_", "TELE_", "END_"]
-
-    for score_type in score_types:
+    for score_type in sections:
         columns = [col for col in df_plot.columns if col.startswith(score_type)]
         df_plot[f"{score_type.strip('_').title()} Score"] = df_plot[columns].sum(axis=1)
 
-    df_plot["Total Score"] = df_plot.drop(
-        ["Match", "Auto Score", "Tele Score", "End Score"], axis=1
-    ).sum(axis=1)
+    excluded_cols = ["Match"]
+    sum_cols = [f"{section.title()} Score" for section in sections]
+    all_columns = excluded_cols + sum_cols
+
+    df_plot["Total Score"] = df_plot.drop(columns=all_columns, axis=1).sum(axis=1)
 
     df_plot = df_plot.reset_index(drop=True)
 
-    expand_graph = st.checkbox("Expand Graph", False)
-
-    stage_colors = {"Auto": "cyan", "Tele": "lime", "End": "orange"}
+    col2.header("")
+    expand_graph = col2.checkbox("Expand Graph", False)
+    selected_filters = st.multiselect("Filters:", sections, default=sections)
 
     line_chart = plot_line(df_plot, "Total Score", "red", expand_graph).properties(
         title=str(selected_team)
     )
 
-    for stage, color in stage_colors.items():
-        line_chart += plot_line(df_plot, f"{stage} Score", color, expand_graph)
+    colors = iter(st.secrets["LINE_CHART_COLORS"])
+    for stage in selected_filters:
+        line_chart += plot_line(
+            df_plot, f"{stage.title()} Score", next(colors), expand_graph
+        )
 
     st.altair_chart(line_chart)
-
-    red_col, blue_col, green_col, orange_col = st.columns(4)
-    red_col.text("🔴 Score")
-    blue_col.text("🔵 Auto")
-    green_col.text("🟢 Tele")
-    orange_col.text("🟠 Endgame")
 
     st.title("")
     show_raw = st.checkbox("Show Raw Data")

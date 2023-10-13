@@ -27,7 +27,7 @@ def main():
 
     if groupFilters:
         agg_type = st.selectbox("Aggregation Type:", ("Mean", "Median", "Sum")).lower()
-        filter_cols = ["Autonomous", "Teleop", "Endgame", "Info"]
+        filter_cols = st.secrets["FILTER_COLS"]
     else:
         agg_type = st.selectbox(
             "Aggregation Type:", ("Mean", "Median", "Sum", "Count")
@@ -35,7 +35,7 @@ def main():
         filter_cols = [
             col
             for col in df.columns
-            if col.startswith(tuple(["AUTO", "TELE", "END", "INFO"]))
+            if col.startswith(tuple(st.secrets["STAT_SECTIONS"]))
         ]
 
     selected_filters = st.multiselect("Filters:", filter_cols, default=filter_cols)
