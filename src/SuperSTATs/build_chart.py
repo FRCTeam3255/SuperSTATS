@@ -1,9 +1,13 @@
+import SuperSTATs.Main as stats
 import streamlit as st
 import altair as alt
 import pandas as pd
 
-filters = st.secrets["FILTER_COLS"]
-sections = st.secrets["STAT_SECTIONS"]
+df = stats.download_sheets_raw(st.secrets["GID_RAW"])
+sections = stats.get_match_sections(df)
+filters = []
+for section in sections:
+    filters.append(section)
 
 
 def add_cols(org_df, reg, filter):

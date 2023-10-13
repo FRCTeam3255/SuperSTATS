@@ -12,6 +12,12 @@ df = stats.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
 df_picked = stats.download_sheets_raw(st.secrets["GID_PICKED"])
 df = df.merge(df_picked, on="Team", how="left")
 
+sections = stats.get_match_sections(df)
+# filters = []
+# for section in sections:
+#     filters.append(section.title())
+filters = sections
+
 
 def main():
     stats.set_font()
@@ -21,7 +27,7 @@ def main():
     col1, col2, col3, col4 = st.columns(4)
 
     groupFilters = col1.checkbox("Group Filters", True)
-    hide_teams = col3.checkbox("Hide Teams", False)
+    hide_teams = col3.checkbox("Hide Team Nums", False)
     hide_picked = col2.checkbox("Hide Picked", False)
     wide_chart = col4.checkbox("Wide Mode", False)
 
@@ -31,16 +37,12 @@ def main():
         agg_type = col1.selectbox(
             "Aggregation Type:", ("Mean", "Median", "Sum")
         ).lower()
-        filter_cols = st.secrets["FILTER_COLS"]
+        filter_cols = filters
     else:
         agg_type = col1.selectbox(
             "Aggregation Type:", ("Mean", "Median", "Sum", "Count")
         ).lower()
-        filter_cols = [
-            col
-            for col in df.columns
-            if col.startswith(tuple(st.secrets["STAT_SECTIONS"]))
-        ]
+        filter_cols = [col for col in df.columns if col.startswith(tuple(sections))]
 
     match_filters = col2.multiselect(
         "Match Types:", ["Prac", "Quals", "Playoffs"], default=[]

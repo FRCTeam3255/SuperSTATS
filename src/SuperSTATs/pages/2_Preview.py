@@ -4,6 +4,14 @@ import streamlit as st
 import altair as alt
 import pandas as pd
 
+df_r = stats.download_sheets_raw(st.secrets["GID_RAW"])
+
+sections = stats.get_match_sections(df_r)
+# filters = []
+# for section in sections:
+#     filters.append(section.title())
+filters = sections
+
 st.set_page_config(
     page_title="[PREVIEW] SN Stats",
     page_icon="🤖",
@@ -44,13 +52,12 @@ def main():
 
     st.header("🔮 Match Preview 🔮")
 
-    df = stats.download_sheets_raw(st.secrets["GID_MATCHES"])
-
     teams = {}
     teams_raw = list(st.session_state.team_info_dict.items())
     for team in teams_raw:
         teams[team[1]] = int(team[0])
 
+    df = stats.download_sheets_raw(st.secrets["GID_MATCHES"])
     match_choice = st.selectbox("Match", df["Match"])
 
     df_sort = df[df["Match"] == match_choice]
@@ -80,13 +87,9 @@ def main():
         ).lower()
 
     if groupFilters:
-        filter_cols = st.secrets["FILTER_COLS"]
+        filter_cols = filters
     else:
-        filter_cols = [
-            col
-            for col in df.columns
-            if col.startswith(tuple(st.secrets["STAT_SECTIONS"]))
-        ]
+        filter_cols = [col for col in df.columns if col.startswith(tuple(sections))]
 
     match_filters = col2.multiselect(
         "Match Types:", ["Prac", "Quals", "Playoffs"], default=[]

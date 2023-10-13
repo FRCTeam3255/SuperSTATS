@@ -9,11 +9,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-df = stats.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
-
-filters = st.secrets["FILTER_COLS"]
-sections = st.secrets["STAT_SECTIONS"]
-
 
 def plot_line(df, y_value, color, expand_graph):
     if expand_graph:
@@ -31,6 +26,14 @@ def plot_line(df, y_value, color, expand_graph):
 
 def main():
     stats.set_font()
+
+    df = stats.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
+
+    sections = stats.get_match_sections(df)
+    # filters = []
+    # for section in sections:
+    #     filters.append(section.title())
+    filters = sections
 
     st.title(f"📈 Team Matches 📉")
 

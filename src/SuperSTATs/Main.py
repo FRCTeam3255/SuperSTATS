@@ -47,6 +47,20 @@ def download_team_info():
     return local_team_info_dict
 
 
+def get_match_sections(df):
+    filtered_columns = []
+    for column in df.columns:
+        if any(c.isdigit() for c in column.split("_")[-1]):
+            filtered_columns.append(column)
+
+    sections = []
+    for column in filtered_columns:
+        column = column.split("_")[0]
+        sections.append(column)
+
+    return list(set(sections))
+
+
 def set_font():
     streamlit_style = """
             <style>
