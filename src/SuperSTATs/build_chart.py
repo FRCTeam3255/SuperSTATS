@@ -54,12 +54,7 @@ def config_chart(df, column, agg, hide_picked, match_filters):
     return calc_chart
 
 
-def custom_bar_chart(data, hide_teams, wide_chart, height):
-    if wide_chart:
-        width = 700
-    else:
-        width = 350
-
+def custom_bar_chart(data, hide_teams):
     if hide_teams:
         tooltip = ["value:Q", "variable:N"]
     else:
@@ -81,7 +76,6 @@ def custom_bar_chart(data, hide_teams, wide_chart, height):
             ),
             tooltip=tooltip,
         )
-        .properties(width=width, height=height)
     )
 
     return chart

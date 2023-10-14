@@ -98,7 +98,7 @@ def main():
     st.markdown(
         """
         <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-            <a href="https://forms.gle/xRQNfLQLkCRB5rXZ6" style="color: #0070E0; font-size: 25px;">Stats Input Form</a>
+            <a href="https://www.supernurds.com/statsinput" style="color: #0070E0; font-size: 25px;">Stats Input Form</a>
         </div>
         """,
         unsafe_allow_html=True,

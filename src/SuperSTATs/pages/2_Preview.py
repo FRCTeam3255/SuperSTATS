@@ -27,9 +27,7 @@ def gen_team_chart(df, column, team_df, agg_type, filter_cols, match_filters):
                 match_filters,
             ),
             False,
-            False,
-            300,
-        )
+        ),
     )
 
 

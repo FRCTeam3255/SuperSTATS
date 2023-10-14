@@ -6,6 +6,7 @@ st.set_page_config(
     page_title="[STATS] SN Stats",
     page_icon="🤖",
     initial_sidebar_state="expanded",
+    layout="wide",
 )
 
 df = stats.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
@@ -77,9 +78,8 @@ def main():
                     df, selected_filters, agg_type, hide_picked, match_filters
                 ),
                 hide_teams,
-                wide_chart,
-                1500,
-            )
+            ),
+            use_container_width=True,
         )
     else:
         st.error("Please select at least one filter")
