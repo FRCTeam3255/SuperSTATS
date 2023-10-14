@@ -72,7 +72,9 @@ def custom_bar_chart(data, hide_teams):
                 axis=alt.Axis(labels=not hide_teams),
             ),
             color=alt.Color(
-                "variable:N", title=" ", legend=alt.Legend(title=None, orient="top")
+                "variable:N",
+                title=" ",
+                legend=alt.Legend(title=None, orient="top", symbolType="circle"),
             ),
             tooltip=tooltip,
         )
