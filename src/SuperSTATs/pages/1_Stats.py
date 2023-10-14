@@ -48,7 +48,11 @@ def main():
 
         filter_cols = [col for col in df.columns if col.startswith(tuple(sections))]
 
-        sort_type = st.radio("Sorting Type:", ["NONE"] + sections, horizontal=True)
+        # TODO: Make the sorting types in numerical order for sorting
+        # sort_type = st.radio("Sorting Type:", ["NONE"] + sections, horizontal=True)
+        sort_type = st.radio(
+            "Sorting Type:", ["NONE", "AUTO", "TELE", "END"], horizontal=True
+        )
 
         if sort_type == "NONE":
             filter_cols = [col for col in df.columns if col.startswith(tuple(sections))]
