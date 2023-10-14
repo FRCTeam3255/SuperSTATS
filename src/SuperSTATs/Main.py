@@ -31,7 +31,13 @@ def build_sheet_url(url):
 
 def download_sheets_raw(gid):
     url = f"https://docs.google.com/spreadsheets/d/{st.secrets['GSHEET_DOC_ID']}/edit#gid={gid}"
-    return pd.read_csv(build_sheet_url(url))
+    df = pd.read_csv(build_sheet_url(url))
+    df.columns = (
+        df.columns.str.lstrip()
+        .str.replace("[", repl="", regex=False)
+        .str.replace("]", repl="", regex=False)
+    )
+    return df
 
 
 def get_team(team):
