@@ -30,10 +30,6 @@ def main():
     df = stats.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
 
     sections = stats.get_match_sections(df)
-    # filters = []
-    # for section in sections:
-    #     filters.append(section.title())
-    filters = sections
 
     st.title(f"📈 Team Matches 📉")
 
@@ -54,7 +50,7 @@ def main():
     df_plot = df.loc[(df["Team"] == team_num)]
 
     mask = df.columns == "Match"
-    for section, filter_col in zip(sections, filters):
+    for section in sections:
         mask = mask | df.columns.str.startswith(f"{section}_")
 
     df_plot = df_plot.loc[:, mask]

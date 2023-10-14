@@ -58,7 +58,7 @@ def get_match_sections(df):
         column = column.split("_")[0]
         sections.append(column)
 
-    return list(set(sections))
+    return sorted(list(set(sections)))
 
 
 def set_font():

@@ -13,10 +13,13 @@ df_picked = stats.download_sheets_raw(st.secrets["GID_PICKED"])
 df = df.merge(df_picked, on="Team", how="left")
 
 sections = stats.get_match_sections(df)
-# filters = []
-# for section in sections:
-#     filters.append(section.title())
-filters = sections
+
+
+def sort_cols(starts_with):
+    filter_cols = []
+    cols = [col for col in df.columns if col.startswith(starts_with)]
+    filter_cols.extend(cols)
+    return filter_cols
 
 
 def main():
@@ -26,23 +29,31 @@ def main():
 
     col1, col2, col3, col4 = st.columns(4)
 
-    groupFilters = col1.checkbox("Group Filters", True)
+    group_filters = col1.checkbox("Group Filters", True)
     hide_teams = col3.checkbox("Hide Team Nums", False)
     hide_picked = col2.checkbox("Hide Picked", False)
     wide_chart = col4.checkbox("Wide Mode", False)
 
     col1, col2 = st.columns(2)
 
-    if groupFilters:
+    if group_filters:
         agg_type = col1.selectbox(
             "Aggregation Type:", ("Mean", "Median", "Sum")
         ).lower()
-        filter_cols = filters
+        filter_cols = sections
     else:
         agg_type = col1.selectbox(
             "Aggregation Type:", ("Mean", "Median", "Sum", "Count")
         ).lower()
+
         filter_cols = [col for col in df.columns if col.startswith(tuple(sections))]
+
+        sort_type = st.radio("Sorting Type:", ["NONE"] + sections, horizontal=True)
+
+        if sort_type == "NONE":
+            filter_cols = [col for col in df.columns if col.startswith(tuple(sections))]
+        else:
+            filter_cols = sort_cols(sort_type)
 
     match_filters = col2.multiselect(
         "Match Types:", ["Prac", "Quals", "Playoffs"], default=[]

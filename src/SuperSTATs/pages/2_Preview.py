@@ -7,10 +7,6 @@ import pandas as pd
 df_r = stats.download_sheets_raw(st.secrets["GID_RAW"])
 
 sections = stats.get_match_sections(df_r)
-# filters = []
-# for section in sections:
-#     filters.append(section.title())
-filters = sections
 
 st.set_page_config(
     page_title="[PREVIEW] SN Stats",
@@ -47,6 +43,17 @@ def display_team(team_header, column, team_df):
         )
 
 
+def sort_cols(starts_with):
+    df = stats.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
+    df_picked = stats.download_sheets_raw(st.secrets["GID_PICKED"])
+    df = df.merge(df_picked, on="Team", how="left")
+
+    filter_cols = []
+    cols = [col for col in df.columns if col.startswith(starts_with)]
+    filter_cols.extend(cols)
+    return filter_cols
+
+
 def main():
     stats.set_font()
 
@@ -77,19 +84,26 @@ def main():
 
     col1, col2, col3 = st.columns(3)
     col3.title("")
-    groupFilters = col3.checkbox("Group Filters", True)
+    group_filters = col3.checkbox("Group Filters", True)
 
-    if groupFilters:
-        agg_type = col1.selectbox("Aggregation Type", ("Mean", "Median", "Sum")).lower()
+    if group_filters:
+        agg_type = col1.selectbox(
+            "Aggregation Type:", ("Mean", "Median", "Sum")
+        ).lower()
+        filter_cols = sections
     else:
         agg_type = col1.selectbox(
-            "Aggregation Type", ("Mean", "Median", "Sum", "Count")
+            "Aggregation Type:", ("Mean", "Median", "Sum", "Count")
         ).lower()
 
-    if groupFilters:
-        filter_cols = filters
-    else:
         filter_cols = [col for col in df.columns if col.startswith(tuple(sections))]
+
+        sort_type = st.radio("Sorting Type:", ["NONE"] + sections, horizontal=True)
+
+        if sort_type == "NONE":
+            filter_cols = [col for col in df.columns if col.startswith(tuple(sections))]
+        else:
+            filter_cols = sort_cols(sort_type)
 
     match_filters = col2.multiselect(
         "Match Types:", ["Prac", "Quals", "Playoffs"], default=[]
