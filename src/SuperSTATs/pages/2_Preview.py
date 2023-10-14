@@ -35,7 +35,7 @@ def gen_team_chart(df, column, team_df, agg_type, filter_cols, match_filters):
 def display_team(team_header, column, team_df):
     column.header(team_header)
     for team_num in team_df:
-        team_name = stats.get_team(team_num)["nickname"]
+        team_name = stats.get_team(team_num).get("nickname","NA")
         column.markdown(
             f"<p style='font-size:20px'><b>[{int(team_num)}]</b> {team_name}</p>",
             unsafe_allow_html=True,
