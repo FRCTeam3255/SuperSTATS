@@ -12,7 +12,7 @@ st.set_page_config(
     page_title="[PREVIEW] SN Stats",
     page_icon="🤖",
     initial_sidebar_state="expanded",
-    menu_items={"About": "Kane Was Here 👋"},
+    layout="wide",
 )
 
 
@@ -52,10 +52,68 @@ def sort_cols(starts_with):
     return filter_cols
 
 
+def calc_score(df, team_num, sections):
+    df_plot = df.loc[(df["Team"] == team_num)]
+
+    mask = df.columns == "Match"
+    for section in sections:
+        mask = mask | df.columns.str.startswith(f"{section}_")
+
+    df_plot = df_plot.loc[:, mask]
+
+    df_split = []
+    for list in df.columns.str.split("_"):
+        if len(list) > 1:
+            df_split.append(list)
+
+    points = {}
+    for value in df_split:
+        points.update({f"{value[0]}_{value[1]}_{value[2]}": int(value[2])})
+
+    for col, point in points.items():
+        if col in df_plot.columns:
+            df_plot[col] *= point
+
+    for score_type in sections:
+        columns = [col for col in df_plot.columns if col.startswith(score_type)]
+        df_plot[f"{score_type.strip('_').title()} Score"] = df_plot[columns].sum(axis=1)
+
+    excluded_cols = ["Match"]
+    sum_cols = [f"{section.title()} Score" for section in sections]
+    all_columns = excluded_cols + sum_cols
+
+    df_plot["Total Score"] = df_plot.drop(columns=all_columns, axis=1).sum(axis=1)
+
+    return df_plot
+
+
+import numpy as np
+
+
+def team_score(df, team_df):
+    team_scores = []
+    for team in team_df:
+        scores = calc_score(df, team, sections)["Total Score"]
+        if not np.isnan(scores.mean()):
+            team_scores.append(scores.mean())
+
+    if not team_scores:
+        return "None"
+
+    if len(team_scores) < 3:
+        team_sum = sum(team_scores)
+        return f"{str(int(team_sum))} *"
+    else:
+        return str(int(sum(team_scores)))
+
+
 def main():
     stats.set_font()
 
-    st.header("🔮 Match Preview 🔮")
+    st.markdown(
+        "<h1 style='text-align: center;'>🔮 Match Preview 🔮</h1>", unsafe_allow_html=True
+    )
+    st.title("")
 
     teams = {}
     teams_raw = list(st.session_state.team_info_dict.items())
@@ -63,7 +121,7 @@ def main():
         teams[team[1]] = int(team[0])
 
     df = stats.download_sheets_raw(st.secrets["GID_MATCHES"])
-    match_choice = st.selectbox("Match", df["Match"])
+    match_choice = st.selectbox("Match:", df["Match"])
 
     df_sort = df[df["Match"] == match_choice]
     df_sort = df_sort.set_index("Match").transpose()
@@ -79,6 +137,10 @@ def main():
     df = stats.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
     df_picked = stats.download_sheets_raw(st.secrets["GID_PICKED"])
     df = df.merge(df_picked, on="Team", how="left")
+
+    df_raw = stats.download_sheets_raw(st.secrets["GID_RAW"])
+    col_red.subheader(f"Projected Score: {team_score(df_raw, df_red)}")
+    col_blue.subheader(f"Projected Score: {team_score(df_raw, df_blue)}")
 
     col1, col2, col3 = st.columns(3)
     col3.title("")
@@ -118,6 +180,8 @@ def main():
 
     gen_team_chart(df, col_red, df_red, agg_type, selected_filters, match_filters)
     gen_team_chart(df, col_blue, df_blue, agg_type, selected_filters, match_filters)
+
+    st.text("✱ - one or more teams has no stats")
 
 
 if __name__ == "__main__":

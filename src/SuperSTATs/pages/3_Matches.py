@@ -7,20 +7,15 @@ st.set_page_config(
     page_title="[MATCHES] SN Stats",
     page_icon="🤖",
     initial_sidebar_state="expanded",
+    layout="wide",
 )
 
 
-def plot_line(df, y_value, color, expand_graph):
-    if expand_graph:
-        size = 700
-    else:
-        size = 350
-
+def plot_line(df, y_value, color):
     return (
         alt.Chart(df)
         .mark_line()
         .encode(x="Match", y=alt.Y(y_value, title="Score"), color=alt.value(color))
-        .properties(width=size, height=size)
     )
 
 
@@ -31,7 +26,10 @@ def main():
 
     sections = stats.get_match_sections(df)
 
-    st.title(f"📈 Team Matches 📉")
+    st.markdown(
+        "<h1 style='text-align: center;'>📈 Team Matches 📉</h1>", unsafe_allow_html=True
+    )
+    st.title("")
 
     teams = {}
     teams_raw = st.session_state.team_info_dict.items()
@@ -44,7 +42,7 @@ def main():
     ]
 
     col1, col2 = st.columns(2)
-    selected_team = col1.selectbox("Select Team:", sorted(team_options))
+    selected_team = col2.selectbox("Select Team:", sorted(team_options))
     team_num = int(selected_team.split(" | ")[1])
 
     df_plot = df.loc[(df["Team"] == team_num)]
@@ -80,21 +78,17 @@ def main():
 
     df_plot = df_plot.reset_index(drop=True)
 
-    col2.header("")
-    expand_graph = col2.checkbox("Expand Graph", False)
-    selected_filters = st.multiselect("Filters:", sections, default=sections)
+    selected_filters = col1.multiselect("Filters:", sections, default=sections)
 
-    line_chart = plot_line(df_plot, "Total Score", "red", expand_graph).properties(
+    line_chart = plot_line(df_plot, "Total Score", "red").properties(
         title=str(selected_team)
     )
 
     colors = iter(st.secrets["LINE_CHART_COLORS"])
     for stage in selected_filters:
-        line_chart += plot_line(
-            df_plot, f"{stage.title()} Score", next(colors), expand_graph
-        )
+        line_chart += plot_line(df_plot, f"{stage.title()} Score", next(colors))
 
-    st.altair_chart(line_chart)
+    st.altair_chart(line_chart, use_container_width=True)
 
     st.title("")
     show_raw = st.checkbox("Show Raw Data")

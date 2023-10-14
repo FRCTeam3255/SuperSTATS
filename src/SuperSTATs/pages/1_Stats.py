@@ -7,6 +7,7 @@ st.set_page_config(
     page_icon="🤖",
     initial_sidebar_state="expanded",
     layout="wide",
+    menu_items={"About": "Errorz Was Here 👋"},
 )
 
 df = stats.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
@@ -26,14 +27,16 @@ def sort_cols(starts_with):
 def main():
     stats.set_font()
 
-    st.header("🏆 NURD Stats 🏆")
+    st.markdown(
+        "<h1 style='text-align: center;'>🏆 NURD Stats 🏆</h1>", unsafe_allow_html=True
+    )
+    st.title("")
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns(3)
 
     group_filters = col1.checkbox("Group Filters", True)
-    hide_teams = col3.checkbox("Hide Team Nums", False)
-    hide_picked = col2.checkbox("Hide Picked", False)
-    wide_chart = col4.checkbox("Wide Mode", False)
+    hide_picked = col2.checkbox("Hide Picked Teams", False)
+    hide_teams = col3.checkbox("Hide Team Numbers", False)
 
     col1, col2 = st.columns(2)
 
