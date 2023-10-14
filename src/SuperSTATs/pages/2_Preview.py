@@ -3,10 +3,7 @@ import SuperSTATs.Main as stats
 import streamlit as st
 import altair as alt
 import pandas as pd
-
-df_r = stats.download_sheets_raw(st.secrets["GID_RAW"])
-
-sections = stats.get_match_sections(df_r)
+import numpy as np
 
 st.set_page_config(
     page_title="[PREVIEW] SN Stats",
@@ -14,6 +11,10 @@ st.set_page_config(
     initial_sidebar_state="expanded",
     layout="wide",
 )
+
+df_r = stats.download_sheets_raw(st.secrets["GID_RAW"])
+
+sections = stats.get_match_sections(df_r)
 
 
 def gen_team_chart(df, column, team_df, agg_type, filter_cols, match_filters):
@@ -36,7 +37,7 @@ def display_team(team_header, column, team_df):
     for team_num in team_df:
         team_name = stats.get_team(team_num)["nickname"]
         column.markdown(
-            f"<p style='font-size:20px'><b>[{team_num}]</b> {team_name}</p>",
+            f"<p style='font-size:20px'><b>[{int(team_num)}]</b> {team_name}</p>",
             unsafe_allow_html=True,
         )
 
@@ -85,9 +86,6 @@ def calc_score(df, team_num, sections):
     df_plot["Total Score"] = df_plot.drop(columns=all_columns, axis=1).sum(axis=1)
 
     return df_plot
-
-
-import numpy as np
 
 
 def team_score(df, team_df):

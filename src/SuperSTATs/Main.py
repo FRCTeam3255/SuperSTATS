@@ -49,7 +49,7 @@ def download_team_info():
     df = download_sheets_raw(st.secrets["GID_RAW"])
     local_team_info_dict = {}
     for team in df["Team"].unique():
-        local_team_info_dict[team] = get_team(team)["nickname"]
+        local_team_info_dict[team] = get_team(team).get("nickname", "NA")
     return local_team_info_dict
 
 
@@ -99,6 +99,15 @@ def main():
         """
         <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
             <a href="https://www.supernurds.com/statsinput" style="color: #0070E0; font-size: 25px;">Stats Input Form</a>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        """
+        <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+            <a href="https://docs.google.com/forms/d/1P32axMIgTIkHJUZuP4BPpiVX1-CMNHobgsAW-aZkse4" style="color: #0070E0; font-size: 25px;">Scouting Form</a>
         </div>
         """,
         unsafe_allow_html=True,
