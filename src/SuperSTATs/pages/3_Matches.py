@@ -94,7 +94,7 @@ def main():
     show_raw = st.checkbox("Show Raw Data")
     if show_raw:
         st.subheader(f"Raw Data For Team {team_num}")
-        st.table(df_plot)
+        st.table(df.loc[(df["Team"] == team_num)])
 
 
 if __name__ == "__main__":
