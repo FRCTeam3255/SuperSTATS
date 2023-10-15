@@ -49,7 +49,7 @@ def download_team_info():
     df = download_sheets_raw(st.secrets["GID_RAW"])
     local_team_info_dict = {}
     for team in df["Team"].unique():
-        local_team_info_dict[team] = get_team(team).get("nickname", "NA")
+        local_team_info_dict[team] = get_team(team).get("nickname", "N/A")
     return local_team_info_dict
 
 
