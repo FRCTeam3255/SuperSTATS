@@ -1,6 +1,7 @@
 import SuperSTATs.build_chart as build
 import SuperSTATs.Main as stats
 import streamlit as st
+import numpy as np
 
 st.set_page_config(
     page_title="[SCOUT] SN Stats",
@@ -12,6 +13,14 @@ st.set_page_config(
 df_r = stats.download_sheets_raw(st.secrets["GID_RAW"])
 
 sections = stats.get_match_sections(df_r)
+
+
+def check_nan(var_name, var_value):
+    try:
+        if np.isnan(var_value):
+            st.subheader(f"{var_name}: No Data Collected")
+    except:
+        st.subheader(f"{var_name}: {var_value}")
 
 
 def main():
@@ -40,30 +49,37 @@ def main():
     team_name = str(selected_team.split(" | ")[0])
     team_num = int(selected_team.split(" | ")[1])
 
-    sorted_df = df.loc[df['Team #'] == team_num]
+    sorted_df = df.loc[df["Team #"] == team_num]
 
     sorted_df = sorted_df.sort_values(by="Timestamp")
     sorted_df = sorted_df.drop_duplicates(keep="last", subset="Team #")
 
     st.title(f"Team: {team_name} | {team_num}")
 
-    try:
-        frame_length = int(sorted_df["Frame Size LENGTH"])
-        frame_width = int(sorted_df["Frame Size WIDTH"])
-        st.subheader(f"Length: {frame_length} in | Width: {frame_width} in | Area: {frame_length * frame_width} in²")
+    time_logged = str(sorted_df["Timestamp"].max())
+    if time_logged == "nan":
+        st.error("No Data Collected For Team")
 
-        weight = int(sorted_df["Weight"])
-        st.subheader(f"Weight: {weight} lbs")
-        
-        drivetrain = str(sorted_df["Drivetrain Type"].max())
-        st.subheader(f"Drivetrain: {drivetrain}")
+    else:
+        length = sorted_df["Frame Size LENGTH"].max()
+        width = sorted_df["Frame Size WIDTH"].max()
+        st.subheader(f"Length: {length} in | Width: {width} in")
+        st.subheader(f"Area: {length * width} in²")
 
-        time_logged = str(sorted_df["Timestamp"].max())
+        check_nan("Drivetrain", sorted_df["Drivetrain Type"].max())
+        check_nan("Feeders", sorted_df["Which feeder does your robot go to"].max())
+        check_nan("Scouting Comments", sorted_df["Comments"].max())
+
+        df_raw = stats.download_sheets_raw(st.secrets["GID_RAW"]).dropna(
+            subset="Timestamp"
+        )
+        # match_comments = "[Work in Progress]"
+        # check_nan("Match Comments", match_comments)
+
         st.text(f"Time Logged: {time_logged}")
 
         st.button("Reload Values")
-    except:
-        st.error("No Data Collected For This Team")
+
 
 if __name__ == "__main__":
     main()

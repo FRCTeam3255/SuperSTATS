@@ -98,15 +98,8 @@ def main():
     st.markdown(
         """
         <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+            <a href="https://docs.google.com/spreadsheets/d/1KboyFTIZJiIW_33Z9_ea8jtYkV3T-fuS659ezwsXYmY/edit#gid=1878511843" style="color: #0070E0; font-size: 25px;">Raw Data Sheet</a>
             <a href="https://www.supernurds.com/statsinput" style="color: #0070E0; font-size: 25px;">Stats Input Form</a>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(
-        """
-        <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
             <a href="https://docs.google.com/forms/d/1P32axMIgTIkHJUZuP4BPpiVX1-CMNHobgsAW-aZkse4" style="color: #0070E0; font-size: 25px;">Scouting Form</a>
         </div>
         """,
