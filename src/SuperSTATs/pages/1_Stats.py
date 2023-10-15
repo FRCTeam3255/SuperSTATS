@@ -64,7 +64,7 @@ def main():
             filter_cols = sort_cols(sort_type)
 
     match_filters = col2.multiselect(
-        "Match Types:", ["Prac", "Quals", "Playoffs"], default=[]
+        "Match Types:", ["Prac", "Quals", "Playoffs"], default=["Quals", "Playoffs"]
     )
 
     if match_filters:
