@@ -87,6 +87,8 @@ def main():
     else:
         st.error("Please select at least one filter")
 
+    st.button("Reload Chart", use_container_width=True)
+
 
 if __name__ == "__main__":
     main()
