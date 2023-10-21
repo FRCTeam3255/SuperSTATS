@@ -1,8 +1,6 @@
 import SuperSTATs.build_chart as build
-import SuperSTATs.Main as stats
+import SuperSTATs.loader as load
 import streamlit as st
-import altair as alt
-import pandas as pd
 import numpy as np
 
 st.set_page_config(
@@ -12,9 +10,9 @@ st.set_page_config(
     layout="wide",
 )
 
-df_r = stats.download_sheets_raw(st.secrets["GID_RAW"])
+df_r = load.download_sheets_raw(st.secrets["GID_RAW"])
 
-sections = stats.get_match_sections(df_r)
+sections = load.get_match_sections(df_r)
 
 
 def gen_team_chart(df, column, team_df, agg_type, filter_cols, match_filters):
@@ -35,7 +33,7 @@ def gen_team_chart(df, column, team_df, agg_type, filter_cols, match_filters):
 def display_team(team_header, column, team_df):
     column.header(team_header)
     for team_num in team_df:
-        team_name = stats.get_team(team_num).get("nickname", "N/A")
+        team_name = load.get_team(team_num).get("nickname", "N/A")
         column.markdown(
             f"<p style='font-size:20px'><b>[{int(team_num)}]</b> {team_name}</p>",
             unsafe_allow_html=True,
@@ -43,8 +41,8 @@ def display_team(team_header, column, team_df):
 
 
 def sort_cols(starts_with):
-    df = stats.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
-    df_picked = stats.download_sheets_raw(st.secrets["GID_PICKED"])
+    df = load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
+    df_picked = load.download_sheets_raw(st.secrets["GID_PICKED"])
     df = df.merge(df_picked, on="Team", how="left")
 
     filter_cols = []
@@ -106,7 +104,7 @@ def team_score(df, team_df):
 
 
 def main():
-    stats.init_page()
+    load.init_page()
 
     st.markdown(
         "<h1 style='text-align: center;'>🔮 Match Preview 🔮</h1>", unsafe_allow_html=True
@@ -118,7 +116,7 @@ def main():
     for team in teams_raw:
         teams[team[1]] = int(team[0])
 
-    df = stats.download_sheets_raw(st.secrets["GID_MATCHES"])
+    df = load.download_sheets_raw(st.secrets["GID_MATCHES"])
     match_choice = st.selectbox("Match:", df["Match"])
 
     df_sort = df[df["Match"] == match_choice]
@@ -132,11 +130,11 @@ def main():
     display_team("🔴 Red Alliance 🔴", col_red, df_red)
     display_team("🔵 Blue Alliance 🔵", col_blue, df_blue)
 
-    df = stats.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
-    df_picked = stats.download_sheets_raw(st.secrets["GID_PICKED"])
+    df = load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
+    df_picked = load.download_sheets_raw(st.secrets["GID_PICKED"])
     df = df.merge(df_picked, on="Team", how="left")
 
-    df_raw = stats.download_sheets_raw(st.secrets["GID_RAW"])
+    df_raw = load.download_sheets_raw(st.secrets["GID_RAW"])
     col_red.subheader(f"Projected Score: {team_score(df_raw, df_red)}")
     col_blue.subheader(f"Projected Score: {team_score(df_raw, df_blue)}")
 

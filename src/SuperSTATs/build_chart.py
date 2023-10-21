@@ -1,13 +1,16 @@
-import SuperSTATs.Main as stats
+import SuperSTATs.loader as load
 import streamlit as st
 import altair as alt
 import pandas as pd
 
-df = stats.download_sheets_raw(st.secrets["GID_RAW"])
-sections = stats.get_match_sections(df)
+
+df = load.download_sheets_raw(st.secrets["GID_RAW"])
+sections = load.get_match_sections(df)
 filters = []
 for section in sections:
     filters.append(section)
+
+pd.options.mode.chained_assignment = None
 
 
 def add_cols(org_df, reg, filter):
@@ -31,7 +34,7 @@ def config_chart(df, column, agg, hide_picked, match_filters):
         df[f"{col}_{point}"] *= point
 
     for i in range(len(filters)):
-        df[filters[i]] = add_cols(
+        df.loc[:, filters[i]] = add_cols(
             df,
             f"{sections[i]}_",
             filters[i],

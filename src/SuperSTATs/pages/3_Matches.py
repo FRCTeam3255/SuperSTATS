@@ -1,5 +1,5 @@
 import SuperSTATs.build_chart as build
-import SuperSTATs.Main as stats
+import SuperSTATs.loader as load
 import streamlit as st
 import altair as alt
 
@@ -20,11 +20,11 @@ def plot_line(df, y_value, color):
 
 
 def main():
-    stats.init_page()
+    load.init_page()
 
-    df = stats.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
+    df = load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
 
-    sections = stats.get_match_sections(df)
+    sections = load.get_match_sections(df)
 
     st.markdown(
         "<h1 style='text-align: center;'>📈 Team Matches 📉</h1>", unsafe_allow_html=True

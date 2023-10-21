@@ -1,5 +1,5 @@
 import SuperSTATs.build_chart as build
-import SuperSTATs.Main as stats
+import SuperSTATs.loader as load
 import streamlit as st
 
 st.set_page_config(
@@ -10,11 +10,11 @@ st.set_page_config(
     menu_items={"About": "Errorz Was Here 👋"},
 )
 
-df = stats.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
-df_picked = stats.download_sheets_raw(st.secrets["GID_PICKED"])
+df = load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
+df_picked = load.download_sheets_raw(st.secrets["GID_PICKED"])
 df = df.merge(df_picked, on="Team", how="left")
 
-sections = stats.get_match_sections(df)
+sections = load.get_match_sections(df)
 
 
 def sort_cols(starts_with):
@@ -25,7 +25,7 @@ def sort_cols(starts_with):
 
 
 def main():
-    stats.init_page()
+    load.init_page()
 
     st.markdown(
         "<h1 style='text-align: center;'>🏆 NURD Stats 🏆</h1>", unsafe_allow_html=True

@@ -1,4 +1,4 @@
-import SuperSTATs.Main as stats
+import SuperSTATs.loader as load
 import streamlit as st
 
 st.set_page_config(
@@ -16,7 +16,7 @@ def num_input(column, label, min_value, max_value, default_index):
 
 
 def main():
-    stats.init_page()
+    load.init_page()
 
     st.markdown(
         "<h1 style='text-align: center;'>✏️ Stats Input ✏️</h1>", unsafe_allow_html=True
@@ -29,7 +29,7 @@ def main():
     for team in teams_raw:
         teams[team[1]] = int(team[0])
 
-    df = stats.download_sheets_raw(st.secrets["GID_MATCHES"])
+    df = load.download_sheets_raw(st.secrets["GID_MATCHES"])
 
     with st.form("Stats Input", clear_on_submit=True):
         selection_col_1, selection_col_2 = st.columns(2)
