@@ -16,6 +16,7 @@ sections = load.get_match_sections(df_r)
 
 
 def gen_team_chart(df, column, team_df, agg_type, filter_cols, match_filters):
+    team_df = [int(team) for team in team_df]
     column.altair_chart(
         build.custom_bar_chart(
             build.config_chart(
@@ -87,6 +88,7 @@ def calc_score(df, team_num, sections):
 
 
 def team_score(df, team_df):
+    team_df = [int(team) for team in team_df]
     team_scores = []
     for team in team_df:
         scores = calc_score(df, team, sections)["Total Score"]
@@ -116,7 +118,11 @@ def main():
     for team in teams_raw:
         teams[team[1]] = int(team[0])
 
-    df = load.download_sheets_raw(st.secrets["GID_MATCHES"])
+    if st.checkbox("Use Manual Dataframe"):
+        df = load.download_sheets_raw(st.secrets["GID_MATCHES"])
+    else:
+        df = st.session_state.global_match_df
+
     match_choice = st.selectbox("Match:", df["Match"])
 
     df_sort = df[df["Match"] == match_choice]
@@ -154,7 +160,6 @@ def main():
 
         filter_cols = [col for col in df.columns if col.startswith(tuple(sections))]
 
-        # sort_type = st.radio("Sorting Type:", ["NONE"] + sections, horizontal=True)
         sort_type = st.radio(
             "Sorting Type:", ["NONE", "AUTO", "TELE", "END"], horizontal=True
         )
@@ -164,7 +169,10 @@ def main():
             filter_cols = sort_cols(sort_type)
 
     match_filters = col2.multiselect(
-        "Match Types:", ["Prac", "Quals", "Playoffs"], default=["Quals", "Playoffs"]
+        # "Match Types:", ["Prac", "Quals", "Playoffs"], default=["Quals", "Playoffs"]
+        "Match Types:",
+        ["Prac", "Quals", "Playoffs"],
+        default=["Quals"],
     )
 
     if match_filters:

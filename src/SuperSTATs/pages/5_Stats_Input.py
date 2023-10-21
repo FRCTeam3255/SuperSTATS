@@ -29,49 +29,42 @@ def main():
     for team in teams_raw:
         teams[team[1]] = int(team[0])
 
-    df = load.download_sheets_raw(st.secrets["GID_MATCHES"])
+    # df = load.download_sheets_raw(st.secrets["GID_MATCHES"])
+    df = st.session_state.global_match_df
+
+    selection_col_1, selection_col_2 = st.columns(2)
+
+    name_input = selection_col_1.text_input("Your Name:", max_chars=2)
+    match_choice = selection_col_2.selectbox("Match:", df["Match"])
+
+    df_sort = df[df["Match"] == match_choice]
+    df_sort = df_sort.set_index("Match").transpose()
+
+    df_red = df_sort.filter(like="Red", axis=0)[match_choice].to_list()
+    df_blue = df_sort.filter(like="Blue", axis=0)[match_choice].to_list()
+
+    df_red = [int(value) for value in df_red]
+    df_blue = [int(value) for value in df_blue]
+
+    team_color = selection_col_1.radio("Team Color:", ["Red", "Blue"], horizontal=True)
+
+    if team_color == "Red":
+        selected_team = selection_col_2.radio("Team Choice:", df_red, horizontal=True)
+        color_input = "R"
+
+    if team_color == "Blue":
+        selected_team = selection_col_2.radio("Team Choice:", df_blue, horizontal=True)
+        color_input = "B"
+
+    match_split = match_choice.split(" ")
+    match_type_input = match_split[0]
+    if match_type_input == "Playoff":
+        match_type_input = "Playoffs"
+    match_input = match_split[1]
+
+    team_input = selected_team
 
     with st.form("Stats Input", clear_on_submit=True):
-        selection_col_1, selection_col_2 = st.columns(2)
-
-        name_input = selection_col_1.text_input("Your Name:", max_chars=2)
-        match_choice = selection_col_2.selectbox("Match:", df["Match"])
-
-        df_sort = df[df["Match"] == match_choice]
-        df_sort = df_sort.set_index("Match").transpose()
-
-        df_red = df_sort.filter(like="Red", axis=0)[match_choice].to_list()
-        df_blue = df_sort.filter(like="Blue", axis=0)[match_choice].to_list()
-
-        df_red = [int(value) for value in df_red]
-        df_blue = [int(value) for value in df_blue]
-
-        team_color = selection_col_1.radio(
-            "Team Color:", ["Red", "Blue"], horizontal=True
-        )
-
-        if team_color == "Red":
-            selected_team = selection_col_2.radio(
-                "Team Choice:", df_red, horizontal=True
-            )
-            color_input = "R"
-
-        if team_color == "Blue":
-            selected_team = selection_col_2.radio(
-                "Team Choice:", df_blue, horizontal=True
-            )
-            color_input = "B"
-
-        match_split = match_choice.split(" ")
-        match_type_input = match_split[0]
-        if match_type_input == "Playoff":
-            match_type_input = "Playoffs"
-        match_input = match_split[1]
-
-        team_input = selected_team
-
-        st.markdown("""---""")
-
         auto_mobility_input = int(st.checkbox("AUTO_MOBILITY_3"))
 
         auto_col_1, auto_col_2 = st.columns(2)
@@ -136,7 +129,12 @@ def main():
         prefill_url = f"https://docs.google.com/forms/d/e/1FAIpQLSeZ0snvF5GZixUzFuiDfGsifffaRJxwuQyszizAdKjR1apMLA/viewform?usp=pp_url&entry.398002633={name_input}&entry.311722203={match_input}&entry.1823404922={match_type_input}&entry.432823991={color_input}&entry.1873738734={team_input}&entry.2015525146={info_penalty_input}&entry.250579147=-{info_brick_input}&entry.268050731={auto_mobility_input}&entry.542386964={auto_low_input}&entry.530845045={auto_cone_mid_input}&entry.2086503014={auto_cube_mid_input}&entry.1207232700={auto_cone_high_input}&entry.1008310587={auto_cube_high_input}&entry.2083103665={auto_docked_input}&entry.829803960={auto_engaged_input}&entry.1796811601={tele_low_input}&entry.837438137={tele_cone_mid_input}&entry.263379052={tele_cube_mid_input}&entry.597282987={tele_cone_high_input}&entry.2060882466={tele_cube_high_input}&entry.1349917441={end_parked_input}&entry.167115309={end_docked_input}&entry.1695411443={end_engaged_input}&entry.619894282={comments_input}&entry.107629913={comment_notes_input}&entry.629905259={comment_defense_input}"
 
         st.balloons()
-        st.link_button("Link", prefill_url, type="primary", use_container_width=True)
+        st.link_button(
+            "Go To Prefilled Form",
+            prefill_url,
+            type="primary",
+            use_container_width=True,
+        )
 
     # prefill_url = f"https://docs.google.com/forms/d/e/1FAIpQLSeZ0snvF5GZixUzFuiDfGsifffaRJxwuQyszizAdKjR1apMLA/viewform?usp=pp_url&entry.398002633=0&entry.311722203=0&entry.1823404922=Prac&entry.432823991=R&entry.1873738734=0&entry.2015525146=-1&entry.250579147=-1&entry.268050731=1&entry.542386964=1&entry.530845045=1&entry.2086503014=1&entry.1207232700=1&entry.1008310587=1&entry.2083103665=1&entry.1796811601=1&entry.837438137=1&entry.263379052=1&entry.597282987=1&entry.2060882466=1&entry.1349917441=1&entry.619894282=NONE&entry.107629913=-1&entry.629905259=1"
 
