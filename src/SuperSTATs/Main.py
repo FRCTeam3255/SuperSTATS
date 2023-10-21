@@ -3,18 +3,6 @@ import streamlit as st
 import pandas as pd
 import tbapy
 
-
-# [NOTE]
-# from SuperSTATs.app import *
-# df = load.download_sheets_raw("st.secrets['GID_RAW']")
-# df = df.dropna(subset="Timestamp")
-# df.loc[(df["Team"]==3255) | (df["Team"]==254)]
-# df.loc[df["Team"]==3255].sum(numeric_only=True)
-# df.groupby("Team").sum(numeric_only=True)
-# df.sort_values("match", ascending=False)
-# df = df.drop(columns=df.filter(regex=".1").columns)
-# df.filter(regex="Auto").sum(axis=1)
-
 st.set_page_config(
     page_title="SN Stats",
     page_icon="🤖",
@@ -27,8 +15,6 @@ tba = tbapy.TBA(st.secrets["TBA_API"])
 
 def main():
     load.init_page()
-
-    # main_title = st.empty()
 
     st.markdown(
         "<div style='display: flex; justify-content: center; font-size: 40px;'><b>🤖 SuperSTATs 🤖</b></div>",
