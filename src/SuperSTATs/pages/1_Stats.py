@@ -25,7 +25,7 @@ def sort_cols(starts_with):
 
 
 def main():
-    stats.set_font()
+    stats.init_page()
 
     st.markdown(
         "<h1 style='text-align: center;'>🏆 NURD Stats 🏆</h1>", unsafe_allow_html=True

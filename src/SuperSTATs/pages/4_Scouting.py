@@ -16,7 +16,7 @@ sections = stats.get_match_sections(df_r)
 
 
 def main():
-    stats.set_font()
+    stats.init_page()
 
     df = stats.download_sheets_raw(st.secrets["GID_SCOUTING"]).dropna(
         subset="Timestamp"

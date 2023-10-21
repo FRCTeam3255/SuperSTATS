@@ -16,7 +16,7 @@ def num_input(column, label, min_value, max_value, default_index):
 
 
 def main():
-    stats.set_font()
+    stats.init_page()
 
     st.markdown(
         "<h1 style='text-align: center;'>✏️ Stats Input ✏️</h1>", unsafe_allow_html=True

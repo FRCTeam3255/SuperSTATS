@@ -20,7 +20,7 @@ def plot_line(df, y_value, color):
 
 
 def main():
-    stats.set_font()
+    stats.init_page()
 
     df = stats.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
 

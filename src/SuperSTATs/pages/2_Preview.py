@@ -106,7 +106,7 @@ def team_score(df, team_df):
 
 
 def main():
-    stats.set_font()
+    stats.init_page()
 
     st.markdown(
         "<h1 style='text-align: center;'>🔮 Match Preview 🔮</h1>", unsafe_allow_html=True

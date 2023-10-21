@@ -67,28 +67,20 @@ def get_match_sections(df):
     return sorted(list(set(sections)))
 
 
-def set_font():
-    streamlit_style = """
-            <style>
-            @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100&display=swap');
-
-            html, body, [class*="css"]  {
-            font-family: 'Roboto', sans-serif;
-            }
-            </style>
-            """
-    st.markdown(streamlit_style, unsafe_allow_html=True)
+def init_page():
+    if "team_info_dict" not in st.session_state:
+        st.session_state.team_info_dict = download_team_info()
 
 
 def main():
-    set_font()
+    init_page()
 
     main_title = st.empty()
 
     main_title.title("INITIALIZING...")
 
-    if "team_info_dict" not in st.session_state:
-        st.session_state.team_info_dict = download_team_info()
+    # if "team_info_dict" not in st.session_state:
+    #     st.session_state.team_info_dict = download_team_info()
 
     main_title.markdown(
         "<div style='display: flex; justify-content: center; font-size: 40px;'><b>🤖 SuperSTATs 🤖</b></div>",
