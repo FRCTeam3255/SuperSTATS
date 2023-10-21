@@ -49,6 +49,73 @@ def get_match_sections(df):
     return sorted(list(set(sections)))
 
 
+def alter_cols(match_num):
+    return f"Quals {match_num}"
+
+
+def set_global_df():
+    with st.expander("View Keys"):
+        # chosen_event = None
+        chosen_event_key = st.secrets["DEFAULT_EVENT_KEY"]
+        year = st.number_input("Year:", min_value=0, step=1, value=2023)
+
+        # year = st.sidebar.number_input("Year:", min_value=0, step=1, value=2023)
+        # events = tba.events(int(year))
+        events = tba.events(year)
+        event_keys = {}
+
+        for event in events:
+            name = event["name"]
+            key = event["key"]
+            event_keys[name] = key
+
+        # chosen_event = st.sidebar.selectbox("Event:", event_keys.keys())
+        # chosen_event_key = event_keys[chosen_event]
+
+        # if "global_match_df" not in st.session_state:
+        #     chosen_event_key = st.secrets["DEFAULT_EVENT_KEY"]
+
+        event_matches = tba.event_matches(chosen_event_key)
+
+        quals = {}
+        for match in event_matches:
+            if match["comp_level"] == "qm":
+                red_teams = match["alliances"]["red"]["team_keys"]
+                blue_teams = match["alliances"]["blue"]["team_keys"]
+
+                red_teams = [
+                    team.replace("frc", "").replace("'", "") for team in red_teams
+                ]
+                blue_teams = [
+                    team.replace("frc", "").replace("'", "") for team in blue_teams
+                ]
+
+                quals[match["match_number"]] = {
+                    "Red 1": red_teams[0],
+                    "Red 2": red_teams[1],
+                    "Red 3": red_teams[2],
+                    "Blue 1": blue_teams[0],
+                    "Blue 2": blue_teams[1],
+                    "Blue 3": blue_teams[2],
+                }
+
+        df = pd.DataFrame(quals).T.reset_index()
+        df.columns = ["Match", "Red 1", "Red 2", "Red 3", "Blue 1", "Blue 2", "Blue 3"]
+        df = df.sort_values(by="Match").reset_index(drop=True)
+        df["Match"] = df["Match"].apply(alter_cols)
+
+        if "global_match_df" not in st.session_state:
+            st.session_state.global_match_df = df
+
+        # if st.button(f"Assign Global Dataframe: {chosen_event}", use_container_width=True):
+        #     st.session_state.global_match_df = df
+
+        for name, key in event_keys.items():
+            st.text(f"{name} : {key}")
+
+
 def init_page():
     if "team_info_dict" not in st.session_state:
         st.session_state.team_info_dict = download_team_info()
+    if "global_match_df" not in st.session_state:
+        set_global_df()
