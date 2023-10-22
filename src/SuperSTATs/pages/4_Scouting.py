@@ -10,9 +10,9 @@ st.set_page_config(
     layout="wide",
 )
 
-df_r = load.download_sheets_raw(st.secrets["GID_RAW"])
+# df_r = load.download_sheets_raw(st.secrets["GID_RAW"])
 
-sections = load.get_match_sections(df_r)
+# sections = load.get_match_sections(df_r)
 
 
 def main():
@@ -57,7 +57,7 @@ def main():
         sorted_df = sorted_df.sort_values(by="Timestamp")
         sorted_df = sorted_df.drop_duplicates(keep="last", subset="Team #")
 
-        column.title(f"Team: {team_name} | {team_num}")
+        column.title(f"Team {team_num}: {team_name}")
 
         time_logged = str(sorted_df["Timestamp"].max())
         if time_logged == "nan":
@@ -86,7 +86,20 @@ def main():
     else:
         get_team_scouting(df, st, "", check_nan, team_options)
 
-    st.button("Reload Values")
+    st.button("Reload Values", use_container_width=True)
+
+    df_raw = load.download_sheets_raw(st.secrets["GID_RAW"])
+    unique_teams = df_raw["Team"].unique()
+
+    scouted_teams = df["Team #"].unique()
+    unscouted_teams = [team for team in unique_teams if team not in scouted_teams]
+
+    with st.expander("Unscouted Teams"):
+        if not unscouted_teams:
+            st.write("All teams have scouting info!")
+        else:
+            for team in unscouted_teams:
+                st.write(f"- {team}")
 
 
 if __name__ == "__main__":
