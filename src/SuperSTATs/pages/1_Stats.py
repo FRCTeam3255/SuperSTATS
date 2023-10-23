@@ -68,22 +68,22 @@ def main():
         data = st.session_state.presets[preset_choice]
         return data[variable]
 
-    col1, col2, col3 = st.columns(3)
+    col_1, col_2, col_3 = st.columns(3)
 
     if preset_choice == "None":
-        group_filters = col1.checkbox("Group Filters", True)
-        hide_picked = col2.checkbox("Hide Picked Teams", False)
-        hide_team_nums = col3.checkbox("Hide Team Numbers", False)
+        group_filters = col_1.checkbox("Group Filters", True)
+        hide_picked = col_2.checkbox("Hide Picked Teams", False)
+        hide_team_nums = col_3.checkbox("Hide Team Numbers", False)
     else:
         group_filters = check_preset("group_filters")
         hide_picked = check_preset("hide_picked")
         hide_team_nums = check_preset("hide_team_nums")
 
-    col1, col2 = st.columns(2)
+    col_1, col_2 = st.columns(2)
 
     if group_filters:
         if preset_choice == "None":
-            agg_type = col1.selectbox(
+            agg_type = col_1.selectbox(
                 "Aggregation Type:", ("Mean", "Median", "Sum")
             ).lower()
         else:
@@ -92,7 +92,7 @@ def main():
         filter_cols = sections
     else:
         if preset_choice == "None":
-            agg_type = col1.selectbox(
+            agg_type = col_1.selectbox(
                 "Aggregation Type:", ("Mean", "Median", "Sum", "Count")
             ).lower()
         else:
@@ -115,7 +115,7 @@ def main():
                 filter_cols = sort_cols(sort_type)
 
     if preset_choice == "None":
-        match_filters = col2.multiselect(
+        match_filters = col_2.multiselect(
             "Match Types:", ["Prac", "Quals", "Playoffs"], default=["Quals", "Playoffs"]
         )
     else:

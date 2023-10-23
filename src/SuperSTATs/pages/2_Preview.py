@@ -144,17 +144,17 @@ def main():
     col_red.subheader(f"Projected Score: {team_score(df_raw, df_red)}")
     col_blue.subheader(f"Projected Score: {team_score(df_raw, df_blue)}")
 
-    col1, col2, col3 = st.columns(3)
-    col3.title("")
-    group_filters = col3.checkbox("Group Filters", True)
+    col_1, col_2, col_3 = st.columns(3)
+    col_3.title("")
+    group_filters = col_3.checkbox("Group Filters", True)
 
     if group_filters:
-        agg_type = col1.selectbox(
+        agg_type = col_1.selectbox(
             "Aggregation Type:", ("Mean", "Median", "Sum")
         ).lower()
         filter_cols = sections
     else:
-        agg_type = col1.selectbox(
+        agg_type = col_1.selectbox(
             "Aggregation Type:", ("Mean", "Median", "Sum", "Count")
         ).lower()
 
@@ -168,7 +168,7 @@ def main():
         else:
             filter_cols = sort_cols(sort_type)
 
-    match_filters = col2.multiselect(
+    match_filters = col_2.multiselect(
         # "Match Types:", ["Prac", "Quals", "Playoffs"], default=["Quals", "Playoffs"]
         "Match Types:",
         ["Prac", "Quals", "Playoffs"],

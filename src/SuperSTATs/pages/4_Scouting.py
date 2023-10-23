@@ -26,7 +26,7 @@ def main():
     st.title("")
 
     compare_teams = st.checkbox("Compare Teams", False)
-    col1, col2 = st.columns(2)
+    col_1, col_2 = st.columns(2)
 
     def check_nan(var_name, var_value, column):
         try:
@@ -81,8 +81,8 @@ def main():
             column.text(f"Time Logged: {time_logged}")
 
     if compare_teams:
-        get_team_scouting(df, col1, "First", check_nan, team_options)
-        get_team_scouting(df, col2, "Second", check_nan, team_options)
+        get_team_scouting(df, col_1, "First", check_nan, team_options)
+        get_team_scouting(df, col_2, "Second", check_nan, team_options)
     else:
         get_team_scouting(df, st, "", check_nan, team_options)
 

@@ -32,7 +32,7 @@ def main():
         st.session_state.signed_in = False
 
     if not st.session_state.signed_in:
-        pass_input = display.text_input("Password", type="password")
+        pass_input = display.text_input("Password:", type="password")
 
         if pass_input == password:
             st.session_state.signed_in = True

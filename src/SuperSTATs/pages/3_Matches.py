@@ -41,8 +41,8 @@ def main():
         f"{team_name} | {team_num}" for team_name, team_num in teams.items()
     ]
 
-    col1, col2 = st.columns(2)
-    selected_team = col2.selectbox("Select Team:", sorted(team_options))
+    col_1, col_2 = st.columns(2)
+    selected_team = col_2.selectbox("Select Team:", sorted(team_options))
     team_num = int(selected_team.split(" | ")[1])
 
     df_plot = df.loc[(df["Team"] == team_num)]
@@ -78,7 +78,7 @@ def main():
 
     df_plot = df_plot.reset_index(drop=True)
 
-    selected_filters = col1.multiselect("Filters:", sections, default=sections)
+    selected_filters = col_1.multiselect("Filters:", sections, default=sections)
 
     line_chart = plot_line(df_plot, "Total Score", "red").properties(
         title=str(selected_team)
