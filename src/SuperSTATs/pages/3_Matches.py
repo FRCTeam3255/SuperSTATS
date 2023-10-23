@@ -84,7 +84,7 @@ def main():
         title=str(selected_team)
     )
 
-    colors = iter(st.secrets["LINE_CHART_COLORS"])
+    colors = iter(["orange", "yellow", "lime", "cyan", "violet"])
     for stage in selected_filters:
         line_chart += plot_line(df_plot, f"{stage.title()} Score", next(colors))
 
