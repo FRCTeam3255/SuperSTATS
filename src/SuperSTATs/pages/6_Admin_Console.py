@@ -51,4 +51,4 @@ if st.session_state.signed_in:
             st.write(json.load(json_file))
         if st.button("Delete Preset"):
             os.remove(f"{presets_folder}\\{preset_choice}.json")
-            st.rerun()
+            st.warning("Please Reload Page")

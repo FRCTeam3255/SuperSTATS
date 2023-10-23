@@ -122,7 +122,7 @@ def set_global_df():
             for name, key in event_keys.items():
                 st.text(f"{name} : {key}")
     except:
-        st.rerun()
+        st.warning("Please Reload Page")
 
 
 def init_page():
