@@ -35,18 +35,7 @@ def main():
 
     st.button("Update Page", type="primary", use_container_width=True)
 
-    preset_col_1, preset_col_2 = st.columns(2)
-
-    presets_folder = "src\\SuperSTATs\\presets"
-    preset_name = preset_col_1.text_input("Preset Name:")
-
-    presets = [
-        file.split(".")[0]
-        for file in os.listdir(presets_folder)
-        if os.path.isfile(os.path.join(presets_folder, file))
-    ]
-
-    preset_choice = preset_col_2.selectbox(
+    preset_choice = st.selectbox(
         "Preset Choice:", ["None"] + list(st.session_state.presets.keys())
     )
     if preset_choice == "None":
@@ -143,29 +132,6 @@ def main():
         )
     else:
         st.error("Please select at least one filter")
-
-    if preset_name:
-        data = {
-            "preset_name": preset_name,
-            "group_filters": group_filters,
-            "selected_filters": selected_filters,
-            "agg_type": agg_type,
-            "match_filters": match_filters,
-            "hide_picked": hide_picked,
-            "hide_team_nums": hide_team_nums,
-        }
-
-        try:
-            if os.path.exists(f"{presets_folder}\\{preset_name}.json"):
-                preset_col_1.error(f"Preset '{preset_name}' already exists!")
-            else:
-                with open(
-                    f"{presets_folder}\\{preset_name}.json", "w", encoding="utf-8"
-                ) as json_file:
-                    json.dump(data, json_file)
-                preset_col_1.success(f"Preset '{preset_name}' successfully created!")
-        except:
-            preset_col_1.error(f"Preset '{preset_name}' could not be created!")
 
 
 if __name__ == "__main__":
