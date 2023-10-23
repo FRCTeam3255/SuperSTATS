@@ -46,14 +46,16 @@ def main():
         if os.path.isfile(os.path.join(presets_folder, file))
     ]
 
-    preset_choice = preset_col_2.selectbox("Preset Choice:", ["None"] + presets)
+    preset_choice = preset_col_2.selectbox(
+        "Preset Choice:", ["None"] + list(st.session_state.presets.keys())
+    )
     if preset_choice == "None":
         pass
     else:
-        with open(
-            f"{presets_folder}\\{preset_choice}.json", "r", encoding="utf-8"
-        ) as json_file:
-            data = json.load(json_file)
+        if preset_choice in st.session_state.presets:
+            data = st.session_state.presets[preset_choice]
+        else:
+            st.warning("Preset not found.")
 
         # for key, value in data.items():
         #     st.text([key, value])
@@ -63,11 +65,7 @@ def main():
         st.header(f"Selected Preset: {preset_choice}")
 
     def check_preset(variable):
-        with open(
-            f"{presets_folder}\\{preset_choice}.json", "r", encoding="utf-8"
-        ) as json_file:
-            data = json.load(json_file)
-
+        data = st.session_state.presets[preset_choice]
         return data[variable]
 
     col1, col2, col3 = st.columns(3)

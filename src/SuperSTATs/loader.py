@@ -1,6 +1,6 @@
+import requests, tbapy, json
 import streamlit as st
 import pandas as pd
-import tbapy
 
 tba = tbapy.TBA(st.secrets["TBA_API"])
 
@@ -125,8 +125,16 @@ def set_global_df():
         st.warning("Please Reload Page")
 
 
+def fetch_github_data():
+    github_url = st.secrets["PRESETS_RAW_URL"]
+    response = requests.get(github_url)
+    return json.loads(response.text)
+
+
 def init_page():
     if "team_info_dict" not in st.session_state:
         st.session_state.team_info_dict = download_team_info()
     if "global_match_df" not in st.session_state:
         set_global_df()
+    if "presets" not in st.session_state:
+        st.session_state.presets = fetch_github_data()
