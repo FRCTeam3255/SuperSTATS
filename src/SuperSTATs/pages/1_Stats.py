@@ -33,7 +33,7 @@ def main():
     )
     st.title("")
 
-    st.button("Update Page", use_container_width=True)
+    st.button("Update Page", type="primary", use_container_width=True)
 
     preset_col_1, preset_col_2 = st.columns(2)
 
