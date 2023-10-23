@@ -61,32 +61,48 @@ def main():
     if "presets" not in st.session_state:
         st.session_state.presets = {}
 
-    uploaded_file = st.file_uploader("Upload Preset")
-    if uploaded_file is not None:
-        bytes_data = uploaded_file.getvalue()
-        bytes_formatted = bytes_data.decode("utf-8")
+    preset_tab, dict_tab = st.tabs(["Preset", "Dictionary"])
 
-        json_data = json.loads(bytes_formatted)
-        # st.write(json_data)
+    with preset_tab:
+        uploaded_file = st.file_uploader("Upload Preset")
+        if uploaded_file is not None:
+            bytes_data = uploaded_file.getvalue()
+            bytes_formatted = bytes_data.decode("utf-8")
 
-    if st.button("Upload Preset"):
-        st.session_state.presets[(json_data["preset_name"]).split(".")[0]] = json_data
+            json_data = json.loads(bytes_formatted)
 
-    st.write(st.session_state.presets)
+            if st.button("Upload Preset"):
+                st.session_state.presets[
+                    (json_data["preset_name"]).split(".")[0]
+                ] = json_data
 
-    preset_choice = st.selectbox(
-        "Preset Choice:", ["None"] + list(st.session_state.presets.keys())
-    )
+    with dict_tab:
+        uploaded_file = st.file_uploader("Upload Dictionary")
+        if uploaded_file is not None:
+            bytes_data = uploaded_file.getvalue()
+            bytes_formatted = bytes_data.decode("utf-8")
 
-    if preset_choice != "None":
-        st.write("Selected Preset Value:")
-        st.write(st.session_state.presets[preset_choice])
+            json_data = json.loads(bytes_formatted)
+            if st.button("Load Dictionary"):
+                st.session_state.presets = json_data
+
+    # preset_choice = st.selectbox(
+    #     "Preset Choice:", ["None"] + list(st.session_state.presets.keys())
+    # )
+
+    # if preset_choice != "None":
+    #     st.write("Selected Preset Value:")
+    #     st.write(st.session_state.presets[preset_choice])
 
     # json_data = json.dumps(json_data)
     # json_encoded = json_data.encode("utf-8")
-    # st.download_button(
-    #     "Download Data", json_encoded, file_name=f"preset_{uploaded_file.name}"
-    # )
+
+    presets_json = json.dumps(st.session_state.presets)
+    presets_bytes = presets_json.encode("utf-8")
+    st.download_button("Download Dictionary", presets_bytes, file_name=f"presets.json")
+
+    st.markdown("""---""")
+    st.write(st.session_state.presets)
 
 
 if __name__ == "__main__":
