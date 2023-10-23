@@ -34,6 +34,7 @@ def main():
     st.title("")
 
     st.button("Update Page", type="primary", use_container_width=True)
+    st.markdown("""---""")
 
     preset_choice = st.selectbox(
         "Preset Choice:", ["None"] + list(st.session_state.presets.keys())
@@ -49,7 +50,6 @@ def main():
         # for key, value in data.items():
         #     st.text([key, value])
 
-    st.markdown("""---""")
     if preset_choice != "None":
         st.header(f"Selected Preset: {preset_choice}")
 
