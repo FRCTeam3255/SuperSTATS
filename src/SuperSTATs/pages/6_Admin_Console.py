@@ -1,6 +1,6 @@
 import SuperSTATs.loader as load
 import streamlit as st
-import json, os
+import json
 
 # [PRESETS]
 # Delete
@@ -48,6 +48,15 @@ def main():
             )
 
             st.write(st.session_state.presets)
+
+            uploaded_file = st.file_uploader("Override Dictionary")
+
+            if uploaded_file is not None:
+                if st.button("Override Presets"):
+                    bytes_data = uploaded_file.getvalue()
+                    bytes_formatted = bytes_data.decode("utf-8")
+                    st.session_state.presets = json.loads(bytes_formatted)
+                    st.success("Presets Successfully Overridden")
 
 
 if __name__ == "__main__":
