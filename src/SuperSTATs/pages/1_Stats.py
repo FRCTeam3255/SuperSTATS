@@ -34,8 +34,11 @@ def main():
     st.title("")
 
     if st.button("Update Page", type="primary", use_container_width=True):
-        with open("data.pickle", "rb") as f:
-            st.session_state.presets = pickle.load(f)
+        try:
+            with open("data.pickle", "rb") as f:
+                st.session_state.presets = pickle.load(f)
+        except:
+            pass
 
     st.markdown("""---""")
 
