@@ -32,18 +32,17 @@ def main():
     if st.session_state.signed_in:
         display.button("Update Page", type="primary", use_container_width=True)
 
-        with st.expander("View Presets Dictionary"):
-            uploaded_file = st.file_uploader("Override Presets:")
+        uploaded_file = st.file_uploader("Override Presets:")
 
-            if uploaded_file is not None:
-                if st.button("Set Presets"):
-                    bytes_data = uploaded_file.getvalue()
-                    bytes_formatted = bytes_data.decode("utf-8")
-                    data = json.loads(bytes_formatted)
+        if uploaded_file is not None:
+            if st.button("Set Presets"):
+                bytes_data = uploaded_file.getvalue()
+                bytes_formatted = bytes_data.decode("utf-8")
+                data = json.loads(bytes_formatted)
 
-                    with open("data.pickle", "wb") as f:
-                        pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
-                    st.success("Successfully Updated Presets!")
+                with open("data.pickle", "wb") as f:
+                    pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
+                st.success("Successfully Updated Presets!")
 
 
 if __name__ == "__main__":
