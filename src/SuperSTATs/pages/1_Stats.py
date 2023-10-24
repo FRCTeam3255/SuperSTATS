@@ -45,16 +45,6 @@ def main():
     preset_choice = st.selectbox(
         "Preset Choice:", ["None"] + list(st.session_state.presets.keys())
     )
-    if preset_choice == "None":
-        pass
-    else:
-        if preset_choice in st.session_state.presets:
-            data = st.session_state.presets[preset_choice]
-        else:
-            st.warning("Preset not found.")
-
-        # for key, value in data.items():
-        #     st.text([key, value])
 
     if preset_choice != "None":
         st.header(f"Selected Preset: {preset_choice}")
@@ -138,6 +128,25 @@ def main():
         )
     else:
         st.error("Please select at least one filter")
+
+    preset_name = st.text_input("New Preset Name:")
+
+    if preset_name:
+        if st.button("Add Preset", use_container_width=True):
+            data = {
+                "group_filters": group_filters,
+                "selected_filters": selected_filters,
+                "agg_type": agg_type,
+                "match_filters": match_filters,
+                "hide_picked": hide_picked,
+                "hide_team_nums": hide_team_nums,
+            }
+
+            presets = st.session_state.presets
+            presets[preset_name] = data
+            with open("data.pickle", "wb") as f:
+                pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
+            st.success("Successfully Added Preset!")
 
 
 if __name__ == "__main__":

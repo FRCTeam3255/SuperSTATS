@@ -35,7 +35,7 @@ def main():
         uploaded_file = st.file_uploader("Override Presets:")
 
         if uploaded_file is not None:
-            if st.button("Set Presets"):
+            if st.button("Set Presets", use_container_width=True):
                 bytes_data = uploaded_file.getvalue()
                 bytes_formatted = bytes_data.decode("utf-8")
                 data = json.loads(bytes_formatted)
@@ -43,6 +43,13 @@ def main():
                 with open("data.pickle", "wb") as f:
                     pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
                 st.success("Successfully Updated Presets!")
+
+        st.download_button(
+            "Download Presets",
+            json.dumps(st.session_state.presets).encode("utf-8"),
+            "Presets.json",
+            use_container_width=True,
+        )
 
 
 if __name__ == "__main__":
