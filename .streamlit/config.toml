@@ -1,0 +1,9 @@
+[theme]
+base ="dark"
+primaryColor = "#910000"
+backgroundColor = "#141414"
+secondaryBackgroundColor = "#212121"
+font = "monospace"
+
+[runner]
+enforceSerializableSessionState = true

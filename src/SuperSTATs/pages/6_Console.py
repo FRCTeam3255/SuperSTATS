@@ -2,16 +2,8 @@ import SuperSTATs.loader as load
 import streamlit as st
 import json
 
-# [PRESETS]
-# Delete
-# Rename
-# Compare
-
 # [STATS INPUT]
 # Stat Taker List
-
-# [SCOUTING]
-# Uncollected Teams
 
 st.set_page_config(
     page_title="[CONSOLE] SN Stats",
@@ -40,7 +32,7 @@ def main():
     if st.session_state.signed_in:
         display.button("Update Page", type="primary", use_container_width=True)
 
-        with st.expander("View Presets Dict"):
+        with st.expander("View Presets Dictionary"):
             presets_json = json.dumps(st.session_state.presets)
             presets_bytes = presets_json.encode("utf-8")
             st.download_button(
@@ -49,7 +41,7 @@ def main():
 
             st.write(st.session_state.presets)
 
-            uploaded_file = st.file_uploader("Override Dictionary")
+            uploaded_file = st.file_uploader("Override Dictionary:")
 
             if uploaded_file is not None:
                 if st.button("Override Presets"):
@@ -61,3 +53,21 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    import pickle
+
+    if st.button("Set Pickle Data"):
+        data = {
+            "a": [1, 2.0, 3 + 4j],
+            "b": ("character string", b"byte string"),
+            "c": {None, True, False},
+        }
+
+        with open("data.pickle", "wb") as f:
+            pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
+
+    if st.button("Unload Pickle Data"):
+        with open("data.pickle", "rb") as f:
+            data = pickle.load(f)
+
+        st.write(data)

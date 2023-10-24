@@ -10,10 +10,6 @@ st.set_page_config(
     layout="wide",
 )
 
-# df_r = load.download_sheets_raw(st.secrets["GID_RAW"])
-
-# sections = load.get_match_sections(df_r)
-
 
 def main():
     load.init_page()
