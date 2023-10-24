@@ -35,7 +35,7 @@ def main():
 
     if st.button("Update Page", type="primary", use_container_width=True):
         try:
-            with open("data.pickle", "rb") as f:
+            with open("presets.pickle", "rb") as f:
                 st.session_state.presets = pickle.load(f)
         except:
             pass
@@ -144,7 +144,7 @@ def main():
 
             presets = st.session_state.presets
             presets[preset_name] = data
-            with open("data.pickle", "wb") as f:
+            with open("presets.pickle", "wb") as f:
                 pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
             st.success("Successfully Added Preset!")
 

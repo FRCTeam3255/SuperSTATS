@@ -22,16 +22,31 @@ def main():
     )
 
     # TODO: Potentially password lock these links
-    st.markdown(
-        """
-        <div style="display: flex; flex-direction: row; justify-content: center; text-align: center;">
-            <a href="https://docs.google.com/spreadsheets/d/1KboyFTIZJiIW_33Z9_ea8jtYkV3T-fuS659ezwsXYmY/edit#gid=1878511843" style="color: #0070E0; font-size: 25px; margin: 10px;">Raw Data Sheet</a>
-            <a href="https://www.supernurds.com/statsinput" style="color: #0070E0; font-size: 25px; margin: 10px;">Stats Input Form</a>
-            <a href="https://docs.google.com/forms/d/1P32axMIgTIkHJUZuP4BPpiVX1-CMNHobgsAW-aZkse4" style="color: #0070E0; font-size: 25px; margin: 10px;">Scouting Form</a>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+
+    password = st.secrets["GUEST_PASSWORD"]
+    display = st.empty()
+
+    if "signed_in" not in st.session_state:
+        st.session_state.signed_in = False
+
+    if not st.session_state.signed_in:
+        pass_input = display.text_input("Password:", type="password").lower()
+
+        if pass_input == password:
+            st.session_state.signed_in = True
+            display.empty()
+
+    if st.session_state.signed_in:
+        st.markdown(
+            """
+            <div style="display: flex; flex-direction: row; justify-content: center; text-align: center;">
+                <a href="https://docs.google.com/spreadsheets/d/1KboyFTIZJiIW_33Z9_ea8jtYkV3T-fuS659ezwsXYmY/edit#gid=1878511843" style="color: #0070E0; font-size: 25px; margin: 10px;">Raw Data Sheet</a>
+                <a href="https://www.supernurds.com/statsinput" style="color: #0070E0; font-size: 25px; margin: 10px;">Stats Input Form</a>
+                <a href="https://docs.google.com/forms/d/1P32axMIgTIkHJUZuP4BPpiVX1-CMNHobgsAW-aZkse4" style="color: #0070E0; font-size: 25px; margin: 10px;">Scouting Form</a>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     logo_path = "src/SuperSTATs/images/SN_Logo.png"
 
