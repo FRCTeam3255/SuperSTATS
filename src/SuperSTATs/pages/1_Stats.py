@@ -1,7 +1,7 @@
 import SuperSTATs.build_chart as build
 import SuperSTATs.loader as load
 import streamlit as st
-import json, os
+import pickle
 
 st.set_page_config(
     page_title="[STATS] SN Stats",
@@ -33,7 +33,10 @@ def main():
     )
     st.title("")
 
-    st.button("Update Page", type="primary", use_container_width=True)
+    if st.button("Update Page", type="primary", use_container_width=True):
+        with open("data.pickle", "rb") as f:
+            st.session_state.presets = pickle.load(f)
+
     st.markdown("""---""")
 
     preset_choice = st.selectbox(

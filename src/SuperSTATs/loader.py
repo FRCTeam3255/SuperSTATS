@@ -137,4 +137,4 @@ def init_page():
     if "global_match_df" not in st.session_state:
         set_global_df()
     if "presets" not in st.session_state:
-        st.session_state.presets = fetch_github_data()
+        st.session_state.presets = {}

@@ -1,6 +1,6 @@
 import SuperSTATs.loader as load
 import streamlit as st
-import json
+import pickle, json
 
 # [STATS INPUT]
 # Stat Taker List
@@ -33,41 +33,18 @@ def main():
         display.button("Update Page", type="primary", use_container_width=True)
 
         with st.expander("View Presets Dictionary"):
-            presets_json = json.dumps(st.session_state.presets)
-            presets_bytes = presets_json.encode("utf-8")
-            st.download_button(
-                "Download Dictionary", presets_bytes, file_name=f"presets.json"
-            )
-
-            st.write(st.session_state.presets)
-
-            uploaded_file = st.file_uploader("Override Dictionary:")
+            uploaded_file = st.file_uploader("Override Presets:")
 
             if uploaded_file is not None:
-                if st.button("Override Presets"):
+                if st.button("Set Presets"):
                     bytes_data = uploaded_file.getvalue()
                     bytes_formatted = bytes_data.decode("utf-8")
-                    st.session_state.presets = json.loads(bytes_formatted)
-                    st.success("Presets Successfully Overridden")
+                    data = json.loads(bytes_formatted)
+
+                    with open("data.pickle", "wb") as f:
+                        pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
+                    st.success("Successfully Updated Presets!")
 
 
 if __name__ == "__main__":
     main()
-
-    import pickle
-
-    if st.button("Set Pickle Data"):
-        data = {
-            "a": [1, 2.0, 3 + 4j],
-            "b": ("character string", b"byte string"),
-            "c": {None, True, False},
-        }
-
-        with open("data.pickle", "wb") as f:
-            pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
-
-    if st.button("Unload Pickle Data"):
-        with open("data.pickle", "rb") as f:
-            data = pickle.load(f)
-
-        st.write(data)
