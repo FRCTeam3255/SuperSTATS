@@ -15,6 +15,15 @@ st.set_page_config(
 )
 
 
+def hex_to_rgb(hex_color):
+    hex_color = hex_color.lstrip("#")
+    color_int = int(hex_color, 16)
+    red = (color_int >> 16) & 255
+    green = (color_int >> 8) & 255
+    blue = color_int & 255
+    return red, green, blue
+
+
 def main():
     load.init_page()
 
@@ -50,6 +59,7 @@ def main():
         with st.expander("Delete Presets"):
             for preset in st.session_state.presets.keys():
                 st.checkbox(preset, False)
+
             # if st.button("Set Presets", use_container_width=True):
             #     bytes_data = uploaded_file.getvalue()
             #     bytes_formatted = bytes_data.decode("utf-8")
@@ -66,79 +76,78 @@ def main():
             use_container_width=True,
         )
 
-        # df = pd.DataFrame(
-        #     dict(
-        #         r=[1, 5, 2, 2, 3],
-        #         theta=sections,
-        #     )
-        # )
-        # radar_chart = px.line_polar(df, r="r", theta="theta", line_close=True)
+    teams = {}
+    teams_raw = st.session_state.team_info_dict.items()
 
-        with st.expander("Radio Chart:"):
-            teams = {}
-            teams_raw = st.session_state.team_info_dict.items()
+    for team in teams_raw:
+        teams[team[1]] = int(team[0])
 
-            for team in teams_raw:
-                teams[team[1]] = int(team[0])
+    team_options = [
+        f"{team_name} | {team_num}" for team_name, team_num in teams.items()
+    ]
 
-            team_options = [
-                f"{team_name} | {team_num}" for team_name, team_num in teams.items()
-            ]
+    col_1, col_2 = st.columns(2)
+    selected_team = col_1.selectbox("Select Team:", sorted(team_options))
+    team_num = int(selected_team.split(" | ")[1])
+    team_1_color = hex_to_rgb(col_2.color_picker("Team Color:", value="#910000"))
 
-            selected_team = st.selectbox("Select Team:", sorted(team_options))
-            team_num = int(selected_team.split(" | ")[1])
+    df = load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
+    df = df.loc[(df["Team"] == team_num)]
+    sections = load.get_match_sections(df)
 
-            df = load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(
-                subset="Timestamp"
-            )
-            df = df.loc[(df["Team"] == team_num)]
+    section_cols = [
+        col
+        for col in df.columns
+        if any(col.startswith(section) for section in sections)
+    ]
+    df = df[section_cols].reset_index(drop=True)
 
-            sections = load.get_match_sections(df)
+    column_values = {}
+    for column in df:
+        column_value = int(column.split("_")[2])
+        sum_value = int(df[column].sum()) * column_value
+        column_values[column] = sum_value
 
-            radar_r = []
-            radar_t = []
+    sum_values = ["AUTO", "TELE", "END"]
 
-            for section in sections:
-                section_cols = [col for col in df.columns if col.startswith(section)]
+    radar_r = []
+    radar_t = []
 
-                col_sum = df[section_cols].sum().sum()
-                radar_r.append(abs(col_sum))
-                radar_t.append(section)
+    for sum_for in sum_values:
+        value_sum = sum(
+            value for key, value in column_values.items() if key.startswith(sum_for)
+        )
+        radar_r.append(value_sum)
+        radar_t.append(sum_for)
 
-            # st.write(f"R: {radar_r}")
-            # st.write(f"T: {radar_t}")
-            radar_df = pd.DataFrame(
-                {
-                    "r": radar_r,
-                    "theta": radar_t,
-                }
-            )
+    radar_df = pd.DataFrame(
+        {
+            "r": radar_r,
+            "theta": radar_t,
+        }
+    )
 
-            radar_chart = px.line_polar(radar_df, r="r", theta="theta", line_close=True)
-            radar_chart.update_traces(fill="toself")
+    radar_chart = px.line_polar(radar_df, r="r", theta="theta", line_close=True)
+    radar_chart.update_traces(fill="toself")
 
-            radar_chart.update_layout(
-                polar_bgcolor="#212121",
-                polar_radialaxis_visible=False,
-                polar_angularaxis_showline=False,
-                paper_bgcolor="#141414",
-            )
+    radar_chart.update_layout(
+        polar_bgcolor="#212121",
+        paper_bgcolor="#141414",
+    )
 
-            radar_chart.update_traces(
-                fill="toself",
-                fillcolor="#141414",
-                line=dict(
-                    color="#000000",
-                    width=2,
-                ),
-            )
+    radar_chart.update_traces(
+        fill="toself",
+        fillcolor=f"rgba({team_1_color[0]}, {team_1_color[1]}, {team_1_color[2]}, 0.5)",
+        line=dict(
+            color="#000000",
+            width=2,
+        ),
+    )
 
-            st.plotly_chart(radar_chart)
+    st.plotly_chart(radar_chart)
 
-            # for score_type in sections:
-            #     columns = [col for col in df.columns if col.startswith(score_type)]
-            #     df[f"{score_type.strip('_').title()} Score"] = df[columns].sum(axis=1)
-            #     st.write(df[f"{score_type.strip('_').title()} Score"])
+    if st.checkbox("Show Raw Data"):
+        st.dataframe(df)
 
 
 if __name__ == "__main__":
