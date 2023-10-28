@@ -326,17 +326,21 @@ def main():
     if on_mobile:
         st.write("""---""")
 
-    info_brick_input = int(info_col_1.checkbox("INFO_BRICK_1")) * -1
+    info_brick_input = int(info_col_1.checkbox("INFO_BRICK_1"))
 
     brick_types = [
         "RSL Blinking",
         "RSL Solid",
         "RSL Off",
-        "Recovered",
     ]
 
     if info_brick_input:
-        info_col_1.selectbox("Brick Type:", brick_types)
+        brick_type = info_col_1.selectbox("Brick Type:", brick_types)
+        brick_recovered = info_col_1.checkbox("Recovered", False)
+
+    if not info_brick_input:
+        brick_type = None
+        brick_recovered = None
 
     if on_mobile:
         info_col_1.write("""---""")
@@ -357,7 +361,7 @@ def main():
         st.markdown("""---""")
 
     if st.button("Submit", use_container_width=True):
-        prefill_url = f"https://docs.google.com/forms/d/e/1FAIpQLSeZ0snvF5GZixUzFuiDfGsifffaRJxwuQyszizAdKjR1apMLA/viewform?usp=pp_url&entry.398002633={name_input}&entry.311722203={match_input}&entry.1823404922={match_type_input}&entry.432823991={color_input}&entry.1873738734={team_input}&entry.2015525146={info_penalty_input}&entry.250579147=-{info_brick_input}&entry.268050731={auto_mobility_input}&entry.542386964={auto_low_input}&entry.530845045={auto_cone_mid_input}&entry.2086503014={auto_cube_mid_input}&entry.1207232700={auto_cone_high_input}&entry.1008310587={auto_cube_high_input}&entry.2083103665={auto_docked_input}&entry.829803960={auto_engaged_input}&entry.1796811601={tele_low_input}&entry.837438137={tele_cone_mid_input}&entry.263379052={tele_cube_mid_input}&entry.597282987={tele_cone_high_input}&entry.2060882466={tele_cube_high_input}&entry.1349917441={end_parked_input}&entry.167115309={end_docked_input}&entry.1695411443={end_engaged_input}&entry.619894282={comments_input}&entry.107629913={comment_notes_input}&entry.629905259={comment_defense_input}"
+        prefill_url = f"https://docs.google.com/forms/d/e/1FAIpQLSeZ0snvF5GZixUzFuiDfGsifffaRJxwuQyszizAdKjR1apMLA/viewform?usp=pp_url&entry.398002633={name_input}&entry.311722203={match_input}&entry.1823404922={match_type_input}&entry.432823991={color_input}&entry.1873738734={team_input}&entry.2015525146={st.session_state.info_penalties}&entry.250579147=-{info_brick_input}&entry.268050731={auto_mobility_input}&entry.542386964={st.session_state.auto_low}&entry.530845045={st.session_state.auto_cone_mid}&entry.2086503014={st.session_state.auto_cube_mid}&entry.1207232700={st.session_state.auto_cone_high}&entry.1008310587={st.session_state.auto_cube_high}&entry.2083103665={auto_docked_input}&entry.829803960={auto_engaged_input}&entry.1796811601={st.session_state.tele_low}&entry.837438137={st.session_state.tele_cone_mid}&entry.263379052={st.session_state.tele_cube_mid}&entry.597282987={st.session_state.tele_cone_high}&entry.2060882466={st.session_state.tele_cube_high}&entry.1349917441={end_parked_input}&entry.167115309={end_docked_input}&entry.1695411443={end_engaged_input}&entry.619894282={[comments_input, (f'Brick Type: {brick_type}'), (f'Recovered: {brick_recovered}')]}&entry.107629913={comment_options}&entry.629905259={comment_defense_input}"
 
         st.balloons()
         st.link_button(
