@@ -15,6 +15,17 @@ def init_page():
         st.session_state.presets = {}
     if "max_value" not in st.session_state:
         st.session_state.max_value = 0
+    if "comment_options" not in st.session_state:
+        st.session_state.comment_options = [
+            "Tipped",
+            "Mechanism Damaged/Disabled",
+            "Excessive Auto Penalties",
+            "Pick Up ⚠️ Off Ground",
+            "Pick Up 🟪 Off Ground",
+            "Pick Up Tipped ⚠️",
+            "Single Substation",
+            "Double Substation",
+        ]
 
 
 def build_sheet_url(url):
