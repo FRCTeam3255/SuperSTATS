@@ -1,7 +1,7 @@
-import requests, tbapy, json
 import plotly.express as px
 import streamlit as st
 import pandas as pd
+import tbapy
 
 tba = tbapy.TBA(st.secrets["TBA_API"])
 
