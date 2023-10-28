@@ -31,18 +31,8 @@ def main():
     )
     st.title("")
 
-    teams = {}
-    teams_raw = st.session_state.team_info_dict.items()
-
-    for team in teams_raw:
-        teams[team[1]] = int(team[0])
-
-    team_options = [
-        f"{team_name} | {team_num}" for team_name, team_num in teams.items()
-    ]
-
     col_1, col_2 = st.columns(2)
-    selected_team = col_2.selectbox("Select Team:", sorted(team_options))
+    selected_team = col_2.selectbox("Select Team:", sorted(load.get_team_options()))
     team_num = int(selected_team.split(" | ")[1])
 
     df_plot = df.loc[(df["Team"] == team_num)]

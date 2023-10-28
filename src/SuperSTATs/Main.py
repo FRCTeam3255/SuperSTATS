@@ -21,8 +21,6 @@ def main():
         unsafe_allow_html=True,
     )
 
-    # TODO: Potentially password lock these links
-
     password = st.secrets["GUEST_PASSWORD"]
     display = st.empty()
 

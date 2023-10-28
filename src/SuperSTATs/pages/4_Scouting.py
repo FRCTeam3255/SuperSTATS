@@ -31,15 +31,7 @@ def main():
         except:
             column.subheader(f"{var_name}: {var_value}")
 
-    teams = {}
-    teams_raw = st.session_state.team_info_dict.items()
-
-    for team in teams_raw:
-        teams[team[1]] = int(team[0])
-
-    team_options = [
-        f"{team_name} | {team_num}" for team_name, team_num in teams.items()
-    ]
+    team_options = load.get_team_options()
 
     def get_team_scouting(df, column, side_value, check_nan, team_options):
         selected_team = column.selectbox(
@@ -71,6 +63,7 @@ def main():
             )
             check_nan("Scouting Comments", sorted_df["Comments"].max(), column)
 
+            # TODO: Implement match comments
             # match_comments = "[Work in Progress]"
             # check_nan("Match Comments", match_comments)
 
