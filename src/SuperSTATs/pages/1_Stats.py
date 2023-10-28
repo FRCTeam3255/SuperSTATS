@@ -53,12 +53,13 @@ def main():
         data = st.session_state.presets[preset_choice]
         return data[variable]
 
-    col_1, col_2, col_3 = st.columns(3)
+    col_1, col_2, col_3, col_4 = st.columns(4)
 
     if preset_choice == "None":
         group_filters = col_1.checkbox("Group Filters", True)
         hide_picked = col_2.checkbox("Hide Picked Teams", False)
         hide_team_nums = col_3.checkbox("Hide Team Numbers", False)
+        comment_filters = col_4.checkbox("Comments", False)
     else:
         group_filters = check_preset("group_filters")
         hide_picked = check_preset("hide_picked")
@@ -96,6 +97,7 @@ def main():
                 filter_cols = [
                     col for col in df.columns if col.startswith(tuple(sections))
                 ]
+                filter_cols.remove("COMMENT_GENERAL_1")
             else:
                 filter_cols = sort_cols(sort_type)
 
@@ -120,7 +122,12 @@ def main():
         st.altair_chart(
             build.custom_bar_chart(
                 build.config_chart(
-                    df, selected_filters, agg_type, hide_picked, match_filters
+                    df,
+                    selected_filters,
+                    agg_type,
+                    hide_picked,
+                    comment_filters,
+                    match_filters,
                 ),
                 hide_team_nums,
             ),

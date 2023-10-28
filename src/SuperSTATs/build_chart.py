@@ -14,11 +14,16 @@ pd.options.mode.chained_assignment = None
 
 
 def add_cols(org_df, reg, filter):
-    org_df[filter] = org_df.filter(regex=reg).sum(axis=1)
+    relevant_columns = [
+        col
+        for col in org_df.columns
+        if col != "COMMENT_GENERAL_1" and col.startswith(filter)
+    ]
+    org_df[filter] = org_df[relevant_columns].sum(axis=1)
     return org_df[filter]
 
 
-def config_chart(df, column, agg, hide_picked, match_filters):
+def config_chart(df, column, agg, hide_picked, comment_filters, match_filters):
     df = df[df["Match Type"].isin(match_filters)]
 
     df_split = []
@@ -42,6 +47,19 @@ def config_chart(df, column, agg, hide_picked, match_filters):
 
     if hide_picked:
         df = df[~df["Unavailable"].str.contains("x", case=False, na=False)]
+
+    # TODO: Invert this so it shows any chosen ones, and defaults to show all
+
+    if comment_filters:
+        df = df
+        pfilters = st.session_state.comment_options
+        selected_filters = st.multiselect("Disgard Features:", pfilters)
+        mask = [True] * len(df)
+        for filter in selected_filters:
+            mask = mask & ~df["COMMENT_GENERAL_1"].str.contains(
+                filter, case=False, na=False
+            )
+        df = df[mask]
 
     calc_df = df.groupby("Team")[column].agg(agg)
     calc_df["rank"] = calc_df.sum(axis=1).rank(ascending=False).astype(int)

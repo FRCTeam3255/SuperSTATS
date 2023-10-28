@@ -24,6 +24,7 @@ def gen_team_chart(df, column, team_df, agg_type, filter_cols, match_filters):
                 filter_cols,
                 agg_type,
                 False,
+                False,
                 match_filters,
             ),
             False,
@@ -237,6 +238,7 @@ def main():
     gen_team_chart(df, col_red, df_red, agg_type, selected_filters, match_filters)
     gen_team_chart(df, col_blue, df_blue, agg_type, selected_filters, match_filters)
 
+    st.button("Update Page", type="primary", use_container_width=True)
     st.text("✱ - one or more teams has no stats")
 
     combined_chart_1 = get_alliance_chart(df, df_red)
