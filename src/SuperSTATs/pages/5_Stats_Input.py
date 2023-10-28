@@ -15,6 +15,35 @@ def num_input(column, label, min_value, max_value, default_index):
     )
 
 
+def gen_num_container(
+    column, on_mobile, session_state, num_name, btn_key_inc, btn_key_dec
+):
+    with column.container():
+        left_btn, num_value, right_btn = st.columns(3)
+
+        if on_mobile:
+            if left_btn.button("➕", key=btn_key_inc, use_container_width=True):
+                session_state += 1
+
+            if right_btn.button("➖", key=btn_key_dec, use_container_width=True):
+                session_state -= 1
+
+        else:
+            if left_btn.button("➖", key=btn_key_inc, use_container_width=True):
+                session_state -= 1
+
+            if right_btn.button("➕", key=btn_key_dec, use_container_width=True):
+                session_state += 1
+
+        num_value.markdown(
+            f'<div style="text-align: center;">{num_name}: {session_state}</div>',
+            unsafe_allow_html=True,
+        )
+
+        st.markdown("---")
+        return session_state
+
+
 def main():
     load.init_page()
 
@@ -22,6 +51,17 @@ def main():
         "<h1 style='text-align: center;'>✏️ Stats Input ✏️</h1>", unsafe_allow_html=True
     )
     st.title("")
+
+    if "input_init" not in st.session_state:
+        st.session_state.input_init = True
+        st.session_state.auto_cone_high = 0
+        st.session_state.auto_cube_high = 0
+
+    if st.button("Clear Form", use_container_width=True, type="primary"):
+        st.session_state.auto_cone_high = 0
+        st.session_state.auto_cube_high = 0
+
+    on_mobile = st.checkbox("Mobile", True)
 
     teams = {}
     teams_raw = st.session_state.team_info_dict.items()
@@ -62,14 +102,30 @@ def main():
 
     team_input = selected_team
 
+    st.markdown("""---""")
+
+    col_1, col_2 = st.columns(2)
+
+    st.session_state.auto_cone_high = gen_num_container(
+        col_1,
+        on_mobile,
+        st.session_state.auto_cone_high,
+        "AUTO ⚠️ HIGH",
+        "AUTO⚠️HIGH➕",
+        "AUTO⚠️HIGH➖",
+    )
+
+    st.session_state.auto_cube_high = gen_num_container(
+        col_2,
+        on_mobile,
+        st.session_state.auto_cube_high,
+        "AUTO 🟪 HIGH",
+        "AUTO🟪HIGH➕",
+        "AUTO🟪HIGH➖",
+    )
+
     with st.form("Stats Input", clear_on_submit=True):
         auto_mobility_input = int(st.checkbox("AUTO_MOBILITY_3"))
-
-        # with st.container():
-        #     left_btn, num_value, right_btn = st.columns(3)
-        #     left_btn.button("This is a button lol")
-        #     num_value.text(1)
-        #     right_btn.button("This is a button lol")
 
         auto_col_1, auto_col_2 = st.columns(2)
 
