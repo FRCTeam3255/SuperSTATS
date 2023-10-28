@@ -151,12 +151,6 @@ def set_global_df():
         st.warning("Please Reload Page")
 
 
-def fetch_github_data():
-    github_url = st.secrets["PRESETS_RAW_URL"]
-    response = requests.get(github_url)
-    return json.loads(response.text)
-
-
 def hex_to_rgb(hex_color):
     hex_color = hex_color.lstrip("#")
     color_int = int(hex_color, 16)
