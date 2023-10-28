@@ -105,6 +105,58 @@ def team_score(df, team_df):
         return str(int(sum(team_scores)))
 
 
+def get_alliance_chart(df, team_df):
+    match_sections = load.get_match_sections(df)
+
+    auto_values = []
+    tele_values = []
+    end_values = []
+
+    for team in team_df:
+        team_df = df.loc[(df["Team"] == int(team))]
+
+        section_cols = [
+            col
+            for col in df.columns
+            if any(col.startswith(section) for section in match_sections)
+        ]
+        team_df = team_df[section_cols].reset_index(drop=True)
+
+        column_values = {}
+        for column in team_df:
+            column_value = int(column.split("_")[2])
+            sum_value = int(team_df[column].sum()) * column_value
+            column_values[column] = sum_value
+
+        sum_values = ["AUTO", "TELE", "END"]
+
+        for sum_for in sum_values:
+            value_sum = sum(
+                value for key, value in column_values.items() if key.startswith(sum_for)
+            )
+
+            if sum_for == "AUTO":
+                auto_values.append(value_sum)
+            elif sum_for == "TELE":
+                tele_values.append(value_sum)
+            elif sum_for == "END":
+                end_values.append(value_sum)
+
+    team_r = [sum(auto_values), sum(tele_values), sum(end_values)]
+
+    team_t = ["AUTO", "TELE", "END"]
+
+    chart_team_1 = load.gen_radio_chart(
+        team_r, team_t, max(team_r), load.hex_to_rgb("#ff0000"), 0.35
+    )
+    chart_team_2 = load.gen_radio_chart(
+        team_r, team_t, max(team_r), load.hex_to_rgb("#0000ff"), 0.35
+    )
+
+    combined_chart = chart_team_1.add_trace(chart_team_2.data[0])
+    return combined_chart
+
+
 def main():
     load.init_page()
 
@@ -186,6 +238,12 @@ def main():
     gen_team_chart(df, col_blue, df_blue, agg_type, selected_filters, match_filters)
 
     st.text("✱ - one or more teams has no stats")
+
+    combined_chart_1 = get_alliance_chart(df, df_red)
+    combined_chart_2 = get_alliance_chart(df, df_blue)
+
+    combined_chart_3 = combined_chart_1.add_trace(combined_chart_2.data[0])
+    st.plotly_chart(combined_chart_3, use_container_width=True)
 
 
 if __name__ == "__main__":

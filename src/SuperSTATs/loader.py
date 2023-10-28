@@ -166,7 +166,7 @@ def hex_to_rgb(hex_color):
     return red, green, blue
 
 
-def get_rt(df, column, team_num, team_color):
+def get_rt(df, column, team_num):
     df = df.loc[(df["Team"] == team_num)]
     sections = get_match_sections(df)
 
@@ -198,7 +198,7 @@ def get_rt(df, column, team_num, team_color):
     return [radar_r, radar_t]
 
 
-def gen_radio_chart(radar_r, radar_t, max_range, team_color):
+def gen_radio_chart(radar_r, radar_t, max_range, team_color, team_alpha):
     radar_df = pd.DataFrame(
         {
             "r": radar_r,
@@ -217,7 +217,7 @@ def gen_radio_chart(radar_r, radar_t, max_range, team_color):
 
     radar_chart.update_traces(
         fill="toself",
-        fillcolor=f"rgba({team_color[0]}, {team_color[1]}, {team_color[2]}, 0.25)",
+        fillcolor=f"rgba({team_color[0]}, {team_color[1]}, {team_color[2]}, {team_alpha})",
         line=dict(
             color="#000000",
             width=2,
@@ -248,19 +248,19 @@ def gen_radial_charts(df, team_options):
 
     chart_1, chart_2 = st.columns(2)
 
-    team_1_rt = get_rt(df, chart_1, team_1_num, team_1_color)
-    team_2_rt = get_rt(df, chart_2, team_2_num, team_2_color)
+    team_1_rt = get_rt(df, chart_1, team_1_num)
+    team_2_rt = get_rt(df, chart_2, team_2_num)
 
     team_1_r, team_1_t = team_1_rt
     team_2_r, team_2_t = team_2_rt
 
     st.session_state.max_value = sorted(team_1_r + team_2_r)[-1]
 
-    chart_team1 = gen_radio_chart(
-        team_1_r, team_1_t, st.session_state.max_value, team_1_color
+    chart_team_1 = gen_radio_chart(
+        team_1_r, team_1_t, st.session_state.max_value, team_1_color, 0.25
     )
-    chart_team2 = gen_radio_chart(
-        team_2_r, team_2_t, st.session_state.max_value, team_2_color
+    chart_team_2 = gen_radio_chart(
+        team_2_r, team_2_t, st.session_state.max_value, team_2_color, 0.25
     )
 
-    return chart_team1.add_trace(chart_team2.data[0])
+    return chart_team_1.add_trace(chart_team_2.data[0])

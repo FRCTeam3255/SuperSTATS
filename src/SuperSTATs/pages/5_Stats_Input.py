@@ -25,11 +25,9 @@ def main():
 
     teams = {}
     teams_raw = st.session_state.team_info_dict.items()
-
     for team in teams_raw:
         teams[team[1]] = int(team[0])
 
-    # df = load.download_sheets_raw(st.secrets["GID_MATCHES"])
     df = st.session_state.global_match_df
 
     selection_col_1, selection_col_2 = st.columns(2)
@@ -66,6 +64,12 @@ def main():
 
     with st.form("Stats Input", clear_on_submit=True):
         auto_mobility_input = int(st.checkbox("AUTO_MOBILITY_3"))
+
+        # with st.container():
+        #     left_btn, num_value, right_btn = st.columns(3)
+        #     left_btn.button("This is a button lol")
+        #     num_value.text(1)
+        #     right_btn.button("This is a button lol")
 
         auto_col_1, auto_col_2 = st.columns(2)
 
