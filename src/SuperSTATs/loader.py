@@ -26,6 +26,8 @@ def init_page():
             "Single Substation",
             "Double Substation",
         ]
+    if "selected_filters" not in st.session_state:
+        st.session_state.selected_filters = []
 
 
 def build_sheet_url(url):
@@ -173,6 +175,8 @@ def hex_to_rgb(hex_color):
 
 def get_rt(df, column, team_num):
     df = df.loc[(df["Team"] == team_num)]
+    df = df.drop("COMMENT_GENERAL_1", axis=1)
+
     sections = get_match_sections(df)
 
     section_cols = [

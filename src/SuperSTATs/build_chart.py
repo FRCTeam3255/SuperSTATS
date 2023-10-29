@@ -4,6 +4,7 @@ import altair as alt
 import pandas as pd
 
 
+load.init_page()
 df = load.download_sheets_raw(st.secrets["GID_RAW"])
 sections = load.get_match_sections(df)
 filters = []
@@ -23,7 +24,9 @@ def add_cols(org_df, reg, filter):
     return org_df[filter]
 
 
-def config_chart(df, column, agg, hide_picked, comment_filters, match_filters):
+def config_chart(
+    df, column, agg, hide_picked, preset_choice, comment_filters, match_filters
+):
     df = df[df["Match Type"].isin(match_filters)]
 
     df_split = []
@@ -48,18 +51,26 @@ def config_chart(df, column, agg, hide_picked, comment_filters, match_filters):
     if hide_picked:
         df = df[~df["Unavailable"].str.contains("x", case=False, na=False)]
 
-    # TODO: Invert this so it shows any chosen ones, and defaults to show all
-
     if comment_filters:
-        df = df
-        pfilters = st.session_state.comment_options
-        selected_filters = st.multiselect("Disgard Features:", pfilters)
-        mask = [True] * len(df)
-        for filter in selected_filters:
-            mask = mask & ~df["COMMENT_GENERAL_1"].str.contains(
+        df["COMMENT_GENERAL_1"] = df["COMMENT_GENERAL_1"].fillna("Comments Missing")
+        filter_choices = st.session_state.comment_options + ["Comments Missing"]
+
+        if preset_choice == "None":
+            st.session_state.selected_filters = st.multiselect(
+                "Show Features:", filter_choices, default=filter_choices
+            )
+
+        selected_df = pd.DataFrame(columns=df.columns)
+
+        for filter in st.session_state.selected_filters:
+            filter_mask = df["COMMENT_GENERAL_1"].str.contains(
                 filter, case=False, na=False
             )
-        df = df[mask]
+            selected_df = pd.concat([selected_df, df[filter_mask]])
+
+        df = selected_df
+    else:
+        st.session_state.selected_filters = []
 
     calc_df = df.groupby("Team")[column].agg(agg)
     calc_df["rank"] = calc_df.sum(axis=1).rank(ascending=False).astype(int)

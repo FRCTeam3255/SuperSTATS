@@ -64,6 +64,8 @@ def main():
         group_filters = check_preset("group_filters")
         hide_picked = check_preset("hide_picked")
         hide_team_nums = check_preset("hide_team_nums")
+        comment_filters = check_preset("comment_filters")
+        st.session_state.selected_filters = check_preset("comment_selected")
 
     col_1, col_2 = st.columns(2)
 
@@ -126,6 +128,7 @@ def main():
                     selected_filters,
                     agg_type,
                     hide_picked,
+                    preset_choice,
                     comment_filters,
                     match_filters,
                 ),
@@ -147,6 +150,8 @@ def main():
                 "match_filters": match_filters,
                 "hide_picked": hide_picked,
                 "hide_team_nums": hide_team_nums,
+                "comment_filters": comment_filters,
+                "comment_selected": st.session_state.selected_filters,
             }
 
             presets = st.session_state.presets
