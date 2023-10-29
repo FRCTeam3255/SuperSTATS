@@ -139,26 +139,27 @@ def main():
     else:
         st.error("Please select at least one filter")
 
-    preset_name = st.text_input("New Preset Name:")
+    if preset_choice == "None":
+        preset_name = st.text_input("New Preset Name:")
 
-    if preset_name:
-        if st.button("Add Preset", use_container_width=True):
-            data = {
-                "group_filters": group_filters,
-                "selected_filters": selected_filters,
-                "agg_type": agg_type,
-                "match_filters": match_filters,
-                "hide_picked": hide_picked,
-                "hide_team_nums": hide_team_nums,
-                "comment_filters": comment_filters,
-                "comment_selected": st.session_state.selected_filters,
-            }
+        if preset_name:
+            if st.button("Add Preset", use_container_width=True):
+                data = {
+                    "group_filters": group_filters,
+                    "selected_filters": selected_filters,
+                    "agg_type": agg_type,
+                    "match_filters": match_filters,
+                    "hide_picked": hide_picked,
+                    "hide_team_nums": hide_team_nums,
+                    "comment_filters": comment_filters,
+                    "comment_selected": st.session_state.selected_filters,
+                }
 
-            presets = st.session_state.presets
-            presets[preset_name] = data
-            with open("presets.pickle", "wb") as f:
-                pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
-            st.success("Successfully Added Preset!")
+                presets = st.session_state.presets
+                presets[preset_name] = data
+                with open("presets.pickle", "wb") as f:
+                    pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
+                st.success("Successfully Added Preset!")
 
 
 if __name__ == "__main__":
