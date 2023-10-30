@@ -7,15 +7,13 @@ tba = tbapy.TBA(st.secrets["TBA_API"])
 
 
 def init_page():
-    if "team_info_dict" not in st.session_state:
+    if "session_state_init" not in st.session_state:
         st.session_state.team_info_dict = download_team_info()
-    if "global_match_df" not in st.session_state:
         set_global_df()
-    if "presets" not in st.session_state:
         st.session_state.presets = {}
-    if "max_value" not in st.session_state:
+        st.session_state.signed_in = False
+        st.session_state.admin_signed_in = False
         st.session_state.max_value = 0
-    if "comment_options" not in st.session_state:
         st.session_state.comment_options = [
             "Tipped",
             "Mechanism Damaged/Disabled",
@@ -26,9 +24,7 @@ def init_page():
             "Single Substation",
             "Double Substation",
         ]
-    if "selected_filters" not in st.session_state:
         st.session_state.selected_filters = []
-    if "max_frame_area" not in st.session_state:
         st.session_state.max_frame_area = 0
 
 

@@ -24,9 +24,6 @@ def main():
 
     password = st.secrets["ADMIN_PASSWORD"]
 
-    if "admin_signed_in" not in st.session_state:
-        st.session_state.admin_signed_in = False
-
     if not st.session_state.admin_signed_in:
         pass_input = display.text_input("Password:", type="password")
 

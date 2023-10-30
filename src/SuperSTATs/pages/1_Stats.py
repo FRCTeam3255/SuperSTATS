@@ -59,7 +59,7 @@ def main():
         group_filters = col_1.checkbox("Group Filters", True)
         hide_picked = col_2.checkbox("Hide Picked Teams", False)
         hide_team_nums = col_3.checkbox("Hide Team Numbers", False)
-        comment_filters = col_4.checkbox("Comments", False)
+        comment_filters = col_4.checkbox("Features", True)
     else:
         group_filters = check_preset("group_filters")
         hide_picked = check_preset("hide_picked")

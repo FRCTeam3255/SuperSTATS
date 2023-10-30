@@ -53,7 +53,9 @@ def config_chart(
 
     if comment_filters:
         df_scouting = load.download_sheets_raw(st.secrets["GID_SCOUTING"])
-        dt_types = df_scouting["Drivetrain Type"].unique().tolist()
+        dt_types = df_scouting["Drivetrain Type"].unique().tolist() + [
+            "Unknown Drivetrain"
+        ]
 
         df["COMMENT_GENERAL_1"] = df["COMMENT_GENERAL_1"].fillna("Comments Missing")
         filter_choices = (
@@ -62,7 +64,7 @@ def config_chart(
 
         if preset_choice == "None":
             st.session_state.selected_filters = st.multiselect(
-                "Show Features:", filter_choices, default=filter_choices
+                "Features:", filter_choices, default=filter_choices
             )
 
         selected_df = pd.DataFrame(columns=df.columns)
@@ -92,6 +94,9 @@ def config_chart(
 
         min_area = round(merged_df["Frame Size AREA"].min()) - 5
         max_area = round(merged_df["Frame Size AREA"].max()) + 5
+
+        merged_df["Drivetrain Type"].fillna("Unknown Drivetrain", inplace=True)
+        merged_df["Frame Size AREA"].fillna(min_area, inplace=True)
 
         if preset_choice == "None":
             max_area = st.slider("Max Frame Area:", min_area, max_area, max_area, 1)
