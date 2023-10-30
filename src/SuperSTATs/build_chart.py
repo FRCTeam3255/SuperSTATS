@@ -52,8 +52,13 @@ def config_chart(
         df = df[~df["Unavailable"].str.contains("x", case=False, na=False)]
 
     if comment_filters:
+        df_scouting = load.download_sheets_raw(st.secrets["GID_SCOUTING"])
+        dt_types = df_scouting["Drivetrain Type"].unique().tolist()
+
         df["COMMENT_GENERAL_1"] = df["COMMENT_GENERAL_1"].fillna("Comments Missing")
-        filter_choices = st.session_state.comment_options + ["Comments Missing"]
+        filter_choices = (
+            st.session_state.comment_options + ["Comments Missing"] + dt_types
+        )
 
         if preset_choice == "None":
             st.session_state.selected_filters = st.multiselect(
@@ -61,6 +66,7 @@ def config_chart(
             )
 
         selected_df = pd.DataFrame(columns=df.columns)
+        drivetrain_df = pd.DataFrame(columns=df_scouting.columns)
 
         for filter in st.session_state.selected_filters:
             filter_mask = df["COMMENT_GENERAL_1"].str.contains(
@@ -68,7 +74,25 @@ def config_chart(
             )
             selected_df = pd.concat([selected_df, df[filter_mask]])
 
+            scouting_mask = df_scouting["Drivetrain Type"].str.contains(
+                filter, case=False, na=False
+            )
+            drivetrain_df = pd.concat([drivetrain_df, df_scouting[scouting_mask]])
+
+        df_scouting = drivetrain_df
         df = selected_df
+
+        merged_df = df.merge(
+            df_scouting[["Team #", "Drivetrain Type"]],
+            left_on="Team",
+            right_on="Team #",
+            how="left",
+        )
+        merged_df = merged_df.drop(columns=["Team #"])
+        df = merged_df[
+            merged_df["Drivetrain Type"].isin(st.session_state.selected_filters)
+        ]
+
     else:
         st.session_state.selected_filters = []
 
