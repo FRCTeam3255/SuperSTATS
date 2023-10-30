@@ -74,23 +74,30 @@ def config_chart(
             )
             selected_df = pd.concat([selected_df, df[filter_mask]])
 
-            scouting_mask = df_scouting["Drivetrain Type"].str.contains(
+            drivetrain_mask = df_scouting["Drivetrain Type"].str.contains(
                 filter, case=False, na=False
             )
-            drivetrain_df = pd.concat([drivetrain_df, df_scouting[scouting_mask]])
+            drivetrain_df = pd.concat([drivetrain_df, df_scouting[drivetrain_mask]])
 
         df_scouting = drivetrain_df
         df = selected_df
 
         merged_df = df.merge(
-            df_scouting[["Team #", "Drivetrain Type"]],
+            df_scouting[["Team #", "Drivetrain Type", "Frame Size AREA"]],
             left_on="Team",
             right_on="Team #",
             how="left",
         )
         merged_df = merged_df.drop(columns=["Team #"])
+
+        min_area = round(merged_df["Frame Size AREA"].min()) - 5
+        max_area = round(merged_df["Frame Size AREA"].max()) + 5
+
+        max_area = st.slider("Max Frame Area:", min_area, max_area, max_area, 1)
+
         df = merged_df[
-            merged_df["Drivetrain Type"].isin(st.session_state.selected_filters)
+            (merged_df["Drivetrain Type"].isin(st.session_state.selected_filters))
+            & (merged_df["Frame Size AREA"] <= max_area)
         ]
 
     else:
