@@ -28,6 +28,8 @@ def init_page():
         ]
     if "selected_filters" not in st.session_state:
         st.session_state.selected_filters = []
+    if "max_frame_area" not in st.session_state:
+        st.session_state.max_frame_area = 0
 
 
 def build_sheet_url(url):

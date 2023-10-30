@@ -93,7 +93,11 @@ def config_chart(
         min_area = round(merged_df["Frame Size AREA"].min()) - 5
         max_area = round(merged_df["Frame Size AREA"].max()) + 5
 
-        max_area = st.slider("Max Frame Area:", min_area, max_area, max_area, 1)
+        if preset_choice == "None":
+            max_area = st.slider("Max Frame Area:", min_area, max_area, max_area, 1)
+            st.session_state.max_frame_area = max_area
+        else:
+            max_area = st.session_state.presets[preset_choice]["max_frame_area"]
 
         df = merged_df[
             (merged_df["Drivetrain Type"].isin(st.session_state.selected_filters))
