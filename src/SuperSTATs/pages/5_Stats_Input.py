@@ -304,8 +304,6 @@ def main():
 
     st.markdown("""---""")
 
-    # [TODO]
-
     st.markdown(
         f'<div style="text-align: center; font-size: 32px;">Information</div>',
         unsafe_allow_html=True,
