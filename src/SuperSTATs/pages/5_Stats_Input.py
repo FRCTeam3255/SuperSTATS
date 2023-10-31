@@ -70,6 +70,8 @@ def main():
     )
     st.title("")
 
+    # TODO: Clean up the init/clear and make radio buttons reset to index 0
+
     if "input_init" not in st.session_state:
         st.session_state.input_init = True
 
@@ -88,8 +90,23 @@ def main():
         st.session_state.info_penalties = 0
         st.session_state.info_notes = 0
 
-    # if st.button("Clear Form", use_container_width=True, type="primary"):
-    #     st.session_state.auto_cone_high = 0
+    if st.button("Clear Form", use_container_width=True, type="primary"):
+        st.session_state.auto_cone_high = 0
+        st.session_state.auto_cube_high = 0
+        st.session_state.auto_cone_mid = 0
+        st.session_state.auto_cube_mid = 0
+        st.session_state.auto_low = 0
+
+        st.session_state.tele_cone_high = 0
+        st.session_state.tele_cube_high = 0
+        st.session_state.tele_cone_mid = 0
+        st.session_state.tele_cube_mid = 0
+        st.session_state.tele_low = 0
+
+        st.session_state.info_penalties = 0
+        st.session_state.info_notes = 0
+
+        st.session_state.comment_options = []
 
     on_mobile = st.checkbox("Mobile", False)
 
@@ -102,7 +119,7 @@ def main():
 
     selection_col_1, selection_col_2 = st.columns(2)
 
-    name_input = selection_col_1.text_input("Your Name:", max_chars=2)
+    name_input = (selection_col_1.text_input("Your Name:", max_chars=2)).upper()
     match_choice = selection_col_2.selectbox("Match:", df["Match"])
 
     df_sort = df[df["Match"] == match_choice]
@@ -351,8 +368,7 @@ def main():
 
     if st.button("Submit", use_container_width=True):
         comments_input = ", ".join(comments_input)
-        prefill_url = f"https://docs.google.com/forms/d/e/1FAIpQLSeZ0snvF5GZixUzFuiDfGsifffaRJxwuQyszizAdKjR1apMLA/viewform?usp=pp_url&entry.398002633={name_input}&entry.311722203={match_input}&entry.1823404922={match_type_input}&entry.432823991={color_input}&entry.1873738734={team_input}&entry.2015525146={st.session_state.info_penalties}&entry.250579147=-{info_brick_input}&entry.268050731={auto_mobility_input}&entry.542386964={st.session_state.auto_low}&entry.530845045={st.session_state.auto_cone_mid}&entry.2086503014={st.session_state.auto_cube_mid}&entry.1207232700={st.session_state.auto_cone_high}&entry.1008310587={st.session_state.auto_cube_high}&entry.2083103665={auto_docked_input}&entry.829803960={auto_engaged_input}&entry.1796811601={st.session_state.tele_low}&entry.837438137={st.session_state.tele_cone_mid}&entry.263379052={st.session_state.tele_cube_mid}&entry.597282987={st.session_state.tele_cone_high}&entry.2060882466={st.session_state.tele_cube_high}&entry.1349917441={end_parked_input}&entry.167115309={end_docked_input}&entry.1695411443={end_engaged_input}&entry.619894282={comments_input}&entry.107629913={st.session_state.comment_options}&entry.629905259={comment_defense_input}&srd=true"
-        # prefill_url = f"https://docs.google.com/forms/d/e/1FAIpQLSeZ0snvF5GZixUzFuiDfGsifffaRJxwuQyszizAdKjR1apMLA/formResponse?usp=pp_url&entry.398002633={name_input}&entry.311722203={match_input}&entry.1823404922={match_type_input}&entry.432823991={color_input}&entry.1873738734={team_input}&entry.2015525146={st.session_state.info_penalties}&entry.250579147=-{info_brick_input}&entry.268050731={auto_mobility_input}&entry.542386964={st.session_state.auto_low}&entry.530845045={st.session_state.auto_cone_mid}&entry.2086503014={st.session_state.auto_cube_mid}&entry.1207232700={st.session_state.auto_cone_high}&entry.1008310587={st.session_state.auto_cube_high}&entry.2083103665={auto_docked_input}&entry.829803960={auto_engaged_input}&entry.1796811601={st.session_state.tele_low}&entry.837438137={st.session_state.tele_cone_mid}&entry.263379052={st.session_state.tele_cube_mid}&entry.597282987={st.session_state.tele_cone_high}&entry.2060882466={st.session_state.tele_cube_high}&entry.1349917441={end_parked_input}&entry.167115309={end_docked_input}&entry.1695411443={end_engaged_input}&entry.619894282={comments_input}&entry.107629913={st.session_state.comment_options}&entry.629905259={comment_defense_input}&submit=Submit"
+        prefill_url = f"https://docs.google.com/forms/d/e/1FAIpQLSeZ0snvF5GZixUzFuiDfGsifffaRJxwuQyszizAdKjR1apMLA/formResponse?usp=pp_url&entry.398002633={name_input}&entry.311722203={match_input}&entry.1823404922={match_type_input}&entry.432823991={color_input}&entry.1873738734={team_input}&entry.2015525146={st.session_state.info_penalties}&entry.250579147={info_brick_input}&entry.268050731={auto_mobility_input}&entry.193989110={st.session_state.auto_low}&entry.1576446792={st.session_state.auto_cone_mid}&entry.243783055={st.session_state.auto_cube_mid}&entry.1746336505={st.session_state.auto_cone_high}&entry.2024239037={st.session_state.auto_cube_high}&entry.2083103665={auto_docked_input}&entry.219114227={auto_engaged_input}&entry.1913479797={st.session_state.tele_low}&entry.539083044={st.session_state.tele_cone_mid}&entry.1061898011={st.session_state.tele_cube_mid}&entry.1767742649={st.session_state.tele_cone_high}&entry.2007109233={st.session_state.tele_cube_high}&entry.735364074={end_parked_input}&entry.1649767813={end_docked_input}&entry.173805537={end_engaged_input}&entry.619894282={comments_input}&entry.629905259={comment_defense_input}&submit=Submit"
 
         st.balloons()
         st.link_button(
@@ -361,19 +377,6 @@ def main():
             type="primary",
             use_container_width=True,
         )
-
-    # prefill_url = f"https://docs.google.com/forms/d/e/1FAIpQLSeZ0snvF5GZixUzFuiDfGsifffaRJxwuQyszizAdKjR1apMLA/viewform?usp=pp_url&entry.398002633=0&entry.311722203=0&entry.1823404922=Prac&entry.432823991=R&entry.1873738734=0&entry.2015525146=-1&entry.250579147=-1&entry.268050731=1&entry.542386964=1&entry.530845045=1&entry.2086503014=1&entry.1207232700=1&entry.1008310587=1&entry.2083103665=1&entry.1796811601=1&entry.837438137=1&entry.263379052=1&entry.597282987=1&entry.2060882466=1&entry.1349917441=1&entry.619894282=NONE&entry.107629913=-1&entry.629905259=1"
-
-    # entry_ids = prefill_url.replace("entry.", "")
-    # entry_ids = entry_ids.split("&")
-
-    # for i, entry in enumerate(entry_ids):
-    #     id = entry.split("=")
-    #     entry_ids[i] = f"{id[0]} : {id[1]}"
-
-    # entry_ids = entry_ids[1:]
-    # for entry_id in entry_ids:
-    #     st.text(entry_id)
 
 
 if __name__ == "__main__":
