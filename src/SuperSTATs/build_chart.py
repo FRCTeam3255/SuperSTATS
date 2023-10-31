@@ -92,8 +92,13 @@ def config_chart(
         )
         merged_df = merged_df.drop(columns=["Team #"])
 
-        min_area = round(merged_df["Frame Size AREA"].min()) - 5
-        max_area = round(merged_df["Frame Size AREA"].max()) + 5
+        st.write(merged_df)
+        try:
+            min_area = round(merged_df["Frame Size AREA"].min()) - 5
+            max_area = round(merged_df["Frame Size AREA"].max()) + 5
+        except:
+            min_area = 0
+            max_area = 1
 
         merged_df["Drivetrain Type"].fillna("Unknown Drivetrain", inplace=True)
         merged_df["Frame Size AREA"].fillna(min_area, inplace=True)
