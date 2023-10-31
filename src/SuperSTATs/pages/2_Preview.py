@@ -25,6 +25,7 @@ def gen_team_chart(df, column, team_df, agg_type, filter_cols, match_filters):
                 agg_type,
                 False,
                 False,
+                [],
                 match_filters,
             ),
             False,
@@ -124,6 +125,7 @@ def get_alliance_chart(df, team_df):
         team_df = team_df[section_cols].reset_index(drop=True)
 
         column_values = {}
+        team_df = team_df.drop("COMMENT_GENERAL_1", axis=1)
         for column in team_df:
             column_value = int(column.split("_")[2])
             sum_value = int(team_df[column].sum()) * column_value
@@ -197,10 +199,9 @@ def main():
     col_red.subheader(f"Projected Score: {team_score(df_raw, df_red)}")
     col_blue.subheader(f"Projected Score: {team_score(df_raw, df_blue)}")
 
-    col_1, col_2, col_3 = st.columns(3)
-    col_3.title("")
-    group_filters = col_3.checkbox("Group Filters", True)
+    col_1, col_2 = st.columns(2)
 
+    group_filters = True
     if group_filters:
         agg_type = col_1.selectbox(
             "Aggregation Type:", ("Mean", "Median", "Sum")
@@ -222,10 +223,9 @@ def main():
             filter_cols = sort_cols(sort_type)
 
     match_filters = col_2.multiselect(
-        # "Match Types:", ["Prac", "Quals", "Playoffs"], default=["Quals", "Playoffs"]
         "Match Types:",
         ["Prac", "Quals", "Playoffs"],
-        default=["Quals"],
+        default=["Quals", "Playoffs"],
     )
 
     if match_filters:

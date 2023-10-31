@@ -55,6 +55,24 @@ def main():
         unsafe_allow_html=True,
     )
     st.table(st.session_state.global_match_df)
+
+    with st.expander("View Keys"):
+        # chosen_event = None
+        year = st.number_input("Year:", min_value=0, step=1, value=2023)
+
+        # year = st.sidebar.number_input("Year:", min_value=0, step=1, value=2023)
+        # events = tba.events(int(year))
+        events = tba.events(year)
+        event_keys = {}
+
+        for event in events:
+            name = event["name"]
+            key = event["key"]
+            event_keys[name] = key
+
+        for name, key in event_keys.items():
+            st.text(f"{name} : {key}")
+
     load.set_global_df()
 
 
