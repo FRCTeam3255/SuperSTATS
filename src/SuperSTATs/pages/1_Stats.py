@@ -42,7 +42,6 @@ def main():
 
     st.markdown("""---""")
 
-    # st.write(st.session_state.presets)
     preset_choice = st.selectbox(
         "Preset Choice:", ["None"] + list(st.session_state.presets.keys())
     )
