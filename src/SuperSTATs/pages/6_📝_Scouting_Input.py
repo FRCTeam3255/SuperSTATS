@@ -18,12 +18,18 @@ def main():
     )
     st.title("")
 
-    unscouted_teams = load.get_unscouted_teams()
+    unscouted_teams_raw = load.get_unscouted_teams()
+    teams_raw = st.session_state.team_info_dict.items()
 
-    # TODO: Display team name in selectbox
+    unscouted_teams = []
+    for num, name in teams_raw:
+        if num in unscouted_teams_raw:
+            unscouted_teams.append(f"{name} | {num}")
 
     with st.form("Scouting Input", clear_on_submit=True):
         team_num = st.selectbox("Team", unscouted_teams)
+        team_num = team_num.split(" | ")[1]
+        st.write(team_num)
         length = st.number_input("Frame Size LENGTH [NO BUMPERS]", step=0.5)
         width = st.number_input("Frame Size WIDTH [NO BUMPERS]", step=0.5)
         weight = st.number_input("Weight [WITH BATTERY]", step=1)

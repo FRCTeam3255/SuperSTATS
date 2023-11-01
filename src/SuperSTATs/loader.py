@@ -231,7 +231,7 @@ def gen_radial_charts(df, team_options):
     team_1_num = int(selected_team.split(" | ")[1])
     team_1_color = hex_to_rgb(
         color_1.color_picker(
-            "Team Color 1:", value="#910000", label_visibility="hidden"
+            "Team Color 1:", value="#2AD3FF", label_visibility="hidden"
         )
     )
 
@@ -239,7 +239,7 @@ def gen_radial_charts(df, team_options):
     team_2_num = int(selected_team.split(" | ")[1])
     team_2_color = hex_to_rgb(
         color_2.color_picker(
-            "Team Color 2:", value="#910000", label_visibility="hidden"
+            "Team Color 2:", value="#2AD3FF", label_visibility="hidden"
         )
     )
 

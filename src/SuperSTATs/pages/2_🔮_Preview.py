@@ -152,10 +152,10 @@ def get_alliance_chart(df, team_df):
     team_t = ["AUTO", "TELE", "END"]
 
     chart_team_1 = load.gen_radio_chart(
-        team_r, team_t, max(team_r), load.hex_to_rgb("#ff0000"), 0.5
+        team_r, team_t, max(team_r), load.hex_to_rgb("#FF3838"), 0.5
     )
     chart_team_2 = load.gen_radio_chart(
-        team_r, team_t, max(team_r), load.hex_to_rgb("#00b0d4"), 0.5
+        team_r, team_t, max(team_r), load.hex_to_rgb("#2AD3FF"), 0.5
     )
 
     combined_chart = chart_team_1.add_trace(chart_team_2.data[0])

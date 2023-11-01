@@ -23,7 +23,7 @@ def main():
     password = st.secrets["ADMIN_PASSWORD"]
 
     if not st.session_state.admin_signed_in:
-        pass_input = display.text_input("Password:", type="password")
+        pass_input = display.text_input("Admin Password:", type="password")
 
         if pass_input == password:
             st.session_state.admin_signed_in = True
