@@ -18,8 +18,6 @@ st.set_page_config(
 def main():
     load.init_page()
 
-    df = load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
-
     display = st.empty()
 
     password = st.secrets["ADMIN_PASSWORD"]
@@ -65,10 +63,6 @@ def main():
             #     with open("presets.pickle", "wb") as f:
             #         pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
             #     st.success("Successfully Updated Presets!")
-
-        combined_chart = load.gen_radial_charts(df, load.get_team_options())
-
-        st.plotly_chart(combined_chart, use_container_width=True)
 
 
 if __name__ == "__main__":

@@ -35,7 +35,7 @@ def main():
 
     def get_team_scouting(df, column, side_value, check_nan, team_options):
         selected_team = column.selectbox(
-            f"Select {side_value} Team:", sorted(team_options)
+            f"Select {side_value} Team: ", sorted(team_options)
         )
         team_name = str(selected_team.split(" | ")[0])
         team_num = int(selected_team.split(" | ")[1])
@@ -82,6 +82,9 @@ def main():
 
     scouted_teams = df["Team #"].unique()
     unscouted_teams = [team for team in unique_teams if team not in scouted_teams]
+
+    combined_chart = load.gen_radial_charts(df_raw, load.get_team_options())
+    st.plotly_chart(combined_chart, use_container_width=True)
 
     with st.expander("Unscouted Teams"):
         if not unscouted_teams:

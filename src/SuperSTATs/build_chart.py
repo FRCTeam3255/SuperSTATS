@@ -4,7 +4,6 @@ import altair as alt
 import pandas as pd
 
 
-load.init_page()
 df = load.download_sheets_raw(st.secrets["GID_RAW"])
 sections = load.get_match_sections(df)
 filters = []
@@ -92,7 +91,6 @@ def config_chart(
         )
         merged_df = merged_df.drop(columns=["Team #"])
 
-        st.write(merged_df)
         try:
             min_area = round(merged_df["Frame Size AREA"].min()) - 5
             max_area = round(merged_df["Frame Size AREA"].max()) + 5

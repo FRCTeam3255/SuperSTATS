@@ -31,10 +31,13 @@ def main():
     )
     st.title("")
 
+    st.button("Update Page", type="primary", use_container_width=True)
+
     col_1, col_2 = st.columns(2)
     selected_team = col_2.selectbox("Select Team:", sorted(load.get_team_options()))
     team_num = int(selected_team.split(" | ")[1])
 
+    df = df.drop("COMMENT_GENERAL_1", axis=1)
     df_plot = df.loc[(df["Team"] == team_num)]
 
     mask = df.columns == "Match"
@@ -80,10 +83,8 @@ def main():
 
     st.altair_chart(line_chart, use_container_width=True)
 
-    st.title("")
     show_raw = st.checkbox("Show Raw Data")
     if show_raw:
-        st.subheader(f"Raw Data For Team {team_num}")
         st.table(df.loc[(df["Team"] == team_num)])
 
 

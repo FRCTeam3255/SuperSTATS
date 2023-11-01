@@ -10,6 +10,7 @@ st.set_page_config(
     layout="wide",
 )
 
+
 df_r = load.download_sheets_raw(st.secrets["GID_RAW"])
 
 sections = load.get_match_sections(df_r)
@@ -55,6 +56,7 @@ def sort_cols(starts_with):
 
 
 def calc_score(df, team_num, sections):
+    df = df.drop("COMMENT_GENERAL_1", axis=1)
     df_plot = df.loc[(df["Team"] == team_num)]
 
     mask = df.columns == "Match"
@@ -150,10 +152,10 @@ def get_alliance_chart(df, team_df):
     team_t = ["AUTO", "TELE", "END"]
 
     chart_team_1 = load.gen_radio_chart(
-        team_r, team_t, max(team_r), load.hex_to_rgb("#ff0000"), 0.35
+        team_r, team_t, max(team_r), load.hex_to_rgb("#ff0000"), 0.5
     )
     chart_team_2 = load.gen_radio_chart(
-        team_r, team_t, max(team_r), load.hex_to_rgb("#0000ff"), 0.35
+        team_r, team_t, max(team_r), load.hex_to_rgb("#00b0d4"), 0.5
     )
 
     combined_chart = chart_team_1.add_trace(chart_team_2.data[0])
