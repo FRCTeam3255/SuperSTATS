@@ -11,6 +11,7 @@ def init_page():
         st.session_state.init = True
         set_global_df()
         st.session_state.team_info_dict = download_team_info()
+        st.session_state.unscouted_teams = []
         st.session_state.presets = {}
         st.session_state.signed_in = False
         st.session_state.admin_signed_in = False
@@ -27,6 +28,7 @@ def init_page():
         ]
         st.session_state.selected_filters = []
         st.session_state.max_frame_area = 0
+
 
 def build_sheet_url(url):
     doc_id, sheet_id = url.split("/")[5:7]
@@ -70,6 +72,16 @@ def get_team_options():
     ]
 
     return team_options
+
+
+def get_unscouted_teams():
+    df = download_sheets_raw(st.secrets["GID_SCOUTING"]).dropna(subset="Timestamp")
+    df_raw = download_sheets_raw(st.secrets["GID_RAW"])
+
+    unique_teams = df_raw["Team"].unique()
+    scouted_teams = df["Team #"].unique()
+    unscouted_teams = [team for team in unique_teams if team not in scouted_teams]
+    return unscouted_teams
 
 
 def get_match_sections(df):

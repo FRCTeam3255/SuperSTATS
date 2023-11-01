@@ -9,12 +9,6 @@ st.set_page_config(
 )
 
 
-def num_input(column, label, min_value, max_value, default_index):
-    return column.number_input(
-        label, step=1, min_value=min_value, max_value=max_value, value=default_index
-    )
-
-
 def gen_num_container(
     column, on_mobile, session_state, num_name, btn_key_inc, btn_key_dec, allow_negative
 ):
@@ -370,7 +364,7 @@ def main():
 
         st.balloons()
         st.link_button(
-            "Go To Prefilled Form",
+            "Submit Form",
             prefill_url,
             type="primary",
             use_container_width=True,
