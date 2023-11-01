@@ -44,6 +44,8 @@ def main():
                         pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
                     st.success("Successfully Updated Presets!")
 
+            st.markdown("""---""")
+
             st.download_button(
                 "Download Presets",
                 json.dumps(st.session_state.presets).encode("utf-8"),
@@ -52,17 +54,23 @@ def main():
             )
 
         with st.expander("Delete Presets"):
-            for preset in st.session_state.presets.keys():
-                st.checkbox(preset, False)
+            with open("presets.pickle", "rb") as f:
+                presets = pickle.load(f)
 
-            # if st.button("Set Presets", use_container_width=True):
-            #     bytes_data = uploaded_file.getvalue()
-            #     bytes_formatted = bytes_data.decode("utf-8")
-            #     data = json.loads(bytes_formatted)
+            deleted_presets = []
+            for name, value in presets.items():
+                if st.checkbox(name, False, help=str(value)):
+                    deleted_presets.append(name)
 
-            #     with open("presets.pickle", "wb") as f:
-            #         pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
-            #     st.success("Successfully Updated Presets!")
+            st.markdown("""---""")
+
+            if st.button("Delete Selected", use_container_width=True):
+                for preset in deleted_presets:
+                    presets.pop(preset)
+
+                with open("presets.pickle", "wb") as f:
+                    pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
+                st.success("Successfully Deleted Presets!")
 
 
 if __name__ == "__main__":

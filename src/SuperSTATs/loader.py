@@ -7,7 +7,8 @@ tba = tbapy.TBA(st.secrets["TBA_API"])
 
 
 def init_page():
-    if "session_state_init" not in st.session_state:
+    if "init" not in st.session_state:
+        st.session_state.init = True
         set_global_df()
         st.session_state.team_info_dict = download_team_info()
         st.session_state.presets = {}
@@ -26,7 +27,6 @@ def init_page():
         ]
         st.session_state.selected_filters = []
         st.session_state.max_frame_area = 0
-
 
 def build_sheet_url(url):
     doc_id, sheet_id = url.split("/")[5:7]
