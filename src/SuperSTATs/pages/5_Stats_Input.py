@@ -102,6 +102,8 @@ def main():
 
         st.session_state.comment_options = []
 
+    st.write("""---""")
+
     on_mobile = st.checkbox("Mobile", False)
 
     teams = {}

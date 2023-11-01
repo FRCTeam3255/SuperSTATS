@@ -22,6 +22,7 @@ def main():
     st.title("")
 
     compare_teams = st.checkbox("Compare Teams", False)
+
     col_1, col_2 = st.columns(2)
 
     def check_nan(var_name, var_value, column):
@@ -37,6 +38,7 @@ def main():
         selected_team = column.selectbox(
             f"Select {side_value} Team: ", sorted(team_options)
         )
+
         team_name = str(selected_team.split(" | ")[0])
         team_num = int(selected_team.split(" | ")[1])
 
