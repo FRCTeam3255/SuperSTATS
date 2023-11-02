@@ -34,7 +34,16 @@ def gen_team_chart(df, column, team_df, agg_type, filter_cols, match_filters):
     )
 
 
-def display_team(team_header, column, team_df):
+def check_nan(var_name, var_value, column):
+    try:
+        if np.isnan(var_value):
+            column.text(f"{var_name}: No Data Collected")
+    except:
+        column.text(f"{var_name}: {var_value}")
+
+
+def display_team(team_header, column, team_df, show_scouting):
+    df = load.download_sheets_raw(st.secrets["GID_SCOUTING"]).dropna(subset="Timestamp")
     column.header(team_header)
     for team_num in team_df:
         team_name = load.get_team(team_num).get("nickname", "N/A")
@@ -42,6 +51,27 @@ def display_team(team_header, column, team_df):
             f"<p style='font-size:20px'><b>[{int(team_num)}]</b> {team_name}</p>",
             unsafe_allow_html=True,
         )
+        if show_scouting:
+            with column.expander("Scouting Data"):
+                sorted_df = df.loc[df["Team #"] == int(team_num)]
+
+                sorted_df = sorted_df.sort_values(by="Timestamp")
+                sorted_df = sorted_df.drop_duplicates(keep="last", subset="Team #")
+
+                time_logged = str(sorted_df["Timestamp"].max())
+                if time_logged == "nan":
+                    column.error("No Data Collected For Team")
+
+                else:
+                    length = sorted_df["Frame Size LENGTH"].max()
+                    width = sorted_df["Frame Size WIDTH"].max()
+                    st.text(f"Length: {length} in | Width: {width} in")
+                    st.text(f"Area: {length * width} in²")
+
+                    check_nan("Drivetrain", sorted_df["Drivetrain Type"].max(), st)
+                    check_nan("Scouting Comments", sorted_df["Comments"].max(), st)
+
+                    st.text(f"Time Logged: {time_logged}")
 
 
 def sort_cols(starts_with):
@@ -175,10 +205,14 @@ def main():
     for team in teams_raw:
         teams[team[1]] = int(team[0])
 
-    if st.checkbox("Use Manual Dataframe"):
+    col_1, col_2 = st.columns(2)
+
+    if col_1.checkbox("Use Manual Dataframe"):
         df = load.download_sheets_raw(st.secrets["GID_MATCHES"])
     else:
         df = st.session_state.global_match_df
+
+    show_scouting = col_2.checkbox("Show Scouting Data")
 
     match_choice = st.selectbox("Match:", df["Match"])
 
@@ -190,8 +224,8 @@ def main():
 
     col_red, col_blue = st.columns(2)
 
-    display_team("🔴 Red Alliance 🔴", col_red, df_red)
-    display_team("🔵 Blue Alliance 🔵", col_blue, df_blue)
+    display_team("🔴 Red Alliance 🔴", col_red, df_red, show_scouting)
+    display_team("🔵 Blue Alliance 🔵", col_blue, df_blue, show_scouting)
 
     df = load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
     df_picked = load.download_sheets_raw(st.secrets["GID_PICKED"])
