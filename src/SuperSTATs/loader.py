@@ -27,7 +27,8 @@ def init_page():
             "Double Substation",
         ]
         st.session_state.selected_filters = []
-        st.session_state.max_frame_area = 0
+        st.session_state.max_frame_width = 0
+        st.session_state.max_frame_length = 0
 
 
 def build_sheet_url(url):

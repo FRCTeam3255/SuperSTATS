@@ -153,7 +153,8 @@ def main():
                     "hide_team_nums": hide_team_nums,
                     "comment_filters": comment_filters,
                     "comment_selected": st.session_state.selected_filters,
-                    "max_frame_area": st.session_state.max_frame_area,
+                    "max_frame_width": st.session_state.max_frame_width,
+                    "max_frame_length": st.session_state.max_frame_length,
                 }
 
                 presets = st.session_state.presets

@@ -84,7 +84,9 @@ def config_chart(
         df = selected_df
 
         merged_df = df.merge(
-            df_scouting[["Team #", "Drivetrain Type", "Frame Size AREA"]],
+            df_scouting[
+                ["Team #", "Drivetrain Type", "Frame Size WIDTH", "Frame Size LENGTH"]
+            ],
             left_on="Team",
             right_on="Team #",
             how="left",
@@ -92,24 +94,57 @@ def config_chart(
         merged_df = merged_df.drop(columns=["Team #"])
 
         try:
-            min_area = round(merged_df["Frame Size AREA"].min()) - 5
-            max_area = round(merged_df["Frame Size AREA"].max()) + 5
+            min_width = round(merged_df["Frame Size WIDTH"].min()) - 1
+            max_width = round(merged_df["Frame Size WIDTH"].max()) + 1
+
+            min_length = round(merged_df["Frame Size LENGTH"].min()) - 1
+            max_length = round(merged_df["Frame Size LENGTH"].max()) + 1
         except:
-            min_area = 0
-            max_area = 1
+            min_width = 0
+            max_width = 1
+
+            min_length = 0
+            max_length = 1
 
         merged_df["Drivetrain Type"].fillna("Unknown Drivetrain", inplace=True)
-        merged_df["Frame Size AREA"].fillna(min_area, inplace=True)
+        merged_df["Frame Size WIDTH"].fillna(min_width, inplace=True)
+        merged_df["Frame Size LENGTH"].fillna(min_length, inplace=True)
 
         if preset_choice == "None":
-            max_area = st.slider("Max Frame Area:", min_area, max_area, max_area, 1)
-            st.session_state.max_frame_area = max_area
+            square_frame = st.checkbox("Use Same WIDTH and LENGTH", False)
+            frame_slider_1, frame_slider_2 = st.columns(2)
+
+            if square_frame:
+                square_sides = [max_width, max_length, min_width, min_length]
+
+                max_width = st.slider(
+                    "Max Frame WIDTH/LENGTH:",
+                    min(square_sides),
+                    max(square_sides),
+                    max(square_sides),
+                    1,
+                )
+                st.session_state.max_frame_width = max_width
+                st.session_state.max_frame_length = max_width
+
+            else:
+                max_width = frame_slider_1.slider(
+                    "Max Frame WIDTH:", min_width, max_width, max_width, 1
+                )
+                max_length = frame_slider_2.slider(
+                    "Max Frame LENGTH:", min_length, max_length, max_length, 1
+                )
+                st.session_state.max_frame_width = max_width
+                st.session_state.max_frame_length = max_length
+
         else:
-            max_area = st.session_state.presets[preset_choice]["max_frame_area"]
+            max_width = st.session_state.presets[preset_choice]["max_frame_width"]
+            max_length = st.session_state.presets[preset_choice]["max_frame_length"]
 
         df = merged_df[
             (merged_df["Drivetrain Type"].isin(st.session_state.selected_filters))
-            & (merged_df["Frame Size AREA"] <= max_area)
+            & (merged_df["Frame Size WIDTH"] <= max_width)
+            & (merged_df["Frame Size LENGTH"] <= max_length)
         ]
 
     else:
