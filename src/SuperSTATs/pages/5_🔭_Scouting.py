@@ -60,9 +60,6 @@ def main():
             column.subheader(f"Area: {length * width} in²")
 
             check_nan("Drivetrain", sorted_df["Drivetrain Type"].max(), column)
-            check_nan(
-                "Feeders", sorted_df["Which feeder does your robot go to"].max(), column
-            )
             check_nan("Scouting Comments", sorted_df["Comments"].max(), column)
 
             # TODO: Implement match comments

@@ -29,7 +29,6 @@ def main():
     with st.form("Scouting Input", clear_on_submit=True):
         team_num = st.selectbox("Team", unscouted_teams)
         team_num = team_num.split(" | ")[1]
-        st.write(team_num)
         length = st.number_input("Frame Size LENGTH [NO BUMPERS]", step=0.5)
         width = st.number_input("Frame Size WIDTH [NO BUMPERS]", step=0.5)
         weight = st.number_input("Weight [NO BATTERY]", step=1)
@@ -40,25 +39,13 @@ def main():
             horizontal=True,
         )
 
-        sub_col_1, sub_col_2 = st.columns(2)
-
-        if sub_col_1.checkbox("Single Substation", False):
-            single_sub = "Single+substation"
-        else:
-            single_sub = ""
-
-        if sub_col_2.checkbox("Double Substation", False):
-            double_sub = "Double+substation"
-        else:
-            double_sub = ""
-
         comments = st.text_input("Additional Comments:")
 
         st.write("""---""")
         submitted = st.form_submit_button("Submit", use_container_width=True)
 
     if submitted:
-        prefill_url = f"https://docs.google.com/forms/d/e/1FAIpQLSf0Wm6xqzuUOaYquHo-oIIZHfIXJIAUA9R64M_PnEQibP_jJw/viewform?usp=pp_url&entry.1329798282={team_num}&entry.2038191838={length}&entry.2133090800={width}&entry.1034225169={weight}&entry.1374859410={dt_type}&entry.1338141486={single_sub}&entry.1338141486={double_sub}&entry.820368818={comments.replace(' ', '+')}"
+        prefill_url = f"https://docs.google.com/forms/d/e/1FAIpQLSf0Wm6xqzuUOaYquHo-oIIZHfIXJIAUA9R64M_PnEQibP_jJw/viewform?usp=pp_url&entry.1329798282={team_num}&entry.2038191838={length}&entry.2133090800={width}&entry.1034225169={weight}&entry.1374859410={dt_type}&entry.820368818={comments.replace(' ', '+')}"
 
         st.balloons()
         st.link_button(
