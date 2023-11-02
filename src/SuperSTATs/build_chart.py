@@ -107,7 +107,7 @@ def config_chart(
         merged_df["Frame Size LENGTH"].fillna(min_length, inplace=True)
 
         if preset_choice == "None":
-            square_frame = st.checkbox("Use Same WIDTH and LENGTH", False)
+            square_frame = st.checkbox("Use Same WIDTH and LENGTH", True)
             frame_slider_1, frame_slider_2 = st.columns(2)
 
             if square_frame:
