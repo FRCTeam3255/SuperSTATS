@@ -32,7 +32,7 @@ def main():
         st.write(team_num)
         length = st.number_input("Frame Size LENGTH [NO BUMPERS]", step=0.5)
         width = st.number_input("Frame Size WIDTH [NO BUMPERS]", step=0.5)
-        weight = st.number_input("Weight [WITH BATTERY]", step=1)
+        weight = st.number_input("Weight [NO BATTERY]", step=1)
 
         dt_type = st.radio(
             "Sorting Type:",

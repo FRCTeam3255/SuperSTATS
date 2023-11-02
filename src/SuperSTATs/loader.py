@@ -61,6 +61,16 @@ def download_team_info():
     return local_team_info_dict
 
 
+def get_tba_rankings():
+    event_rankings = tba.event_rankings(st.secrets["DEFAULT_EVENT_KEY"])["rankings"]
+    team_rankings = {}
+
+    for team in event_rankings:
+        team_rankings[team["team_key"].split("frc")[1]] = team["rank"]
+
+    return team_rankings
+
+
 def get_team_options():
     teams = {}
     teams_raw = st.session_state.team_info_dict.items()

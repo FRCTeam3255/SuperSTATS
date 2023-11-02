@@ -166,6 +166,12 @@ def custom_bar_chart(data, hide_teams):
     else:
         tooltip = ["Team:N", "value:Q", "variable:N"]
 
+    tba_rankings = load.get_tba_rankings()
+
+    data["Team"] = data["Team"].apply(
+        lambda team: f"{team} [{str(tba_rankings.get(str(team), 'NA')).zfill(2)}]"
+    )
+
     chart = (
         alt.Chart(data)
         .mark_bar()
