@@ -100,11 +100,7 @@ def config_chart(
             min_length = round(merged_df["Frame Size LENGTH"].min()) - 1
             max_length = round(merged_df["Frame Size LENGTH"].max()) + 1
         except:
-            min_width = 0
-            max_width = 1
-
-            min_length = 0
-            max_length = 1
+            min_width, max_width, min_length, max_length = 0, 1, 0, 1
 
         merged_df["Drivetrain Type"].fillna("Unknown Drivetrain", inplace=True)
         merged_df["Frame Size WIDTH"].fillna(min_width, inplace=True)
