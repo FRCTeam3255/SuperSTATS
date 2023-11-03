@@ -1,8 +1,6 @@
 import SuperSTATs.loader as load
-import plotly.express as px
 import streamlit as st
 import pickle, json
-import pandas as pd
 
 # [STATS INPUT]
 # Stat Taker List

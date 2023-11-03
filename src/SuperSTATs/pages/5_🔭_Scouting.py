@@ -1,4 +1,3 @@
-import SuperSTATs.build_chart as build
 import SuperSTATs.loader as load
 import streamlit as st
 import numpy as np
