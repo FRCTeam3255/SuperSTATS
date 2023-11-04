@@ -103,7 +103,9 @@ def main():
         # "📈 Score Outliers",
     ]
 
-    selected_filters = st.multiselect("Filters:", filters, ["🚨 TBA Score Variation"])
+    selected_filters = st.multiselect(
+        "Filters:", filters, ["❓ Missing Teams", "🔄️ Incorrect Entry Amount"]
+    )
 
     st.write("""---""")
 
@@ -177,7 +179,7 @@ def main():
                     st.header("Missing Comments")
                     st.write(comment_df)
 
-            if "🔄️ [WIP] Incorrect Entry Amount" in selected_filters:
+            if "🔄️ Incorrect Entry Amount" in selected_filters:
                 entries_df = df[["Team", "Match"]]
                 entries_df = entries_df[entries_df["Match"] == match_num].drop(
                     "Match", axis=1
