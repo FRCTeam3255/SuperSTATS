@@ -55,9 +55,14 @@ def get_team(team):
 @st.cache_data
 def download_team_info():
     df = download_sheets_raw(st.secrets["GID_RAW"])
+    tba_teams = tba.event_teams(st.secrets["DEFAULT_EVENT_KEY"])
+
     local_team_info_dict = {}
-    for team in df["Team"].unique():
+
+    for team in tba_teams:
+        team = team["team_number"]
         local_team_info_dict[team] = get_team(team).get("nickname", "N/A")
+
     return local_team_info_dict
 
 
@@ -87,9 +92,8 @@ def get_team_options():
 
 def get_unscouted_teams():
     df = download_sheets_raw(st.secrets["GID_SCOUTING"]).dropna(subset="Timestamp")
-    df_raw = download_sheets_raw(st.secrets["GID_RAW"])
 
-    unique_teams = df_raw["Team"].unique()
+    unique_teams = st.session_state.team_info_dict
     scouted_teams = df["Team #"].unique()
     unscouted_teams = [team for team in unique_teams if team not in scouted_teams]
     return unscouted_teams

@@ -70,17 +70,24 @@ def main():
     tba_scores = {}
     tba_info = tba.event_matches(st.secrets["DEFAULT_EVENT_KEY"])
 
+    calc_excess = st.checkbox("Calculate Excess")
     for data in tba_info:
-        excess_points = (
-            data["score_breakdown"]["red"]["foulPoints"]
-            + data["score_breakdown"]["red"]["linkPoints"]
-            + data["score_breakdown"]["blue"]["foulPoints"]
-            + data["score_breakdown"]["blue"]["linkPoints"]
-        )
+        if calc_excess:
+            excess_points = (
+                data["score_breakdown"]["red"]["foulPoints"]
+                + data["score_breakdown"]["red"]["linkPoints"]
+                + data["score_breakdown"]["blue"]["foulPoints"]
+                + data["score_breakdown"]["blue"]["linkPoints"]
+            )
         match_num = data["match_number"]
+        if calc_excess:
+            total_score = (
+                data["alliances"]["blue"]["score"] + data["alliances"]["red"]["score"]
+            ) - excess_points
+            tba_scores[match_num] = total_score
         total_score = (
             data["alliances"]["blue"]["score"] + data["alliances"]["red"]["score"]
-        ) - excess_points
+        )
         tba_scores[match_num] = total_score
 
     grouped = df.groupby("Match")
@@ -192,9 +199,9 @@ def main():
                     st.write(entries_count)
 
             if "🚨 TBA Score Variation" in selected_filters:
-                tolerance = st.slider(
-                    "Score Tolerance:", 0, 100, value=25, key=f"{match_num}_Tolerance"
-                )
+                # tolerance = st.slider(
+                #     "Score Tolerance:", 0, 100, value=25, key=f"{match_num}_Tolerance"
+                # )
 
                 tba_score = tba_scores[match_num]
 
