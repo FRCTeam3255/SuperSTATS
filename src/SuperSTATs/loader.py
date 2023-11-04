@@ -109,10 +109,6 @@ def get_match_sections(df):
     return sorted(list(set(sections)))
 
 
-def alter_cols(match_num):
-    return f"Quals {match_num}"
-
-
 def set_global_df():
     chosen_event_key = st.secrets["DEFAULT_EVENT_KEY"]
     # chosen_event = st.sidebar.selectbox("Event:", event_keys.keys())
@@ -123,38 +119,78 @@ def set_global_df():
 
     event_matches = tba.event_matches(chosen_event_key)
 
-    quals = {}
-    for match in event_matches:
-        if match["comp_level"] == "qm":
-            red_teams = match["alliances"]["red"]["team_keys"]
-            blue_teams = match["alliances"]["blue"]["team_keys"]
+    # Convert matches JSON to DataFrame
+    df = pd.DataFrame(event_matches)
 
-            red_teams = [team.replace("frc", "").replace("'", "") for team in red_teams]
-            blue_teams = [
-                team.replace("frc", "").replace("'", "") for team in blue_teams
-            ]
+    # Flatten Dictionaries into colulns
+    df = pd.concat([df, pd.json_normalize(df["alliances"])], axis=1).drop(
+        columns="alliances"
+    )
+    # event_matches_df = pd.concat(
+    #     [event_matches_df, pd.json_normalize(event_matches_df["score_breakdown"])],
+    #     axis=1,
+    # ).drop(columns="score_breakdown")
 
-            quals[match["match_number"]] = {
-                "Red 1": red_teams[0],
-                "Red 2": red_teams[1],
-                "Red 3": red_teams[2],
-                "Blue 1": blue_teams[0],
-                "Blue 2": blue_teams[1],
-                "Blue 3": blue_teams[2],
-            }
+    # Replace match type with human readable name
+    df["comp_level"] = df["comp_level"].replace(
+        {"qm": "Quals", "sf": "Playoffs", "f": "Finals"}
+    )
 
-    df = pd.DataFrame(quals).T.reset_index()
-    df.columns = [
-        "Match",
-        "Red 1",
-        "Red 2",
-        "Red 3",
-        "Blue 1",
-        "Blue 2",
-        "Blue 3",
+    # Remove 'frc' from team number and convert to int
+    df["red.team_keys"] = df["red.team_keys"].apply(
+        lambda teams: [int(x.replace("frc", "")) for x in teams]
+    )
+    df["blue.team_keys"] = df["blue.team_keys"].apply(
+        lambda teams: [int(x.replace("frc", "")) for x in teams]
+    )
+
+    # Expand list to columns
+    df = pd.concat(
+        [
+            df,
+            pd.DataFrame(
+                df["red.team_keys"].to_list(),
+                columns=["Red 1", "Red 2", "Red 3"],
+            ),
+        ],
+        axis=1,
+    ).drop(columns="red.team_keys")
+    df = pd.concat(
+        [
+            df,
+            pd.DataFrame(
+                df["blue.team_keys"].to_list(),
+                columns=["Blue 1", "Blue 2", "Blue 3"],
+            ),
+        ],
+        axis=1,
+    ).drop(columns="blue.team_keys")
+
+    # Set playoff match_numer to be set_number
+    df.loc[df["comp_level"] == "Playoffs", "match_number"] = df.loc[
+        df["comp_level"] == "Playoffs", "set_number"
     ]
-    df = df.sort_values(by="Match").reset_index(drop=True)
-    df["Match"] = df["Match"].apply(alter_cols)
+
+    # Make human readable match number id
+    df["Match"] = df["comp_level"] + " " + df["match_number"].astype(str)
+
+    # Sort values
+    df = df.sort_values(
+        by=["comp_level", "match_number"], ascending=[False, True]
+    ).reset_index(drop=True)
+
+    # Subset
+    df = df[
+        [
+            "Match",
+            "Red 1",
+            "Red 2",
+            "Red 3",
+            "Blue 1",
+            "Blue 2",
+            "Blue 3",
+        ]
+    ]
 
     if "global_match_df" not in st.session_state:
         st.session_state.global_match_df = df
