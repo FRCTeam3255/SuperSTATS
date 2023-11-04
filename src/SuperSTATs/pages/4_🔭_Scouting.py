@@ -73,7 +73,7 @@ def main():
     else:
         get_team_scouting(df, st, "", check_nan, team_options)
 
-    st.button("Reload Values", use_container_width=True)
+    st.button("Reload Values", use_container_width=True, type="primary")
 
     unscouted_teams = load.get_unscouted_teams()
 
@@ -81,8 +81,14 @@ def main():
         if not unscouted_teams:
             st.success("All teams have scouting info!")
         else:
-            for index, team in enumerate(unscouted_teams):
-                st.write(f"[{str(index + 1).zfill(2)}] {team}")
+            show_team_names = st.checkbox("Show Team Names", False)
+            for index, team in enumerate(sorted(unscouted_teams)):
+                if show_team_names:
+                    st.write(
+                        f"[{str(index + 1).zfill(2)}] {team} | {load.get_team(team)['nickname']}"
+                    )
+                else:
+                    st.write(f"[{str(index + 1).zfill(2)}] {team}")
 
     df_raw = load.download_sheets_raw(st.secrets["GID_RAW"])
     combined_chart = load.gen_radial_charts(df_raw, load.get_team_options())
