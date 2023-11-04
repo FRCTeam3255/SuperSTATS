@@ -75,18 +75,18 @@ def main():
 
     st.button("Reload Values", use_container_width=True)
 
-    df_raw = load.download_sheets_raw(st.secrets["GID_RAW"])
-    combined_chart = load.gen_radial_charts(df_raw, load.get_team_options())
-    st.plotly_chart(combined_chart, use_container_width=True)
-
     unscouted_teams = load.get_unscouted_teams()
 
     with st.expander("Unscouted Teams"):
         if not unscouted_teams:
-            st.write("All teams have scouting info!")
+            st.success("All teams have scouting info!")
         else:
-            for team in unscouted_teams:
-                st.write(f"- {team}")
+            for index, team in enumerate(unscouted_teams):
+                st.write(f"[{str(index + 1).zfill(2)}] {team}")
+
+    df_raw = load.download_sheets_raw(st.secrets["GID_RAW"])
+    combined_chart = load.gen_radial_charts(df_raw, load.get_team_options())
+    st.plotly_chart(combined_chart, use_container_width=True)
 
 
 if __name__ == "__main__":
