@@ -2,6 +2,7 @@ import SuperSTATs.loader as load
 import streamlit as st
 import altair as alt
 import pandas as pd
+import numpy as np
 
 
 df = load.download_sheets_raw(st.secrets["GID_RAW"])
@@ -57,9 +58,17 @@ def config_chart(
         ]
 
         df["COMMENT_GENERAL_1"] = df["COMMENT_GENERAL_1"].fillna("Comments Missing")
-        filter_choices = (
+        filter_choices_RAW = (
             st.session_state.comment_options + ["Comments Missing"] + dt_types
         )
+
+        filter_choices = []
+
+        for filter in filter_choices_RAW:
+            if str(filter) == "nan":
+                pass
+            else:
+                filter_choices.append(filter)
 
         if preset_choice == "None":
             st.session_state.selected_filters = st.multiselect(
