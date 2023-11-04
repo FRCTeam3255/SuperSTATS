@@ -45,10 +45,16 @@ def gen_num_container(
             ):
                 session_state += 1
 
-        num_value.markdown(
-            f'<div style="text-align: center;">{num_name}: {session_state}</div>',
-            unsafe_allow_html=True,
-        )
+        if session_state > 0:
+            num_value.markdown(
+                f'<div style="text-align: center; color:lime;">{num_name}: {session_state}</div>',
+                unsafe_allow_html=True,
+            )
+        else:
+            num_value.markdown(
+                f'<div style="text-align: center;">{num_name}: {session_state}</div>',
+                unsafe_allow_html=True,
+            )
 
         if on_mobile:
             st.markdown("---")
@@ -362,6 +368,14 @@ def main():
 
     comments_input = ", ".join(comments_input)
     prefill_url = f"https://docs.google.com/forms/d/e/1FAIpQLSeZ0snvF5GZixUzFuiDfGsifffaRJxwuQyszizAdKjR1apMLA/formResponse?usp=pp_url&entry.398002633={name_input}&entry.311722203={match_input}&entry.1823404922={match_type_input}&entry.432823991={color_input}&entry.1873738734={team_input}&entry.2015525146={st.session_state.info_penalties}&entry.250579147={info_brick_input}&entry.268050731={auto_mobility_input}&entry.193989110={st.session_state.auto_low}&entry.1576446792={st.session_state.auto_cone_mid}&entry.243783055={st.session_state.auto_cube_mid}&entry.1746336505={st.session_state.auto_cone_high}&entry.2024239037={st.session_state.auto_cube_high}&entry.2083103665={auto_docked_input}&entry.219114227={auto_engaged_input}&entry.1913479797={st.session_state.tele_low}&entry.539083044={st.session_state.tele_cone_mid}&entry.1061898011={st.session_state.tele_cube_mid}&entry.1767742649={st.session_state.tele_cone_high}&entry.2007109233={st.session_state.tele_cube_high}&entry.735364074={end_parked_input}&entry.1649767813={end_docked_input}&entry.173805537={end_engaged_input}&entry.619894282={comments_input}&entry.629905259={comment_defense_input}&submit=Submit"
+    st.markdown(
+        '<div style="text-align: center;">You are submitting for:</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        f'<div style="text-align: center; color:lime;">{team_input} - {match_choice}</div>',
+        unsafe_allow_html=True,
+    )
     st.link_button(
         "Submit",
         prefill_url,
