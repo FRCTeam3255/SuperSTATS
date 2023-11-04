@@ -96,7 +96,7 @@ def main():
         # "📈 Score Outliers",
     ]
 
-    selected_filters = st.multiselect("Filters:", filters)
+    selected_filters = st.multiselect("Filters:", filters, ["🚨 TBA Score Variation"])
 
     st.write("""---""")
 

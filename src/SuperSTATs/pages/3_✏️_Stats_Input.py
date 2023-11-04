@@ -17,12 +17,12 @@ def gen_num_container(
 
         if on_mobile:
             if left_btn.button(
-                "➕", key=btn_key_inc, use_container_width=True, type="primary"
+                "$+$", key=btn_key_inc, use_container_width=True, type="primary"
             ):
                 session_state += 1
 
             if right_btn.button(
-                "➖", key=btn_key_dec, use_container_width=True, type="primary"
+                "$-$", key=btn_key_dec, use_container_width=True, type="primary"
             ):
                 if allow_negative:
                     session_state -= 1
@@ -32,7 +32,7 @@ def gen_num_container(
 
         else:
             if left_btn.button(
-                "➖", key=btn_key_inc, use_container_width=True, type="primary"
+                "$-$", key=btn_key_inc, use_container_width=True, type="primary"
             ):
                 if allow_negative:
                     session_state -= 1
@@ -41,7 +41,7 @@ def gen_num_container(
                         session_state -= 1
 
             if right_btn.button(
-                "➕", key=btn_key_dec, use_container_width=True, type="primary"
+                "$+$", key=btn_key_dec, use_container_width=True, type="primary"
             ):
                 session_state += 1
 
@@ -110,7 +110,7 @@ def main():
 
     st.write("""---""")
 
-    on_mobile = st.checkbox("Mobile", True)
+    on_mobile = st.checkbox("Mobile", False)
 
     teams = {}
     teams_raw = st.session_state.team_info_dict.items()
@@ -166,8 +166,8 @@ def main():
         on_mobile,
         st.session_state.auto_cone_high,
         "AUTO ⚠️ HIGH",
-        "AUTO⚠️HIGH➕",
-        "AUTO⚠️HIGH➖",
+        "AUTO⚠️HIGH$+$",
+        "AUTO⚠️HIGH$-$",
         False,
     )
 
@@ -176,8 +176,8 @@ def main():
         on_mobile,
         st.session_state.auto_cube_high,
         "AUTO 🟪 HIGH",
-        "AUTO🟪HIGH➕",
-        "AUTO🟪HIGH➖",
+        "AUTO🟪HIGH$+$",
+        "AUTO🟪HIGH$-$",
         False,
     )
 
@@ -186,8 +186,8 @@ def main():
         on_mobile,
         st.session_state.auto_cone_mid,
         "AUTO ⚠️ MID",
-        "AUTO⚠️MID➕",
-        "AUTO⚠️MID➖",
+        "AUTO⚠️MID$+$",
+        "AUTO⚠️MID$-$",
         False,
     )
 
@@ -196,8 +196,8 @@ def main():
         on_mobile,
         st.session_state.auto_cube_mid,
         "AUTO 🟪 MID",
-        "AUTO🟪MID➕",
-        "AUTO🟪MID➖",
+        "AUTO🟪MID$+$",
+        "AUTO🟪MID$-$",
         False,
     )
 
@@ -206,8 +206,8 @@ def main():
         on_mobile,
         st.session_state.auto_low,
         "AUTO LOW",
-        "AUTO_LOW➕",
-        "AUTO_LOW➖",
+        "AUTO_LOW$+$",
+        "AUTO_LOW$-$",
         False,
     )
 
@@ -238,8 +238,8 @@ def main():
         on_mobile,
         st.session_state.tele_cone_high,
         "TELE ⚠️ HIGH",
-        "TELE⚠️HIGH➕",
-        "TELE⚠️HIGH➖",
+        "TELE⚠️HIGH$+$",
+        "TELE⚠️HIGH$-$",
         False,
     )
 
@@ -248,8 +248,8 @@ def main():
         on_mobile,
         st.session_state.tele_cube_high,
         "TELE 🟪 HIGH",
-        "TELE🟪HIGH➕",
-        "TELE🟪HIGH➖",
+        "TELE🟪HIGH$+$",
+        "TELE🟪HIGH$-$",
         False,
     )
 
@@ -258,8 +258,8 @@ def main():
         on_mobile,
         st.session_state.tele_cone_mid,
         "TELE ⚠️ MID",
-        "TELE⚠️MID➕",
-        "TELE⚠️MID➖",
+        "TELE⚠️MID$+$",
+        "TELE⚠️MID$-$",
         False,
     )
 
@@ -268,8 +268,8 @@ def main():
         on_mobile,
         st.session_state.tele_cube_mid,
         "TELE 🟪 MID",
-        "TELE🟪MID➕",
-        "TELE🟪MID➖",
+        "TELE🟪MID$+$",
+        "TELE🟪MID$-$",
         False,
     )
 
@@ -278,8 +278,8 @@ def main():
         on_mobile,
         st.session_state.tele_low,
         "TELE LOW",
-        "TELE_LOW➕",
-        "TELE_LOW➖",
+        "TELE_LOW$+$",
+        "TELE_LOW$-$",
         False,
     )
 
@@ -324,8 +324,8 @@ def main():
         on_mobile,
         st.session_state.info_penalties,
         "INFO PENALTIES",
-        "INFO_PENALTIES➕",
-        "INFO_PENALTIES➖",
+        "INFO_PENALTIES$+$",
+        "INFO_PENALTIES$-$",
         True,
     )
 
@@ -356,8 +356,8 @@ def main():
         on_mobile,
         st.session_state.info_notes,
         "INFO NOTES",
-        "INFO_NOTES➕",
-        "INFO_NOTES➖",
+        "INFO_NOTES$+$",
+        "INFO_NOTES$-$",
         True,
     )
 
