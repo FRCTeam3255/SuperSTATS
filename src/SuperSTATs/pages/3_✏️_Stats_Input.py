@@ -110,7 +110,8 @@ def main():
 
     st.write("""---""")
 
-    on_mobile = st.checkbox("Mobile", False)
+    # on_mobile = st.checkbox("Mobile", False, disabled=True)
+    on_mobile = False
 
     teams = {}
     teams_raw = st.session_state.team_info_dict.items()
