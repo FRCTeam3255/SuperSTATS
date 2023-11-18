@@ -1,2 +1,3 @@
-# SuperSTATS
- SuperNURDs Stat Collection
+Local install
+
+pip install -e .
