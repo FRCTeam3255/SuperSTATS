@@ -32,7 +32,9 @@ def add_cols(org_df, filter):
     return org_df[filter]
 
 
-def scouting_expander(team_num, df, rank_info, start_expanded, error_prefix, column):
+def scouting_expander(
+    team_num, df, rank_info, start_expanded, calc_bumpers, error_prefix, column
+):
     team_name = st.session_state.team_info[team_num]
 
     expander_name = f"[{team_num}] {team_name}"
@@ -42,20 +44,44 @@ def scouting_expander(team_num, df, rank_info, start_expanded, error_prefix, col
     with column.expander(expander_name, start_expanded):
         if len(rank_info) == 2:
             st.text(f"SN Rank: {rank_info[0]} | TBA Rank: {rank_info[1]}")
+
         sorted_df = df.loc[df["Team #"] == int(team_num)]
         sorted_df = sorted_df.sort_values(by="Timestamp")
         sorted_df = sorted_df.drop_duplicates(keep="last", subset="Team #")
 
         time_logged = str(sorted_df["Timestamp"].max())
+
         if time_logged == "nan":
             error_message = (
                 f"[{team_num}] {team_name} - No Data" if error_prefix else "No Data"
             )
             column.error(error_message)
+
         else:
+            team_data = df.loc[
+                df["Team #"] == st.secrets["TEAM_NUMBER"],
+                ["Frame Size LENGTH", "Frame Size WIDTH"],
+            ].iloc[0]
+
+            added_length = team_data["Frame Size LENGTH"]
+            added_width = team_data["Frame Size WIDTH"]
+
             length = sorted_df["Frame Size LENGTH"].max()
             width = sorted_df["Frame Size WIDTH"].max()
-            st.text(f"Length: {length} in | Width: {width} in")
+
+            bumper_size = 5
+
+            added_length += bumper_size * calc_bumpers
+            added_width += bumper_size * calc_bumpers
+
+            length += bumper_size * calc_bumpers
+            width += bumper_size * calc_bumpers
+
+            added_length = length + added_length
+            added_width = width + added_width
+
+            st.text(f"Length: {length} in ({added_length} in)")
+            st.text(f"Width: {width} in ({added_width} in)")
             st.text(f"Area: {length * width} in²")
 
             def check_nan(var_name, var_value, column):

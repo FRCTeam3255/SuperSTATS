@@ -10,6 +10,7 @@ def display_team(
     team_df,
     opposing_df,
     start_expanded,
+    calc_bumpers,
     combined_chart,
     match_choice,
 ):
@@ -19,7 +20,9 @@ def display_team(
     )
 
     for team_num in team_df:
-        build.scouting_expander(team_num, df, [], start_expanded, True, column)
+        build.scouting_expander(
+            team_num, df, [], start_expanded, calc_bumpers, True, column
+        )
 
     column.markdown("""---""")
 
@@ -144,10 +147,11 @@ def main():
     red_alliance = df_sort.filter(like="Red", axis=0).to_list()
     blue_alliance = df_sort.filter(like="Blue", axis=0).to_list()
 
-    columns = st.columns(2)
+    columns = st.columns(3)
 
     start_expanded = columns[0].checkbox("Auto Expand Scouting", False)
-    combined_chart = columns[1].checkbox("Show Combined Chart", False)
+    calc_bumpers = columns[1].checkbox("Calculate Bumpers", False)
+    combined_chart = columns[2].checkbox("Show Combined Chart", False)
 
     columns = st.columns(2)
 
@@ -157,6 +161,7 @@ def main():
         red_alliance,
         blue_alliance,
         start_expanded,
+        calc_bumpers,
         combined_chart,
         match_choice,
     )
@@ -167,6 +172,7 @@ def main():
         blue_alliance,
         red_alliance,
         start_expanded,
+        calc_bumpers,
         combined_chart,
         match_choice,
     )
