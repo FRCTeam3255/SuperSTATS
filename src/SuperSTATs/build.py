@@ -1,0 +1,294 @@
+import SuperSTATs.load as load
+import streamlit as st
+import altair as alt
+import pandas as pd
+import numpy as np
+import math
+
+
+load.app_init()
+pd.options.mode.chained_assignment = None
+
+
+def add_cols(org_df, filter):
+    points = {}
+
+    for key, value in st.session_state.points.items():
+        points[f"{key}_{value}"] = value
+
+    relevant_columns = [
+        col
+        for col in org_df.columns
+        if col != "COMMENT_GENERAL_STR_1" and col.startswith(filter)
+    ]
+
+    org_df[filter] = org_df[relevant_columns].apply(
+        lambda row: sum(
+            [points[col] * val for col, val in row.items() if col in points]
+        ),
+        axis=1,
+    )
+
+    return org_df[filter]
+
+
+def scouting_expander(team_num, df, rank_info, start_expanded, error_prefix, column):
+    team_name = st.session_state.team_info[team_num]
+
+    expander_name = f"[{team_num}] {team_name}"
+    if len(rank_info) == 2:
+        expander_name += f" [🦸#{rank_info[0]}/💎#{rank_info[1]}]"
+
+    with column.expander(expander_name, start_expanded):
+        if len(rank_info) == 2:
+            st.text(f"SN Rank: {rank_info[0]} | TBA Rank: {rank_info[1]}")
+        sorted_df = df.loc[df["Team #"] == int(team_num)]
+        sorted_df = sorted_df.sort_values(by="Timestamp")
+        sorted_df = sorted_df.drop_duplicates(keep="last", subset="Team #")
+
+        time_logged = str(sorted_df["Timestamp"].max())
+        if time_logged == "nan":
+            error_message = (
+                f"[{team_num}] {team_name} - No Data" if error_prefix else "No Data"
+            )
+            column.error(error_message)
+        else:
+            length = sorted_df["Frame Size LENGTH"].max()
+            width = sorted_df["Frame Size WIDTH"].max()
+            st.text(f"Length: {length} in | Width: {width} in")
+            st.text(f"Area: {length * width} in²")
+
+            def check_nan(var_name, var_value, column):
+                try:
+                    if np.isnan(var_value):
+                        column.text(f"{var_name}: No Data Collected")
+                except:
+                    column.text(f"{var_name}: {var_value}")
+
+            check_nan("Drivetrain", sorted_df["Drivetrain Type"].max(), st)
+            check_nan("Scouting Comments", sorted_df["Comments"].max(), st)
+
+            st.markdown(
+                f"<span style='font-size: small; color: #808080;'>Time Logged: {time_logged}</span>",
+                unsafe_allow_html=True,
+            )
+
+
+def gen_bar(
+    df,
+    key,
+    use_group_filters,
+    use_hide_picked,
+    use_hide_nums,
+    use_features,
+    use_agg_type,
+    use_filter_selection,
+    displayed_teams,
+    compared_teams,
+    x_range,
+    expanders,
+):
+    phases = st.session_state.phases
+
+    variables = [
+        "group_filters" if use_group_filters else None,
+        "hide_picked" if use_hide_picked else None,
+        "hide_nums" if use_hide_nums else None,
+        "features" if use_features else None,
+    ]
+
+    variables = [var for var in variables if var != None]
+
+    if len(variables) != 0:
+        columns = st.columns(len(variables))
+
+    var_count = 0
+
+    def gen_checkbox(var_name, var_count, box_name, default, key):
+        if var_name in variables:
+            variable = columns[var_count].checkbox(
+                box_name, default, key=f"{var_name}_{key}"
+            )
+            var_count += 1
+        else:
+            variable = default
+
+        return [variable, var_count]
+
+    group_filters, var_count = gen_checkbox(
+        "group_filters", var_count, "Group Filters", True, key
+    )
+
+    hide_picked, var_count = gen_checkbox(
+        "hide_picked", var_count, "Hide Picked Teams", False, key
+    )
+
+    hide_nums, var_count = gen_checkbox(
+        "hide_nums", var_count, "Hide Team Numbers", False, key
+    )
+
+    features, var_count = gen_checkbox("features", var_count, "Features", False, key)
+
+    if use_agg_type:
+        agg_type = st.selectbox(
+            "Aggregation Type:", ("Mean", "Median", "Sum"), key=f"agg_type_{key}"
+        ).lower()
+    else:
+        agg_type = "mean"
+
+    if not group_filters:
+        selected_phases = st.multiselect("Phases:", phases, default=phases, key=key)
+        phases = [
+            col
+            for col in df.columns
+            if any(col.startswith(f"{phase}_") for phase in selected_phases)
+        ]
+        selected_filters = phases
+        filter_choices = phases
+    else:
+        filter_choices = phases
+
+    comment_df = df
+    df = df.drop("COMMENT_GENERAL_STR_1", axis=1)
+
+    for i in range(len(phases)):
+        df.loc[:, phases[i]] = add_cols(
+            df,
+            phases[i],
+        )
+
+    if hide_picked:
+        picked = pd.DataFrame(st.session_state.picked)
+        picked = picked[picked["Unavailable"].str.contains("x", case=False, na=False)]
+        df = df[~df["Team"].isin(picked["Team"])]
+
+    if displayed_teams:
+        df = df[df["Team"].isin(displayed_teams + compared_teams)]
+    else:
+        df = df
+
+    if df.empty:
+        df.loc[0] = 0
+        no_data = True
+    else:
+        no_data = False
+
+    feature_list = list(
+        comment_df["COMMENT_GENERAL_STR_1"].dropna().str.split(", ").explode().unique()
+    )
+
+    df_scouting = st.session_state.scouting
+    dt_types = df_scouting["Drivetrain Type"].unique().tolist() + ["Unknown Drivetrain"]
+
+    feature_choices = []
+
+    for filter in feature_list + dt_types:
+        if str(filter) == "nan":
+            pass
+        else:
+            feature_choices.append(filter)
+
+    selected_features = (
+        st.multiselect(
+            "Features:",
+            feature_choices,
+            default=feature_choices,
+            key=f"selected_features_{key}",
+        )
+        if use_features and features
+        else feature_choices
+    )
+
+    df = df.merge(
+        df_scouting[["Team #", "Drivetrain Type"]].fillna("Unknown Drivetrain"),
+        left_on="Team",
+        right_on="Team #",
+        how="left",
+    ).drop(columns=["Team #"])
+
+    df["Drivetrain Type"] = df["Drivetrain Type"].fillna("Unknown Drivetrain")
+    df = df[(df["Drivetrain Type"].isin(selected_features))]
+
+    if use_filter_selection:
+        selected_filters = st.multiselect(
+            "Filters:",
+            filter_choices,
+            default=filter_choices,
+            key=f"selected_filters_{key}",
+        )
+    else:
+        selected_filters = filter_choices
+
+    calc_df = df.groupby("Team")[selected_filters].agg(agg_type)
+    calc_df["rank"] = calc_df.sum(axis=1).rank(ascending=False).astype(int)
+    calc_df.reset_index(inplace=True)
+    data = pd.melt(
+        calc_df,
+        id_vars=["Team", "rank"],
+        value_vars=selected_filters,
+        var_name="variable",
+        value_name="value",
+    )
+
+    calc_df["Score Sum"] = calc_df[selected_filters].sum(axis=1)
+
+    x_min = (
+        math.floor(calc_df.min().min()) - 2
+        if calc_df.min().min() < 0
+        else math.floor(calc_df.min().min())
+    )
+
+    x_range = x_range if x_range else [x_min, (round(calc_df["Score Sum"].max()) + 2)]
+    x_min, x_max = x_range
+
+    data = data[~data["Team"].isin(compared_teams)]
+
+    tba_rankings = st.session_state.tba_ranks
+
+    data["Team"] = data["Team"].apply(
+        lambda team: f"{team} [{str(tba_rankings.get(str(team), 'NA')).zfill(2)}]"
+    )
+
+    chart = (
+        alt.Chart(data)
+        .mark_bar()
+        .encode(
+            x=alt.X("value:Q", title=" ", scale=alt.Scale(domain=[x_min, x_max])),
+            y=alt.Y(
+                "Team:N",
+                sort=alt.EncodingSortField(field="rank", order="ascending"),
+                title="",
+                axis=alt.Axis(labels=not hide_nums),
+            ),
+            color=alt.Color(
+                "variable:N",
+                title=" ",
+                legend=alt.Legend(title=None, orient="top", symbolType="circle"),
+            ),
+            tooltip=["value:Q", "variable:N"],
+        )
+    )
+
+    if selected_filters:
+        if not no_data:
+            st.altair_chart(chart, use_container_width=True)
+            if expanders:
+                ranked = calc_df.sort_values(by="rank").astype(int)
+                for index, row in ranked.iterrows():
+                    team_num = row["Team"]
+                    scouting_expander(
+                        team_num,
+                        df_scouting,
+                        [
+                            ranked.loc[ranked["Team"] == team_num, "rank"].to_list()[0],
+                            st.session_state.tba_ranks[str(team_num)],
+                        ],
+                        False,
+                        False,
+                        st,
+                    )
+
+        else:
+            st.error("Not Enough Data")
+    else:
+        st.error("Please select at least one filter")
