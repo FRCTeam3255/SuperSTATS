@@ -1,7 +1,6 @@
 import SuperSTATs.load as load
 import streamlit as st
-import pandas as pd
-import tbapy, json
+import json
 
 
 st.set_page_config(
