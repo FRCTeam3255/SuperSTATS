@@ -64,26 +64,8 @@ def display_team(
         unsafe_allow_html=True,
     )
 
-    match_df = pd.DataFrame(
-        st.session_state.tba.event_matches(st.secrets["DEFAULT_EVENT_KEY"])
-    )
-    match_df = pd.concat(
-        [match_df, pd.json_normalize(match_df["alliances"])], axis=1
-    ).drop(columns="alliances")
-
-    match_df["call"] = (
-        match_df["key"]
-        .str.replace(st.secrets["DEFAULT_EVENT_KEY"], "")
-        .str.replace("_qm", "Quals ")
-        .str.replace("_sf", "Playoffs ")
-        .str.replace("_f", "Finals ")
-        .str.replace(re.compile(r"1m1$"), "1", regex=True)
-        .str.replace(re.compile(r"1m2$"), "2", regex=True)
-        .str.replace(re.compile(r"1m3$"), "3", regex=True)
-        .str.replace(re.compile(r"m1$"), "", regex=True)
-    )
-
-    match_df = match_df.loc[match_df["call"] == match_choice]
+    match_df = st.session_state.match_data
+    match_df = match_df.loc[match_df["Match Name"] == match_choice]
     match_breakdown = match_df["score_breakdown"].to_list()[0]
     actual_score = match_breakdown[team_header[1].lower()]["totalPoints"]
 
