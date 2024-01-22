@@ -17,17 +17,7 @@ def main():
     st.button("Update Page", type="primary", use_container_width=True)
     st.markdown("""---""")
 
-    build.gen_bar(
-        df,
-        key=0,
-        use_group_filters=True,
-        use_hide_picked=True,
-        use_hide_nums=True,
-        use_features=True,
-        use_agg_type=True,
-        use_filter_selection=True,
-        expanders=True,
-    )
+    build.gen_bar()
 
 
 if __name__ == "__main__":

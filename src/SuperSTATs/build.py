@@ -107,18 +107,18 @@ def scouting_expander(
 
 
 def gen_bar(
-    df,
-    key,
-    use_group_filters=False,
-    use_hide_picked=False,
-    use_hide_nums=False,
-    use_features=False,
-    use_agg_type=False,
-    use_filter_selection=False,
+    df=st.session_state.df,
+    key=0,
+    use_group_filters=True,
+    use_hide_picked=True,
+    use_hide_nums=True,
+    use_features=True,
+    use_agg_type=True,
+    use_filter_selection=True,
     displayed_teams=[],
     compared_teams=[],
     x_range=[],
-    expanders=False,
+    expanders=True,
 ):
     phases = st.session_state.phases
 

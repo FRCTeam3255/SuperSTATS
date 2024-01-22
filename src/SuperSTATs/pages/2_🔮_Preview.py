@@ -86,11 +86,10 @@ def display_team(
     if not combined_chart:
         with column.container():
             build.gen_bar(
-                df=st.session_state.df,
                 key=column,
-                use_hide_nums=True,
-                use_features=True,
-                use_agg_type=True,
+                use_hide_picked=False,
+                use_features=False,
+                use_filter_selection=False,
                 displayed_teams=team_df,
                 compared_teams=opposing_df,
                 expanders=False,
@@ -180,18 +179,8 @@ def main():
 
     if combined_chart:
         build.gen_bar(
-            st.session_state.df,
-            0,
-            True,
-            False,
-            True,
-            False,
-            True,
-            True,
-            red_alliance + blue_alliance,
-            [],
-            [],
-            False,
+            displayed_teams=red_alliance + blue_alliance,
+            expanders=False,
         )
 
 
