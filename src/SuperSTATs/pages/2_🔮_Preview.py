@@ -89,7 +89,6 @@ def display_team(
                 key=column,
                 use_hide_picked=False,
                 use_features=False,
-                use_filter_selection=False,
                 displayed_teams=team_df,
                 compared_teams=opposing_df,
                 expanders=False,
