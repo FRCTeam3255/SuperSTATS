@@ -21,7 +21,12 @@ def display_team(
 
     for team_num in team_df:
         build.scouting_expander(
-            team_num, df, [], start_expanded, calc_bumpers, True, column
+            team_num=team_num,
+            df=df,
+            start_expanded=start_expanded,
+            calc_bumpers=calc_bumpers,
+            error_prefix=True,
+            column=column,
         )
 
     column.markdown("""---""")
@@ -81,18 +86,14 @@ def display_team(
     if not combined_chart:
         with column.container():
             build.gen_bar(
-                st.session_state.df,
-                column,
-                True,
-                False,
-                True,
-                False,
-                True,
-                True,
-                team_df,
-                opposing_df,
-                [],
-                False,
+                df=st.session_state.df,
+                key=column,
+                use_hide_nums=True,
+                use_features=True,
+                use_agg_type=True,
+                displayed_teams=team_df,
+                compared_teams=opposing_df,
+                expanders=False,
             )
 
 
@@ -150,7 +151,7 @@ def main():
     columns = st.columns(3)
 
     start_expanded = columns[0].checkbox("Auto Expand Scouting", False)
-    calc_bumpers = columns[1].checkbox("Calculate Bumpers", False)
+    calc_bumpers = columns[1].checkbox("Calculate Bumpers", True)
     combined_chart = columns[2].checkbox("Show Combined Chart", False)
 
     columns = st.columns(2)

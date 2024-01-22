@@ -33,7 +33,13 @@ def add_cols(org_df, filter):
 
 
 def scouting_expander(
-    team_num, df, rank_info, start_expanded, calc_bumpers, error_prefix, column
+    team_num,
+    df,
+    rank_info=[],
+    start_expanded=False,
+    calc_bumpers=False,
+    error_prefix=False,
+    column=st,
 ):
     team_name = st.session_state.team_info[team_num]
 
@@ -103,16 +109,16 @@ def scouting_expander(
 def gen_bar(
     df,
     key,
-    use_group_filters,
-    use_hide_picked,
-    use_hide_nums,
-    use_features,
-    use_agg_type,
-    use_filter_selection,
-    displayed_teams,
-    compared_teams,
-    x_range,
-    expanders,
+    use_group_filters=False,
+    use_hide_picked=False,
+    use_hide_nums=False,
+    use_features=False,
+    use_agg_type=False,
+    use_filter_selection=False,
+    displayed_teams=[],
+    compared_teams=[],
+    x_range=[],
+    expanders=False,
 ):
     phases = st.session_state.phases
 
@@ -303,15 +309,12 @@ def gen_bar(
                 for index, row in ranked.iterrows():
                     team_num = row["Team"]
                     scouting_expander(
-                        team_num,
-                        df_scouting,
-                        [
+                        team_num=team_num,
+                        df=df_scouting,
+                        rank_info=[
                             ranked.loc[ranked["Team"] == team_num, "rank"].to_list()[0],
                             st.session_state.tba_ranks[str(team_num)],
                         ],
-                        False,
-                        False,
-                        st,
                     )
 
         else:

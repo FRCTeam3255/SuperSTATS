@@ -26,9 +26,6 @@ def main():
         use_features=True,
         use_agg_type=True,
         use_filter_selection=True,
-        displayed_teams=[],
-        compared_teams=[],
-        x_range=[],
         expanders=True,
     )
 
