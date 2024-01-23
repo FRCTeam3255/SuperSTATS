@@ -17,17 +17,37 @@ def main():
         unsafe_allow_html=True,
     )
 
-    matches = pd.DataFrame(st.session_state.matches)
+    matches = st.session_state.matches
 
     teams = []
     show_all = "All Matches"
 
+    columns = st.columns(2)
+
     for num, name in st.session_state.team_info.items():
         teams.append(f"{num} | {name}")
 
-    columns = st.columns(2)
-
     team = columns[0].selectbox("Team Selection:", [show_all] + teams)
+
+    # TODO: Create fail safe for nonexistent TBA data (Show "Unplayed" in score)
+    matches = pd.merge(
+        matches,
+        st.session_state.match_data[["Match Name", "score_breakdown"]],
+        left_on="Match",
+        right_on="Match Name",
+        how="left",
+    )
+
+    for match_name in matches["Match"]:
+        data = matches[matches["Match"] == match_name]["score_breakdown"].to_list()[0]
+
+        red_data = data["red"]["totalPoints"]
+        blue_data = data["blue"]["totalPoints"]
+
+        matches.loc[matches["Match"] == match_name, "Red Score"] = red_data
+        matches.loc[matches["Match"] == match_name, "Blue Score"] = blue_data
+
+    matches = matches.drop(columns=["Match Name", "score_breakdown"])
 
     if team != show_all:
         team = int(str(team).split(" | ")[0])
@@ -49,7 +69,7 @@ def main():
 
         team_cols = [col for col in matches.columns if "Match" not in col]
         matches = matches[matches[team_cols].isin([team]).any(axis=1)]
-        matches = matches.style.applymap(
+        matches = matches.style.map(
             lambda cell: f"color: {team_color}" if cell == team else "color: #808080",
             subset=pd.IndexSlice[:, team_cols],
         )
