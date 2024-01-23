@@ -13,7 +13,7 @@ def main():
     st.markdown("<div class='rainbow'>🤖 SuperSTATs 🤖</div>", unsafe_allow_html=True)
 
     st.markdown(
-        f"<h1 style='text-align: center;'>Current Dataframe: {st.secrets['DEFAULT_EVENT_KEY']}<h1>",
+        f"<div style='font-weight: bold; text-align: center; font-size: 2.5em;'>Current Dataframe: {st.secrets['DEFAULT_EVENT_KEY']}</div>",
         unsafe_allow_html=True,
     )
 
@@ -79,7 +79,7 @@ def main():
 
         if searched_event != show_all:
             selected_key = event_keys.get(searched_event, "")
-            st.subheader(f"[{selected_key}] {searched_event}")
+            st.subheader(f"[{selected_key}] {searched_event}", False)
 
         else:
             for name, key in event_keys.items():

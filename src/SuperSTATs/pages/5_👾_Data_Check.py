@@ -108,14 +108,14 @@ def main():
 
             if filters[0] in selected_filters:
                 if sorted(team_nums) != sorted(tba_values):
-                    st.subheader(f"Team Count: {len(team_nums)}/6")
+                    st.subheader(f"Team Count: {len(team_nums)}/6", False)
 
                     columns = st.columns(2)
 
-                    columns[0].subheader("SN Data")
+                    columns[0].subheader("SN Data", False)
                     columns[0].write(team_nums)
 
-                    columns[1].subheader("TBA Data")
+                    columns[1].subheader("TBA Data", False)
                     columns[1].write(tba_values)
 
                     data_variance = True
@@ -133,7 +133,7 @@ def main():
                         no_comm_teams.append(str(team))
                     no_comm_teams = ", ".join(no_comm_teams)
 
-                    st.subheader(f"💭 {no_comm_teams}")
+                    st.subheader(f"💭 {no_comm_teams}", False)
                     data_variance = True
 
             if filters[2] in selected_filters:
