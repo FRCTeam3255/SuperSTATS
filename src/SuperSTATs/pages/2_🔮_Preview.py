@@ -89,6 +89,7 @@ def display_team(
                 key=column,
                 use_hide_picked=False,
                 use_features=False,
+                use_max_size=False,
                 displayed_teams=team_df,
                 compared_teams=opposing_df,
                 expanders=False,
@@ -179,6 +180,7 @@ def main():
 
     if combined_chart:
         build.gen_bar(
+            use_max_size=False,
             displayed_teams=red_alliance + blue_alliance,
             expanders=False,
         )

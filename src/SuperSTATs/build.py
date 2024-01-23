@@ -115,6 +115,7 @@ def gen_bar(
     use_features=True,
     use_agg_type=True,
     use_filter_selection=True,
+    use_max_size=True,
     displayed_teams=[],
     compared_teams=[],
     x_range=[],
@@ -232,7 +233,9 @@ def gen_bar(
     )
 
     df = df.merge(
-        df_scouting[["Team #", "Drivetrain Type"]].fillna("Unknown Drivetrain"),
+        df_scouting[
+            ["Team #", "Drivetrain Type", "Frame Size LENGTH", "Frame Size WIDTH"]
+        ].fillna("Unknown Drivetrain"),
         left_on="Team",
         right_on="Team #",
         how="left",
@@ -250,6 +253,31 @@ def gen_bar(
         )
     else:
         selected_filters = filter_choices
+
+    if use_max_size:
+        min_size = df[["Frame Size LENGTH", "Frame Size WIDTH"]].min().min()
+        max_size = df[["Frame Size LENGTH", "Frame Size WIDTH"]].max().max()
+        unscouted_size = max_size + 0.5
+
+        size_limit = st.slider(
+            "Max Size:",
+            min_value=min_size,
+            max_value=unscouted_size,
+            value=max_size,
+            step=0.5,
+            key=f"size_limit_{key}",
+        )
+
+        if size_limit == unscouted_size:
+            st.warning("WARNING: Viewing unscouted teams")
+
+        df["Frame Size LENGTH"] = df["Frame Size LENGTH"].fillna(unscouted_size)
+        df["Frame Size WIDTH"] = df["Frame Size WIDTH"].fillna(unscouted_size)
+
+        df = df[
+            (df["Frame Size LENGTH"] <= size_limit)
+            & (df["Frame Size WIDTH"] <= size_limit)
+        ]
 
     calc_df = df.groupby("Team")[selected_filters].agg(agg_type)
     calc_df["rank"] = calc_df.sum(axis=1).rank(ascending=False).astype(int)
