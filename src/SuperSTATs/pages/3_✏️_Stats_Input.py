@@ -15,9 +15,11 @@ st.set_page_config(
 def main():
     load.app_init()
 
-    st.markdown(
-        "<h1 style='text-align: center;'>✏️ Stats Input ✏️</h1>", unsafe_allow_html=True
-    )
+    import SuperSTATs.styles as style
+
+    st.markdown(style.shimmer("#ffc1ad"), unsafe_allow_html=True)
+    st.markdown("<div class='shimmer'>✏️ Stats Input ✏️</div>", unsafe_allow_html=True)
+
     st.title("")
 
     st.button("Update Page", type="primary", use_container_width=True)

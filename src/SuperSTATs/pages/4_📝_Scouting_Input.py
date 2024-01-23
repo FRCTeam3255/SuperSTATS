@@ -13,10 +13,10 @@ st.set_page_config(
 def main():
     load.app_init()
 
-    st.markdown(
-        "<h1 style='text-align: center;'>📝 Scouting Input 📝</h1>",
-        unsafe_allow_html=True,
-    )
+    import SuperSTATs.styles as style
+
+    st.markdown(style.shimmer("#ffb8e5"), unsafe_allow_html=True)
+    st.markdown("<div class='shimmer'>📝 Scouting Input 📝</div>", unsafe_allow_html=True)
 
     df = st.session_state.scouting
 

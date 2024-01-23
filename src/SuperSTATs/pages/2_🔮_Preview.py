@@ -98,9 +98,10 @@ def display_team(
 def main():
     load.app_init()
 
-    st.markdown(
-        "<h1 style='text-align: center;'>🔮 Match Preview 🔮</h1>", unsafe_allow_html=True
-    )
+    import SuperSTATs.styles as style
+
+    st.markdown(style.shimmer("#d9adff"), unsafe_allow_html=True)
+    st.markdown("<div class='shimmer'>🔮 Match Preview 🔮</div>", unsafe_allow_html=True)
     st.title("")
 
     st.button("Update Page", type="primary", use_container_width=True)

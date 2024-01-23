@@ -7,10 +7,10 @@ import datetime
 def main():
     load.app_init()
 
-    st.markdown(
-        "<div style='display: flex; justify-content: center; font-size: 40px;'><b>🤖 SuperSTATs 🤖</b></div>",
-        unsafe_allow_html=True,
-    )
+    import SuperSTATs.styles as style
+
+    st.markdown(style.rainbow(), unsafe_allow_html=True)
+    st.markdown("<div class='rainbow'>🤖 SuperSTATs 🤖</div>", unsafe_allow_html=True)
 
     st.markdown(
         f"<h1 style='text-align: center;'>Current Dataframe: {st.secrets['DEFAULT_EVENT_KEY']}<h1>",

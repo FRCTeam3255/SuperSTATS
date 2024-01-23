@@ -27,10 +27,11 @@ def main():
     load.app_init()
 
     import SuperSTATs.build as build
+    import SuperSTATs.styles as style
 
-    st.markdown(
-        "<h1 style='text-align: center;'>👾 Data Check 👾</h1>", unsafe_allow_html=True
-    )
+    st.markdown(style.shimmer("#c18aff"), unsafe_allow_html=True)
+    st.markdown("<div class='shimmer'>👾 Data Check 👾</div>", unsafe_allow_html=True)
+
     st.title("")
 
     st.button("Update Page", type="primary", use_container_width=True)

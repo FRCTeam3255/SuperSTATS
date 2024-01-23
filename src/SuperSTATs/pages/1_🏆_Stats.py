@@ -7,11 +7,11 @@ import pandas as pd
 def main():
     load.app_init()
 
-    df = pd.DataFrame(st.session_state.df)
+    import SuperSTATs.styles as style
 
-    st.markdown(
-        "<h1 style='text-align: center;'>🏆 NURD Stats 🏆</h1>", unsafe_allow_html=True
-    )
+    st.markdown(style.shimmer("#ffe8ad"), unsafe_allow_html=True)
+    st.markdown("<div class='shimmer'>🏆 NURD Stats 🏆</div>", unsafe_allow_html=True)
+
     st.title("")
 
     st.button("Update Page", type="primary", use_container_width=True)
