@@ -17,66 +17,78 @@ def main():
         unsafe_allow_html=True,
     )
 
-    matches = st.session_state.matches
+    with st.expander("Match Schedule", True):
+        matches = st.session_state.matches
 
-    teams = []
-    show_all = "All Matches"
+        teams = []
+        show_all = "All Matches"
 
-    columns = st.columns(2)
+        columns = st.columns(2)
 
-    for num, name in st.session_state.team_info.items():
-        teams.append(f"{num} | {name}")
+        for num, name in st.session_state.team_info.items():
+            teams.append(f"{num} | {name}")
 
-    team = columns[0].selectbox("Team Selection:", [show_all] + teams)
+        team = columns[0].selectbox("Team Selection:", [show_all] + teams)
 
-    # TODO: Create fail safe for nonexistent TBA data (Show "Unplayed" in score)
-    matches = pd.merge(
-        matches,
-        st.session_state.match_data[["Match Name", "score_breakdown"]],
-        left_on="Match",
-        right_on="Match Name",
-        how="left",
-    )
-
-    for match_name in matches["Match"]:
-        data = matches[matches["Match"] == match_name]["score_breakdown"].to_list()[0]
-
-        red_data = data["red"]["totalPoints"]
-        blue_data = data["blue"]["totalPoints"]
-
-        matches.loc[matches["Match"] == match_name, "Red Score"] = str(red_data)
-        matches.loc[matches["Match"] == match_name, "Blue Score"] = str(blue_data)
-
-    matches = matches.drop(columns=["Match Name", "score_breakdown"])
-
-    if team != show_all:
-        team = int(str(team).split(" | ")[0])
-
-        use_team_colors = columns[1].checkbox("Use Team Colors", False)
-        team_colors = st.session_state.team_colors[team]
-
-        if use_team_colors:
-            if team_colors[0] == "003255" or team_colors[1] == "003255":
-                st.warning("Team Colors Not Found")
-                team_color = "#ffffff"
-            else:
-                if columns[1].checkbox("Use Secondary Color", False):
-                    team_color = team_colors[1]
-                else:
-                    team_color = team_colors[0]
-        else:
-            team_color = "#ffffff"
-
-        team_cols = [col for col in matches.columns if "Match" not in col]
-        matches = matches[matches[team_cols].isin([team]).any(axis=1)].astype(str)
-        matches = matches.style.map(
-            lambda cell: f"color: {team_color}"
-            if cell == str(team)
-            else "color: #808080",
-            subset=pd.IndexSlice[:, team_cols],
+        # TODO: Create fail safe for nonexistent TBA data (Show "Unplayed" in score)
+        matches = pd.merge(
+            matches,
+            st.session_state.match_data[["Match Name", "score_breakdown"]],
+            left_on="Match",
+            right_on="Match Name",
+            how="left",
         )
 
-    st.table(matches)
+        for match_name in matches["Match"]:
+            data = matches[matches["Match"] == match_name]["score_breakdown"].to_list()[
+                0
+            ]
+
+            red_data = data["red"]["totalPoints"]
+            blue_data = data["blue"]["totalPoints"]
+
+            matches.loc[matches["Match"] == match_name, "Red Score"] = str(red_data)
+            matches.loc[matches["Match"] == match_name, "Blue Score"] = str(blue_data)
+
+        matches = matches.drop(columns=["Match Name", "score_breakdown"])
+
+        if team != show_all:
+            team = int(str(team).split(" | ")[0])
+
+            use_team_colors = columns[1].checkbox("Use Team Colors")
+            team_colors = st.session_state.team_colors[team]
+
+            if use_team_colors:
+                if team_colors[0] == "003255" or team_colors[1] == "003255":
+                    columns[1].checkbox("Use Secondary Color", disabled=True)
+                    st.warning("Team Colors Not Found")
+                    team_color = "#ffffff"
+                else:
+                    if columns[1].checkbox("Use Secondary Color"):
+                        team_color = team_colors[1]
+                    else:
+                        team_color = team_colors[0]
+            else:
+                columns[1].checkbox("Use Secondary Color", disabled=True)
+                team_color = "#ffffff"
+
+            team_cols = [
+                col
+                for col in matches.columns
+                if col not in ["Match", "Red Score", "Blue Score"]
+            ]
+
+            matches = matches[matches[team_cols].isin([team]).any(axis=1)].astype(str)
+            matches = matches.style.map(
+                lambda cell: f"color: {team_color}"
+                if cell == str(team)
+                else "color: #808080",
+                subset=pd.IndexSlice[:, team_cols],
+            )
+        else:
+            matches = matches.astype(str)
+
+        st.table(matches)
 
     with st.expander("Event Keys", True):
         columns = st.columns(2)
