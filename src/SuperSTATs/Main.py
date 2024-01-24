@@ -44,8 +44,8 @@ def main():
         red_data = data["red"]["totalPoints"]
         blue_data = data["blue"]["totalPoints"]
 
-        matches.loc[matches["Match"] == match_name, "Red Score"] = red_data
-        matches.loc[matches["Match"] == match_name, "Blue Score"] = blue_data
+        matches.loc[matches["Match"] == match_name, "Red Score"] = str(red_data)
+        matches.loc[matches["Match"] == match_name, "Blue Score"] = str(blue_data)
 
     matches = matches.drop(columns=["Match Name", "score_breakdown"])
 
@@ -68,9 +68,11 @@ def main():
             team_color = "#ffffff"
 
         team_cols = [col for col in matches.columns if "Match" not in col]
-        matches = matches[matches[team_cols].isin([team]).any(axis=1)]
+        matches = matches[matches[team_cols].isin([team]).any(axis=1)].astype(str)
         matches = matches.style.map(
-            lambda cell: f"color: {team_color}" if cell == team else "color: #808080",
+            lambda cell: f"color: {team_color}"
+            if cell == str(team)
+            else "color: #808080",
             subset=pd.IndexSlice[:, team_cols],
         )
 
