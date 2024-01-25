@@ -93,6 +93,7 @@ def display_team(
                 displayed_teams=team_df,
                 compared_teams=opposing_df,
                 expanders=False,
+                use_inline_legend=False,
             )
 
 
@@ -183,6 +184,7 @@ def main():
             use_max_size=False,
             displayed_teams=red_alliance + blue_alliance,
             expanders=False,
+            use_inline_legend=False,
         )
 
 

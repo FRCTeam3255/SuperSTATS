@@ -112,6 +112,7 @@ def gen_bar(
     use_group_filters=True,
     use_hide_picked=True,
     use_hide_nums=True,
+    use_inline_legend=True,
     use_features=True,
     use_agg_type=True,
     use_filter_selection=True,
@@ -125,6 +126,7 @@ def gen_bar(
 
     variables = [
         "group_filters" if use_group_filters else None,
+        "inline_legend" if use_inline_legend else None,
         "hide_picked" if use_hide_picked else None,
         "hide_nums" if use_hide_nums else None,
         "features" if use_features else None,
@@ -150,6 +152,10 @@ def gen_bar(
 
     group_filters, var_count = gen_checkbox(
         "group_filters", var_count, "Group Filters", True, key
+    )
+
+    inline_legend, var_count = gen_checkbox(
+        "inline_legend", var_count, "Inline Legend", True, key
     )
 
     hide_picked, var_count = gen_checkbox(
@@ -323,7 +329,21 @@ def gen_bar(
             color=alt.Color(
                 "variable:N",
                 title=" ",
-                legend=alt.Legend(title=None, orient="top", symbolType="circle"),
+                legend=alt.Legend(
+                    title=None,
+                    orient=(
+                        "bottom-right"
+                        if inline_legend and not group_filters
+                        else "bottom"
+                    ),
+                    symbolType="circle",
+                    labelBaseline="alphabetic",
+                    labelLimit=0,
+                    offset=5,
+                    padding=0,
+                    rowPadding=0,
+                    labelFontSize=(10.5 if inline_legend and not group_filters else 14),
+                ),
             ),
             tooltip=["value:Q", "variable:N"],
         )
