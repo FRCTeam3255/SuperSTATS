@@ -52,7 +52,7 @@ N/A
 
 ## <span style="color:#f8312f;">Contributing</span>
 
-<span style="font-size: 1.2em;">We welcome and greatly appreciate contributions to enhance SuperSTATs! Whether you find a bug, have a suggestion, or want to contribute code, your input is valuable to us, along with everyone using the app. Here's how you can help out:<span>
+<span style="font-size: 1.2em;">We welcome and greatly appreciate contributions to enhance SuperSTATs! Whether you find a bug, have a suggestion, or want to contribute code, your input is valuable to us. Here's how you can help out:<span>
 
 1. **Report Issues:**
     If you encounter a bug or have a feature request, please [open an issue](https://github.com/FRCTeam3255/SuperSTATS/issues).
