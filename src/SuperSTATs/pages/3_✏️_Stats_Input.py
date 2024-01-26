@@ -12,6 +12,35 @@ st.set_page_config(
 )
 
 
+def get_matches(team):
+    match_list = st.session_state.matches["Match"].to_list()
+    scouts = {}
+
+    rotation = 3
+    count = 0
+    i = 0
+
+    while True:
+        p1 = team[count]
+        p2 = team[count - 1]
+        p3 = team[count - 2]
+
+        if i % rotation == 0:
+            count += 1
+
+        if count == len(team):
+            count = 0
+
+        for j in range(rotation):
+            match_name = f"Quals {(i + 1) + j}"
+            if match_name in match_list:
+                scouts[match_name] = [p1, p2, p3]
+            else:
+                return scouts
+
+        i += rotation
+
+
 def main():
     load.app_init()
 
@@ -51,6 +80,13 @@ def main():
     }
 
     columns = st.columns(2)
+
+    scouter_list = []
+    for i in range(9):
+        scouter_list.append(f"Scout {i+1}")
+
+    red_scouts = get_matches(scouter_list[::2])
+    blue_scouts = get_matches(scouter_list[1::2])
 
     input_name = columns[0].text_input("Name:", max_chars=2).upper()
 
