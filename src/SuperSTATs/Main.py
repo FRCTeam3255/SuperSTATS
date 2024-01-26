@@ -44,11 +44,18 @@ def main():
                 0
             ]
 
-            red_data = data["red"]["totalPoints"]
-            blue_data = data["blue"]["totalPoints"]
+            red_data = str(data["red"]["totalPoints"]).zfill(3)
+            blue_data = str(data["blue"]["totalPoints"]).zfill(3)
 
-            matches.loc[matches["Match"] == match_name, "Red Score"] = str(red_data)
-            matches.loc[matches["Match"] == match_name, "Blue Score"] = str(blue_data)
+            if red_data > blue_data:
+                red_data = f"🔴 {str(red_data)} 🏆"
+                blue_data = f"🔵 {str(blue_data)}"
+            else:
+                red_data = f"🔴 {str(red_data)}"
+                blue_data = f"🔵 {str(blue_data)} 🏆"
+
+            matches.loc[matches["Match"] == match_name, "Red Score"] = red_data
+            matches.loc[matches["Match"] == match_name, "Blue Score"] = blue_data
 
         matches = matches.drop(columns=["Match Name", "score_breakdown"])
 
