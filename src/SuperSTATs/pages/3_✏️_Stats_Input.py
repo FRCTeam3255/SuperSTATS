@@ -79,16 +79,8 @@ def main():
         name: id for name, id in entries_dict.items() if name not in gen_entries
     }
 
-    columns = st.columns(2)
-
-    scouter_list = []
-    for i in range(9):
-        scouter_list.append(f"Scout {i+1}")
-
-    red_scouts = get_matches(scouter_list[::2])
-    blue_scouts = get_matches(scouter_list[1::2])
-
-    input_name = columns[0].text_input("Name:", max_chars=2).upper()
+    top_columns = st.columns(2)
+    bot_columns = st.columns(2)
 
     df = st.session_state.df
     matches = st.session_state.matches
@@ -109,7 +101,7 @@ def main():
         match for sublist in unplayed_matches.values.tolist() for match in sublist
     ]
 
-    match_selection = columns[1].empty()
+    match_selection = top_columns[1].empty()
     input_match = match_selection.selectbox("Match:", unplayed_matches + ["Other"])
     if input_match == "Other":
         input_match = match_selection.selectbox(
@@ -117,12 +109,30 @@ def main():
         )
 
     input_type = input_match.split()[0]
-    input_color = columns[0].radio("Color:", ["Red 🔴", "Blue 🔵"], horizontal=True)[0]
+    input_color = bot_columns[0].radio("Color:", ["Red 🔴", "Blue 🔵"], horizontal=True)
 
     df_teams = matches[matches["Match"] == input_match].set_index("Match").transpose()
-    teams = df_teams.filter(like=input_color.split()[0], axis=0)[input_match].to_list()
+    teams = df_teams.filter(like=input_color[0].split()[0], axis=0)[
+        input_match
+    ].to_list()
 
-    input_team = columns[1].radio("Team:", teams, horizontal=True)
+    input_team = bot_columns[1].radio("Team:", teams, horizontal=True)
+
+    scouter_list = []
+    for i in range(9):
+        scouter_list.append(f"Scout {i+1}")
+
+    if input_color[0] == "R":
+        scouts = get_matches(scouter_list[::2])
+    else:
+        scouts = get_matches(scouter_list[1::2])
+
+    input_name = (
+        top_columns[0]
+        .text_input("Name:", max_chars=2, placeholder=scouts[input_match])
+        .upper()
+    )
+
     input_match = input_match.split()[1]
 
     set_inputs = [input_name, input_match, input_type, input_color, input_team]
