@@ -12,19 +12,19 @@
 
 2. Navigate to the cloned directory:
 
-    `cd .\SuperSTATS`
+    `cd SuperSTATS/`
 
 3. Create a virtual environment:
     
     > ⚠️ Make sure you have Python installed. If not, download and install it from [python.org](https://www.python.org/downloads/). Ensure that Python is added to your system PATH.
 
-    `python3 -m venv env`
+    `python3 -m venv venv`
 
 4. Activate the virtual environment:
 
-    `.\venv\Scripts\activate`
+    `source venv/Scripts/activate`
 
-5. Install the required dependencies:
+6. Install the required dependencies:
 
     `pip install -e .`
 
@@ -32,17 +32,34 @@
 
     `pip install streamlit~=1.30 tbapy~=1.3 urllib3~=1.26 plotly~=5.17 beautifulsoup4~=4.12.2`
 
+7. Create secrets.toml in `SuperSTATs/.streamlit`:
+
+    ```
+    GSHEET_DOC_ID = "GOOGLE_SHEET_ID"
+    TBA_API = "THE_BLUE_ALLIANCE_API_KEY"
+    
+    GID_RAW = "RAW_STATS_DATA_GID"
+    GID_PICKED = "PICKED_TEAMS_GID"
+    GID_MATCHES = "MATCH_LIST_GID"
+    GID_SCOUTING = "SCOUTING_DATA_GID"
+    
+    FORM_URL = "GOOGLE_FORM_URL"
+    
+    TEAM_NUMBER = TEAM_NUMBER
+    DEFAULT_EVENT_KEY = "EVENT_KEY"
+    ```
+
 ## <span style="color:#f8312f;">Setup</span>
 
 <span style="font-size: 1.2em;">To start the stats app, run the startup script:</span>
 
-`.\run`
+`./run` or `./run.bat`
 
 Or launch it manually with Streamlit:
 
-`streamlit run src\SuperSTATs\Main.py`
+`streamlit run src/SuperSTATs/Main.py`
 
-> ⚠️ Make sure you have enabled your venv environment using `.\venv\Scripts\activate`, otherwise this method will not work.
+> ⚠️ Make sure you have enabled your venv environment using `venv/Scripts/activate`, otherwise this method will not work.
 
 <span style="font-size: 1.2em;">All set! Head to http://localhost:8501 to access the app, or the URL provided when launching.</span>
 
