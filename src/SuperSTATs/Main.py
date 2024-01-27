@@ -30,7 +30,6 @@ def main():
 
         team = columns[0].selectbox("Team Selection:", [show_all] + teams)
 
-        # TODO: Create fail safe for nonexistent TBA data (Show "Unplayed" in score)
         matches = pd.merge(
             matches,
             st.session_state.match_data[["Match Name", "score_breakdown"]],
@@ -44,15 +43,21 @@ def main():
                 0
             ]
 
-            red_data = str(data["red"]["totalPoints"]).zfill(3)
-            blue_data = str(data["blue"]["totalPoints"]).zfill(3)
+            st.write(match_name)
+            st.text(data)
 
-            if red_data > blue_data:
-                red_data = f"🔴 {str(red_data)} 🏆"
-                blue_data = f"🔵 {str(blue_data)}"
+            if str(data) != "nan":
+                red_data = str(data["red"]["totalPoints"]).zfill(3)
+                blue_data = str(data["blue"]["totalPoints"]).zfill(3)
+
+                if red_data > blue_data:
+                    red_data = f"🔴 {str(red_data)} 🏆"
+                    blue_data = f"🔵 {str(blue_data)}"
+                else:
+                    red_data = f"🔴 {str(red_data)}"
+                    blue_data = f"🔵 {str(blue_data)} 🏆"
             else:
-                red_data = f"🔴 {str(red_data)}"
-                blue_data = f"🔵 {str(blue_data)} 🏆"
+                red_data = blue_data = "🕑 N/A"
 
             matches.loc[matches["Match"] == match_name, "Red Score"] = red_data
             matches.loc[matches["Match"] == match_name, "Blue Score"] = blue_data
