@@ -394,6 +394,6 @@ def gen_bar(
                     )
 
         else:
-            st.error("Not Enough Data")
+            st.error("Not enough data")
     else:
         st.error("Please select at least one filter")

@@ -18,11 +18,11 @@
     
     > ⚠️ Make sure you have Python installed. If not, download and install it from [python.org](https://www.python.org/downloads/). Ensure that Python is added to your system PATH.
 
-    `python3 -m venv venv`
+    `python3 -m venv .venv`
 
 4. Activate the virtual environment:
 
-    `source venv/Scripts/activate`
+    `source .venv/Scripts/activate`
 
 6. Install the required dependencies:
 
@@ -61,7 +61,7 @@ Or launch it manually with Streamlit:
 
 `streamlit run src/SuperSTATs/Main.py`
 
-> ⚠️ Make sure you have enabled your venv environment using `venv/Scripts/activate`, otherwise this method will not work.
+> ⚠️ Make sure you have enabled your venv environment using `.venv/Scripts/activate`, otherwise this method will not work.
 
 <span style="font-size: 1.2em;">All set! Head to http://localhost:8501 to access the app, or the URL provided when launching.</span>
 
