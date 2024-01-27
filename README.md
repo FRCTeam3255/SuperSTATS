@@ -1,8 +1,8 @@
-# <span style="color:#00a6ed;">🤖 SuperSTATs 🤖</span>
+# 🤖 SuperSTATs 🤖
 
 <span style="font-size: 1.2em;">Welcome to SuperSTATs, a tool designed to process and analyze FIRST Robotics competition collected data in a user-friendly manner developed by FRC team 3255, the [SuperNURDs](https://www.frcteam3255.com/). The app is built using Python and leverages several libraries to perform statistical operations and display them in an easily manageable and configurable way.</span>
 
-## <span style="color:#f8312f;">Getting Started</span>
+## Getting Started
 
 <span style="font-size: 1.2em;">To get started with SuperSTATs, follow these steps:</span>
 
@@ -63,7 +63,7 @@
     SCOUTER_LIST = ["NAME_1", "NAME_2", "NAME_3", ...]
     ```
 
-## <span style="color:#f8312f;">Setup</span>
+## Setup
 
 <span style="font-size: 1.2em;">To start the stats app, run the startup script:</span>
 
@@ -81,11 +81,11 @@ streamlit run src/SuperSTATs/Main.py
 
 <span style="font-size: 1.2em;">All set! Head to http://localhost:8501 to access the app, or the URL provided when launching.</span>
 
-## <span style="color:#f8312f;">Usage</span>
+## Usage
 
 N/A
 
-## <span style="color:#f8312f;">Contributing</span>
+## Contributing
 
 <span style="font-size: 1.2em;">We welcome and greatly appreciate contributions to enhance SuperSTATs! Whether you find a bug, have a suggestion, or want to contribute code, your input is valuable to us. Here's how you can help out:<span>
 
@@ -117,6 +117,6 @@ N/A
 
 
 
-## <span style="color:#f8312f;">License</span>
+## License
 
 N/A
