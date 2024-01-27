@@ -2,6 +2,14 @@
 
 <span style="font-size: 1.2em;">Welcome to SuperSTATs, a tool designed to process and analyze FIRST Robotics competition collected data in a user-friendly manner developed by FRC team 3255, the [SuperNURDs](https://www.frcteam3255.com/). The app is built using Python and leverages several libraries to perform statistical operations and display them in an easily manageable and configurable way.</span>
 
+## Table of Contents
+
+[🚀 Getting Started](#getting-started) |
+[⚙️ Setup](#setup) |
+[📈 Usage](#usage) |
+[💡 Contributing](#contributing) |
+[📜 License](#license)
+
 ## Getting Started
 
 <span style="font-size: 1.2em;">To get started with SuperSTATs, follow these steps:</span>
@@ -44,21 +52,21 @@
    pip install streamlit~=1.30 tbapy~=1.3 urllib3~=1.26 plotly~=5.17 beautifulsoup4~=4.12.2
     ```
 
-9. Create secrets.toml in `SuperSTATs/.streamlit`:
+9. Within `SuperSTATs/.streamlit/` create `secrets.toml`:
 
     ```
-    GSHEET_DOC_ID = "GOOGLE_SHEET_ID"
-    TBA_API = "THE_BLUE_ALLIANCE_API_KEY"
-    
-    GID_RAW = "RAW_STATS_DATA_GID"
-    GID_PICKED = "PICKED_TEAMS_GID"
-    GID_MATCHES = "MATCH_LIST_GID"
-    GID_SCOUTING = "SCOUTING_DATA_GID"
-    
-    FORM_URL = "GOOGLE_FORM_URL"
-    
-    TEAM_NUMBER = TEAM_NUMBER
-    DEFAULT_EVENT_KEY = "EVENT_KEY"
+    GSHEET_DOC_ID = "YOUR_GOOGLE_SHEET_ID_HERE"
+    TBA_API = "YOUR_BLUE_ALLIANCE_API_KEY_HERE"
+
+    GID_RAW = "RAW_STATS_DATA_GID_HERE"
+    GID_PICKED = "PICKED_TEAMS_GID_HERE"
+    GID_MATCHES = "MATCH_LIST_GID_HERE"
+    GID_SCOUTING = "SCOUTING_DATA_GID_HERE"
+
+    FORM_URL = "YOUR_GOOGLE_FORM_URL_HERE"
+
+    TEAM_NUMBER = "YOUR_TEAM_NUMBER_HERE"
+    DEFAULT_EVENT_KEY = "EVENT_KEY_HERE"
 
     SCOUTER_LIST = ["NAME_1", "NAME_2", "NAME_3", ...]
     ```
