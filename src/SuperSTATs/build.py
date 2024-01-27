@@ -250,6 +250,35 @@ def gen_bar(
     df["Drivetrain Type"] = df["Drivetrain Type"].fillna("Unknown Drivetrain")
     df = df[(df["Drivetrain Type"].isin(selected_features))]
 
+    def get_features(comment):
+        return comment.split(", ")
+
+    all_team_features = {}
+    kept_teams = []
+
+    def has_features(team):
+        if all(item in selected_features for item in all_team_features[team]):
+            return True
+        return False
+
+    for team in comment_df["Team"]:
+        comment_df = comment_df.dropna()
+        team_values = comment_df.loc[
+            comment_df["Team"] == team, "COMMENT_GENERAL_STR_1"
+        ].tolist()
+
+        team_features = [get_features(value) for value in team_values]
+        team_features = list(
+            set([feature for sublist in team_features for feature in sublist])
+        )
+
+        all_team_features[team] = team_features
+        if has_features(team):
+            kept_teams.append(team)
+
+    st.write(kept_teams)
+    df = df[df["Team"].isin(kept_teams)]
+
     if use_filter_selection:
         selected_filters = st.multiselect(
             "Filters:",

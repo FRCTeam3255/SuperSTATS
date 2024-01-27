@@ -127,9 +127,9 @@ def main():
     match_scouts = red_scouts + blue_scouts
 
     name_selection = top_columns[0].empty()
-    input_name = name_selection.selectbox("Name:", match_scouts + ["[Sub]"]).upper()
+    input_name = name_selection.selectbox("Name:", match_scouts + ["Sub"]).upper()
 
-    if input_name == "[SUB]":
+    if input_name == "SUB":
         bot_columns = st.columns(2)
         input_name = name_selection.selectbox("Original:", match_scouts).upper()
         input_sub = bot_columns[0].text_input("Sub:", max_chars=2).upper()
