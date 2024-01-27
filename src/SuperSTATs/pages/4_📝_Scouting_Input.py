@@ -86,11 +86,11 @@ def main():
         with st.expander("Pit Map"):
             pit_map = st.file_uploader("Upload Map: ", type=["png", "jpg"])
             if pit_map:
-                with open("map.pickle", "wb") as f:
+                with open("src\\pickles\\map.pickle", "wb") as f:
                     pickle.dump(pit_map, f, pickle.HIGHEST_PROTOCOL)
             else:
                 try:
-                    with open("map.pickle", "rb") as f:
+                    with open("src\\pickles\\map.pickle", "rb") as f:
                         pit_map = pickle.load(f)
                     st.image(pit_map, use_column_width=True)
                 except:

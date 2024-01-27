@@ -43,9 +43,6 @@ def main():
                 0
             ]
 
-            st.write(match_name)
-            st.text(data)
-
             if str(data) != "nan":
                 red_data = str(data["red"]["totalPoints"]).zfill(3)
                 blue_data = str(data["blue"]["totalPoints"]).zfill(3)
