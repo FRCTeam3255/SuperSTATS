@@ -276,7 +276,6 @@ def gen_bar(
         if has_features(team):
             kept_teams.append(team)
 
-    st.write(kept_teams)
     df = df[df["Team"].isin(kept_teams)]
 
     if use_filter_selection:
