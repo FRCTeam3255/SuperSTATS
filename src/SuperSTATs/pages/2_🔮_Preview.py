@@ -2,8 +2,6 @@ import SuperSTATs.build as build
 import SuperSTATs.load as load
 import streamlit as st
 import pandas as pd
-import numpy as np
-import re
 
 
 def display_team(
@@ -12,6 +10,7 @@ def display_team(
     team_df,
     opposing_df,
     start_expanded,
+    calc_bumpers,
     combined_chart,
     match_choice,
 ):
@@ -21,7 +20,14 @@ def display_team(
     )
 
     for team_num in team_df:
-        build.scouting_expander(team_num, df, [], start_expanded, True, column)
+        build.scouting_expander(
+            team_num=team_num,
+            df=df,
+            start_expanded=start_expanded,
+            calc_bumpers=calc_bumpers,
+            error_prefix=True,
+            column=column,
+        )
 
     column.markdown("""---""")
 
@@ -64,26 +70,8 @@ def display_team(
         unsafe_allow_html=True,
     )
 
-    match_df = pd.DataFrame(
-        st.session_state.tba.event_matches(st.secrets["DEFAULT_EVENT_KEY"])
-    )
-    match_df = pd.concat(
-        [match_df, pd.json_normalize(match_df["alliances"])], axis=1
-    ).drop(columns="alliances")
-
-    match_df["call"] = (
-        match_df["key"]
-        .str.replace(st.secrets["DEFAULT_EVENT_KEY"], "")
-        .str.replace("_qm", "Quals ")
-        .str.replace("_sf", "Playoffs ")
-        .str.replace("_f", "Finals ")
-        .str.replace(re.compile(r"1m1$"), "1", regex=True)
-        .str.replace(re.compile(r"1m2$"), "2", regex=True)
-        .str.replace(re.compile(r"1m3$"), "3", regex=True)
-        .str.replace(re.compile(r"m1$"), "", regex=True)
-    )
-
-    match_df = match_df.loc[match_df["call"] == match_choice]
+    match_df = st.session_state.match_data
+    match_df = match_df.loc[match_df["Match Name"] == match_choice]
     match_breakdown = match_df["score_breakdown"].to_list()[0]
     actual_score = match_breakdown[team_header[1].lower()]["totalPoints"]
 
@@ -98,27 +86,24 @@ def display_team(
     if not combined_chart:
         with column.container():
             build.gen_bar(
-                st.session_state.df,
-                column,
-                True,
-                False,
-                True,
-                False,
-                True,
-                True,
-                team_df,
-                opposing_df,
-                [],
-                False,
+                key=column,
+                use_hide_picked=False,
+                use_features=False,
+                use_max_size=False,
+                displayed_teams=team_df,
+                compared_teams=opposing_df,
+                expanders=False,
+                use_inline_legend=False,
             )
 
 
 def main():
     load.app_init()
 
-    st.markdown(
-        "<h1 style='text-align: center;'>🔮 Match Preview 🔮</h1>", unsafe_allow_html=True
-    )
+    import SuperSTATs.styles as style
+
+    st.markdown(style.shimmer("#d9adff"), unsafe_allow_html=True)
+    st.markdown("<div class='shimmer'>🔮 Match Preview 🔮</div>", unsafe_allow_html=True)
     st.title("")
 
     st.button("Update Page", type="primary", use_container_width=True)
@@ -164,10 +149,11 @@ def main():
     red_alliance = df_sort.filter(like="Red", axis=0).to_list()
     blue_alliance = df_sort.filter(like="Blue", axis=0).to_list()
 
-    columns = st.columns(2)
+    columns = st.columns(3)
 
-    start_expanded = columns[0].checkbox("Auto Expand Scouting", False)
-    combined_chart = columns[1].checkbox("Show Combined Chart", False)
+    start_expanded = columns[0].toggle("Auto Expand Scouting", False)
+    calc_bumpers = columns[1].toggle("Calculate Bumpers", True)
+    combined_chart = columns[2].toggle("Show Combined Chart", False)
 
     columns = st.columns(2)
 
@@ -177,6 +163,7 @@ def main():
         red_alliance,
         blue_alliance,
         start_expanded,
+        calc_bumpers,
         combined_chart,
         match_choice,
     )
@@ -187,24 +174,17 @@ def main():
         blue_alliance,
         red_alliance,
         start_expanded,
+        calc_bumpers,
         combined_chart,
         match_choice,
     )
 
     if combined_chart:
         build.gen_bar(
-            st.session_state.df,
-            0,
-            True,
-            False,
-            True,
-            False,
-            True,
-            True,
-            red_alliance + blue_alliance,
-            [],
-            [],
-            False,
+            use_max_size=False,
+            displayed_teams=red_alliance + blue_alliance,
+            expanders=False,
+            use_inline_legend=False,
         )
 
 

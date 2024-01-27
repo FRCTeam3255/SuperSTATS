@@ -1,7 +1,6 @@
 import SuperSTATs.load as load
 import streamlit as st
-import pandas as pd
-import tbapy, json
+import json
 
 
 st.set_page_config(
@@ -14,7 +13,7 @@ st.set_page_config(
 
 def show_raw(match_num, match_info, match_key):
     try:
-        if st.checkbox("📊 Show RAW Data", key=f"{match_num}_RAW"):
+        if st.toggle("📊 Show RAW Data", key=f"{match_num}_RAW"):
             st.write(match_info)
         st.markdown(
             f"<span style='font-size: small;'>[{match_key.replace('_', '-')}](https://www.thebluealliance.com/match/{match_key})</span>",
@@ -28,10 +27,11 @@ def main():
     load.app_init()
 
     import SuperSTATs.build as build
+    import SuperSTATs.styles as style
 
-    st.markdown(
-        "<h1 style='text-align: center;'>👾 Data Check 👾</h1>", unsafe_allow_html=True
-    )
+    st.markdown(style.shimmer("#c18aff"), unsafe_allow_html=True)
+    st.markdown("<div class='shimmer'>👾 Data Check 👾</div>", unsafe_allow_html=True)
+
     st.title("")
 
     st.button("Update Page", type="primary", use_container_width=True)
@@ -108,14 +108,14 @@ def main():
 
             if filters[0] in selected_filters:
                 if sorted(team_nums) != sorted(tba_values):
-                    st.subheader(f"Team Count: {len(team_nums)}/6")
+                    st.subheader(f"Team Count: {len(team_nums)}/6", False)
 
                     columns = st.columns(2)
 
-                    columns[0].subheader("SN Data")
+                    columns[0].subheader("SN Data", False)
                     columns[0].write(team_nums)
 
-                    columns[1].subheader("TBA Data")
+                    columns[1].subheader("TBA Data", False)
                     columns[1].write(tba_values)
 
                     data_variance = True
@@ -133,7 +133,7 @@ def main():
                         no_comm_teams.append(str(team))
                     no_comm_teams = ", ".join(no_comm_teams)
 
-                    st.subheader(f"💭 {no_comm_teams}")
+                    st.subheader(f"💭 {no_comm_teams}", False)
                     data_variance = True
 
             if filters[2] in selected_filters:

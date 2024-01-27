@@ -12,12 +12,56 @@ st.set_page_config(
 )
 
 
+def get_matches(team):
+    match_list = st.session_state.matches["Match"].to_list()
+    scouts = {}
+    rotation = 3
+
+    processed = 0
+    count = 0
+    i = 0
+
+    while processed < len(match_list):
+        p1 = team[count]
+        p2 = team[count - 1]
+        p3 = team[count - 2]
+
+        if i % rotation == 0:
+            count += 1
+
+        if count == len(team):
+            count = 0
+
+        for match_type in ["Quals", "Playoffs", "Finals"]:
+            for j in range(rotation):
+                match_name = f"{match_type} {(i + 1) + j}"
+                if match_name in match_list:
+                    scouts[match_name] = [p1, p2, p3]
+                    processed += 1
+
+        i += rotation
+
+    return scouts
+
+
+def name_check(value, lst):
+    mid_index = len(lst) // 2
+    if value in lst[:mid_index]:
+        return "R"
+    elif value in lst[mid_index:]:
+        return "B"
+    else:
+        return "Other"
+
+
 def main():
     load.app_init()
 
-    st.markdown(
-        "<h1 style='text-align: center;'>✏️ Stats Input ✏️</h1>", unsafe_allow_html=True
-    )
+    import SuperSTATs.styles as style
+
+    st.markdown(style.shimmer("#ffc1ad"), unsafe_allow_html=True)
+    st.markdown("<div class='shimmer'>✏️ Stats Input ✏️</div>", unsafe_allow_html=True)
+
     st.title("")
 
     st.button("Update Page", type="primary", use_container_width=True)
@@ -48,9 +92,7 @@ def main():
         name: id for name, id in entries_dict.items() if name not in gen_entries
     }
 
-    columns = st.columns(2)
-
-    input_name = columns[0].text_input("Name:", max_chars=2).upper()
+    top_columns = st.columns(2)
 
     df = st.session_state.df
     matches = st.session_state.matches
@@ -71,21 +113,52 @@ def main():
         match for sublist in unplayed_matches.values.tolist() for match in sublist
     ]
 
-    match_selection = columns[1].empty()
+    match_selection = top_columns[1].empty()
     input_match = match_selection.selectbox("Match:", unplayed_matches + ["Other"])
     if input_match == "Other":
         input_match = match_selection.selectbox(
             "Match [OTHER]:", st.session_state.matches
         )
 
+    scouter_list = st.secrets["SCOUTER_LIST"]
+
+    red_scouts = get_matches(scouter_list[::2])[input_match]
+    blue_scouts = get_matches(scouter_list[1::2])[input_match]
+    match_scouts = red_scouts + blue_scouts
+
+    name_selection = top_columns[0].empty()
+    input_name = name_selection.selectbox("Name:", match_scouts + ["Sub"]).upper()
+
+    if input_name == "SUB":
+        bot_columns = st.columns(2)
+        input_name = name_selection.selectbox("Original:", match_scouts).upper()
+        input_sub = bot_columns[0].text_input("Sub:", max_chars=2).upper()
+    else:
+        input_sub = None
+
+    input_color = name_check(input_name, match_scouts)
     input_type = input_match.split()[0]
-    input_color = columns[0].radio("Color:", ["Red 🔴", "Blue 🔵"], horizontal=True)[0]
 
     df_teams = matches[matches["Match"] == input_match].set_index("Match").transpose()
-    teams = df_teams.filter(like=input_color.split()[0], axis=0)[input_match].to_list()
-
-    input_team = columns[1].radio("Team:", teams, horizontal=True)
+    teams = df_teams.filter(like=input_color, axis=0)[input_match].to_list()
     input_match = input_match.split()[1]
+
+    name_index = (
+        red_scouts.index(input_name)
+        if input_color == "R"
+        else blue_scouts.index(input_name)
+    )
+
+    input_team = teams[name_index]
+    color_icon = "🔴" if input_color == "R" else "🔵"
+    input_name = f"{input_sub} [⇄]" if input_sub else input_name
+
+    st.markdown("""---""")
+
+    st.markdown(
+        f'<div style="text-align: center; font-size: 2.5em;">{color_icon} {input_team} | {st.session_state.team_info[input_team]} {color_icon}</div>',
+        unsafe_allow_html=True,
+    )
 
     set_inputs = [input_name, input_match, input_type, input_color, input_team]
     set_combined = {}

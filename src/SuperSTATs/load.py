@@ -92,29 +92,33 @@ def get_team_colors():
 
 
 def get_match_data():
-    df = pd.DataFrame(tba.event_matches(st.secrets["DEFAULT_EVENT_KEY"]))
-    df = pd.concat([df, pd.json_normalize(df["alliances"])], axis=1).drop(
-        columns="alliances"
-    )
-
-    df["comp_level"] = df["comp_level"].replace(
-        {"qm": "Quals", "sf": "Playoffs", "f": "Finals"}
-    )
-
-    for color in ["red", "blue"]:
-        df[f"{color}.team_keys"] = df[f"{color}.team_keys"].apply(
-            lambda teams: [int(x.replace("frc", "")) for x in teams]
+    try:
+        df = pd.DataFrame(tba.event_matches(st.secrets["DEFAULT_EVENT_KEY"]))
+        df = pd.concat([df, pd.json_normalize(df["alliances"])], axis=1).drop(
+            columns="alliances"
         )
 
-    def set_match_name(row):
-        if row["comp_level"] == "Playoffs":
-            return row["comp_level"] + " " + str(row["set_number"])
-        else:
-            return row["comp_level"] + " " + str(row["match_number"])
+        df["comp_level"] = df["comp_level"].replace(
+            {"qm": "Quals", "sf": "Playoffs", "f": "Finals"}
+        )
 
-    df["Match Name"] = df.apply(set_match_name, axis=1)
+        for color in ["red", "blue"]:
+            df[f"{color}.team_keys"] = df[f"{color}.team_keys"].apply(
+                lambda teams: [int(x.replace("frc", "")) for x in teams]
+            )
 
-    return df
+        def set_match_name(row):
+            if row["comp_level"] == "Playoffs":
+                return row["comp_level"] + " " + str(row["set_number"])
+            else:
+                return row["comp_level"] + " " + str(row["match_number"])
+
+        df["Match Name"] = df.apply(set_match_name, axis=1)
+
+        return df
+    except:
+        st.error(f"ERROR: Nonexistent Match Data...")
+        st.stop()
 
 
 def get_matches():

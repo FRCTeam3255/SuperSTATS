@@ -32,7 +32,15 @@ def add_cols(org_df, filter):
     return org_df[filter]
 
 
-def scouting_expander(team_num, df, rank_info, start_expanded, error_prefix, column):
+def scouting_expander(
+    team_num,
+    df,
+    rank_info=[],
+    start_expanded=False,
+    calc_bumpers=False,
+    error_prefix=False,
+    column=st,
+):
     team_name = st.session_state.team_info[team_num]
 
     expander_name = f"[{team_num}] {team_name}"
@@ -42,20 +50,44 @@ def scouting_expander(team_num, df, rank_info, start_expanded, error_prefix, col
     with column.expander(expander_name, start_expanded):
         if len(rank_info) == 2:
             st.text(f"SN Rank: {rank_info[0]} | TBA Rank: {rank_info[1]}")
+
         sorted_df = df.loc[df["Team #"] == int(team_num)]
         sorted_df = sorted_df.sort_values(by="Timestamp")
         sorted_df = sorted_df.drop_duplicates(keep="last", subset="Team #")
 
         time_logged = str(sorted_df["Timestamp"].max())
+
         if time_logged == "nan":
             error_message = (
                 f"[{team_num}] {team_name} - No Data" if error_prefix else "No Data"
             )
             column.error(error_message)
+
         else:
+            team_data = df.loc[
+                df["Team #"] == st.secrets["TEAM_NUMBER"],
+                ["Frame Size LENGTH", "Frame Size WIDTH"],
+            ].iloc[0]
+
+            added_length = team_data["Frame Size LENGTH"]
+            added_width = team_data["Frame Size WIDTH"]
+
             length = sorted_df["Frame Size LENGTH"].max()
             width = sorted_df["Frame Size WIDTH"].max()
-            st.text(f"Length: {length} in | Width: {width} in")
+
+            bumper_size = 5
+
+            added_length += bumper_size * calc_bumpers
+            added_width += bumper_size * calc_bumpers
+
+            length += bumper_size * calc_bumpers
+            width += bumper_size * calc_bumpers
+
+            added_length = length + added_length
+            added_width = width + added_width
+
+            st.text(f"Length: {length} in ({added_length} in)")
+            st.text(f"Width: {width} in ({added_width} in)")
             st.text(f"Area: {length * width} in²")
 
             def check_nan(var_name, var_value, column):
@@ -75,23 +107,26 @@ def scouting_expander(team_num, df, rank_info, start_expanded, error_prefix, col
 
 
 def gen_bar(
-    df,
-    key,
-    use_group_filters,
-    use_hide_picked,
-    use_hide_nums,
-    use_features,
-    use_agg_type,
-    use_filter_selection,
-    displayed_teams,
-    compared_teams,
-    x_range,
-    expanders,
+    df=st.session_state.df,
+    key=0,
+    use_group_filters=True,
+    use_hide_picked=True,
+    use_hide_nums=True,
+    use_inline_legend=True,
+    use_features=True,
+    use_agg_type=True,
+    use_filter_selection=True,
+    use_max_size=True,
+    displayed_teams=[],
+    compared_teams=[],
+    x_range=[],
+    expanders=True,
 ):
     phases = st.session_state.phases
 
     variables = [
         "group_filters" if use_group_filters else None,
+        "inline_legend" if use_inline_legend else None,
         "hide_picked" if use_hide_picked else None,
         "hide_nums" if use_hide_nums else None,
         "features" if use_features else None,
@@ -104,9 +139,9 @@ def gen_bar(
 
     var_count = 0
 
-    def gen_checkbox(var_name, var_count, box_name, default, key):
+    def gen_toggle(var_name, var_count, box_name, default, key):
         if var_name in variables:
-            variable = columns[var_count].checkbox(
+            variable = columns[var_count].toggle(
                 box_name, default, key=f"{var_name}_{key}"
             )
             var_count += 1
@@ -115,19 +150,23 @@ def gen_bar(
 
         return [variable, var_count]
 
-    group_filters, var_count = gen_checkbox(
+    group_filters, var_count = gen_toggle(
         "group_filters", var_count, "Group Filters", True, key
     )
 
-    hide_picked, var_count = gen_checkbox(
+    inline_legend, var_count = gen_toggle(
+        "inline_legend", var_count, "Inline Legend", True, key
+    )
+
+    hide_picked, var_count = gen_toggle(
         "hide_picked", var_count, "Hide Picked Teams", False, key
     )
 
-    hide_nums, var_count = gen_checkbox(
+    hide_nums, var_count = gen_toggle(
         "hide_nums", var_count, "Hide Team Numbers", False, key
     )
 
-    features, var_count = gen_checkbox("features", var_count, "Features", False, key)
+    features, var_count = gen_toggle("features", var_count, "Features", False, key)
 
     if use_agg_type:
         agg_type = st.selectbox(
@@ -200,7 +239,9 @@ def gen_bar(
     )
 
     df = df.merge(
-        df_scouting[["Team #", "Drivetrain Type"]].fillna("Unknown Drivetrain"),
+        df_scouting[
+            ["Team #", "Drivetrain Type", "Frame Size LENGTH", "Frame Size WIDTH"]
+        ].fillna("Unknown Drivetrain"),
         left_on="Team",
         right_on="Team #",
         how="left",
@@ -208,6 +249,34 @@ def gen_bar(
 
     df["Drivetrain Type"] = df["Drivetrain Type"].fillna("Unknown Drivetrain")
     df = df[(df["Drivetrain Type"].isin(selected_features))]
+
+    def get_features(comment):
+        return comment.split(", ")
+
+    all_team_features = {}
+    kept_teams = []
+
+    def has_features(team):
+        if all(item in selected_features for item in all_team_features[team]):
+            return True
+        return False
+
+    for team in comment_df["Team"]:
+        comment_df = comment_df.dropna()
+        team_values = comment_df.loc[
+            comment_df["Team"] == team, "COMMENT_GENERAL_STR_1"
+        ].tolist()
+
+        team_features = [get_features(value) for value in team_values]
+        team_features = list(
+            set([feature for sublist in team_features for feature in sublist])
+        )
+
+        all_team_features[team] = team_features
+        if has_features(team):
+            kept_teams.append(team)
+
+    df = df[df["Team"].isin(kept_teams)]
 
     if use_filter_selection:
         selected_filters = st.multiselect(
@@ -218,6 +287,31 @@ def gen_bar(
         )
     else:
         selected_filters = filter_choices
+
+    if use_max_size:
+        min_size = df[["Frame Size LENGTH", "Frame Size WIDTH"]].min().min()
+        max_size = df[["Frame Size LENGTH", "Frame Size WIDTH"]].max().max()
+        unscouted_size = max_size + 0.5
+
+        size_limit = st.slider(
+            "Max Size:",
+            min_value=min_size,
+            max_value=unscouted_size,
+            value=max_size,
+            step=0.5,
+            key=f"size_limit_{key}",
+        )
+
+        if size_limit == unscouted_size:
+            st.warning("WARNING: Viewing unscouted teams")
+
+        df["Frame Size LENGTH"] = df["Frame Size LENGTH"].fillna(unscouted_size)
+        df["Frame Size WIDTH"] = df["Frame Size WIDTH"].fillna(unscouted_size)
+
+        df = df[
+            (df["Frame Size LENGTH"] <= size_limit)
+            & (df["Frame Size WIDTH"] <= size_limit)
+        ]
 
     calc_df = df.groupby("Team")[selected_filters].agg(agg_type)
     calc_df["rank"] = calc_df.sum(axis=1).rank(ascending=False).astype(int)
@@ -263,7 +357,21 @@ def gen_bar(
             color=alt.Color(
                 "variable:N",
                 title=" ",
-                legend=alt.Legend(title=None, orient="top", symbolType="circle"),
+                legend=alt.Legend(
+                    title=None,
+                    orient=(
+                        "bottom-right"
+                        if inline_legend and not group_filters
+                        else "bottom"
+                    ),
+                    symbolType="circle",
+                    labelBaseline="alphabetic",
+                    labelLimit=0,
+                    offset=5,
+                    padding=0,
+                    rowPadding=0,
+                    labelFontSize=(10.5 if inline_legend and not group_filters else 14),
+                ),
             ),
             tooltip=["value:Q", "variable:N"],
         )
@@ -277,18 +385,15 @@ def gen_bar(
                 for index, row in ranked.iterrows():
                     team_num = row["Team"]
                     scouting_expander(
-                        team_num,
-                        df_scouting,
-                        [
+                        team_num=team_num,
+                        df=df_scouting,
+                        rank_info=[
                             ranked.loc[ranked["Team"] == team_num, "rank"].to_list()[0],
                             st.session_state.tba_ranks[str(team_num)],
                         ],
-                        False,
-                        False,
-                        st,
                     )
 
         else:
-            st.error("Not Enough Data")
+            st.error("Not enough data")
     else:
         st.error("Please select at least one filter")
