@@ -126,9 +126,9 @@ N/A
 
 ## Contributors
 
-- [Kane Barnes](https://github.com/FRCTeam3255/SuperSTATS/commits/package-conversion/?author=KaneBarnes)
-- [Tayler Uva](https://github.com/FRCTeam3255/SuperSTATS/commits/package-conversion/?author=TaylerUva)
+- [Kane Barnes](https://github.com/FRCTeam3255/SuperSTATS/commits/package-conversion/?author=KaneBarnes) - [3255](https://github.com/FRCTeam3255)
 
+- [Tayler Uva](https://github.com/FRCTeam3255/SuperSTATS/commits/package-conversion/?author=TaylerUva) - [3255](https://github.com/FRCTeam3255)
 
 ## License
 
