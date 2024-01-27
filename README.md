@@ -7,7 +7,8 @@
 [🚀 Getting Started](#getting-started) |
 [⚙️ Setup](#setup) |
 [📈 Usage](#usage) |
-[💡 Contributing](#contributing) |
+[💡 Get Involved](#get-involved) |
+[💎 Contributors](#contributors) |
 [📜 License](#license)
 
 ## Getting Started
@@ -93,7 +94,7 @@ streamlit run src/SuperSTATs/Main.py
 
 N/A
 
-## Contributing
+## Get Involved
 
 <span style="font-size: 1.2em;">We welcome and greatly appreciate contributions to enhance SuperSTATs! Whether you find a bug, have a suggestion, or want to contribute code, your input is valuable to us. Here's how you can help out:<span>
 
@@ -123,6 +124,10 @@ N/A
 
 <span style="font-size: 1.2em;">Feel free to [reach out](https://www.frcteam3255.com/contact) if you have any questions or need assistance in contributing!</span>
 
+## Contributors
+
+- [Kane Barnes](https://github.com/FRCTeam3255/SuperSTATS/commits/package-conversion/?author=KaneBarnes)
+- [Tayler Uva](https://github.com/FRCTeam3255/SuperSTATS/commits/package-conversion/?author=TaylerUva)
 
 
 ## License
