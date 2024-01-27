@@ -7,7 +7,7 @@
             "command": "cmd",
             "args": [
                 "/k",
-                "./.venv/Scripts/activate && streamlit run src\\SuperSTATs\\Main.py"
+                ".\\.venv\\Scripts\\activate && streamlit run src\\SuperSTATs\\Main.py"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
