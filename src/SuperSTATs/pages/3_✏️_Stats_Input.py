@@ -213,7 +213,7 @@ def main():
                 entry_responses[entry] = ", ".join(selected_options)
 
             elif entry_parts[2] == "BOOL":
-                entry_responses[entry] = int(st.checkbox(entry_name, key=entry))
+                entry_responses[entry] = int(st.toggle(entry_name, key=entry))
 
     submitted = False
 
