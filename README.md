@@ -47,6 +47,8 @@
     
     TEAM_NUMBER = TEAM_NUMBER
     DEFAULT_EVENT_KEY = "EVENT_KEY"
+
+    SCOUTER_LIST = ["NAME_1", "NAME_2", "NAME_3", ...]
     ```
 
 ## <span style="color:#f8312f;">Setup</span>

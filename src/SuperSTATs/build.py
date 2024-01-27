@@ -139,9 +139,9 @@ def gen_bar(
 
     var_count = 0
 
-    def gen_checkbox(var_name, var_count, box_name, default, key):
+    def gen_toggle(var_name, var_count, box_name, default, key):
         if var_name in variables:
-            variable = columns[var_count].checkbox(
+            variable = columns[var_count].toggle(
                 box_name, default, key=f"{var_name}_{key}"
             )
             var_count += 1
@@ -150,23 +150,23 @@ def gen_bar(
 
         return [variable, var_count]
 
-    group_filters, var_count = gen_checkbox(
+    group_filters, var_count = gen_toggle(
         "group_filters", var_count, "Group Filters", True, key
     )
 
-    inline_legend, var_count = gen_checkbox(
+    inline_legend, var_count = gen_toggle(
         "inline_legend", var_count, "Inline Legend", True, key
     )
 
-    hide_picked, var_count = gen_checkbox(
+    hide_picked, var_count = gen_toggle(
         "hide_picked", var_count, "Hide Picked Teams", False, key
     )
 
-    hide_nums, var_count = gen_checkbox(
+    hide_nums, var_count = gen_toggle(
         "hide_nums", var_count, "Hide Team Numbers", False, key
     )
 
-    features, var_count = gen_checkbox("features", var_count, "Features", False, key)
+    features, var_count = gen_toggle("features", var_count, "Features", False, key)
 
     if use_agg_type:
         agg_type = st.selectbox(

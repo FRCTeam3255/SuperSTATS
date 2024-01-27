@@ -151,9 +151,9 @@ def main():
 
     columns = st.columns(3)
 
-    start_expanded = columns[0].checkbox("Auto Expand Scouting", False)
-    calc_bumpers = columns[1].checkbox("Calculate Bumpers", True)
-    combined_chart = columns[2].checkbox("Show Combined Chart", False)
+    start_expanded = columns[0].toggle("Auto Expand Scouting", False)
+    calc_bumpers = columns[1].toggle("Calculate Bumpers", True)
+    combined_chart = columns[2].toggle("Show Combined Chart", False)
 
     columns = st.columns(2)
 

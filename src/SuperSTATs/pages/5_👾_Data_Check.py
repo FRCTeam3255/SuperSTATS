@@ -13,7 +13,7 @@ st.set_page_config(
 
 def show_raw(match_num, match_info, match_key):
     try:
-        if st.checkbox("📊 Show RAW Data", key=f"{match_num}_RAW"):
+        if st.toggle("📊 Show RAW Data", key=f"{match_num}_RAW"):
             st.write(match_info)
         st.markdown(
             f"<span style='font-size: small;'>[{match_key.replace('_', '-')}](https://www.thebluealliance.com/match/{match_key})</span>",

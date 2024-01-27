@@ -62,21 +62,21 @@ def main():
         if team != show_all:
             team = int(str(team).split(" | ")[0])
 
-            use_team_colors = columns[1].checkbox("Use Team Colors")
+            use_team_colors = columns[1].toggle("Use Team Colors")
             team_colors = st.session_state.team_colors[team]
 
             if use_team_colors:
                 if team_colors[0] == "003255" or team_colors[1] == "003255":
-                    columns[1].checkbox("Use Secondary Color", disabled=True)
+                    columns[1].toggle("Use Secondary Color", disabled=True)
                     st.warning("Team Colors Not Found")
                     team_color = "#ffffff"
                 else:
-                    if columns[1].checkbox("Use Secondary Color"):
+                    if columns[1].toggle("Use Secondary Color"):
                         team_color = team_colors[1]
                     else:
                         team_color = team_colors[0]
             else:
-                columns[1].checkbox("Use Secondary Color", disabled=True)
+                columns[1].toggle("Use Secondary Color", disabled=True)
                 team_color = "#ffffff"
 
             team_cols = [
