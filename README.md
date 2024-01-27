@@ -2,7 +2,7 @@
 
 <span style="font-size: 1.2em;">Welcome to SuperSTATs, a tool designed to process and analyze FIRST Robotics competition collected data in a user-friendly manner developed by FRC team 3255, the [SuperNURDs](https://www.frcteam3255.com/). The app is built using Python and leverages several libraries to perform statistical operations and display them in an easily manageable and configurable way.</span>
 
-## Table of Contents
+## Contents
 
 [🚀 Getting Started](#getting-started) |
 [⚙️ Setup](#setup) |
