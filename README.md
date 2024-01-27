@@ -47,13 +47,7 @@
    pip install -e .
     ```
 
-    Or install them manually with:
-
-    ```
-   pip install streamlit~=1.30 tbapy~=1.3 urllib3~=1.26 plotly~=5.17 beautifulsoup4~=4.12.2
-    ```
-
-9. Within `SuperSTATs/.streamlit/` create `secrets.toml`:
+9. Within the `SuperSTATs/.streamlit` folder create `secrets.toml` and add your values:
 
     ```
     GSHEET_DOC_ID = "YOUR_GOOGLE_SHEET_ID_HERE"
@@ -77,16 +71,16 @@
 <span style="font-size: 1.2em;">To start the stats app, run the startup script:</span>
 
 ```
-./run
+./run.bat
 ```
 
 Or launch it manually with Streamlit:
 
+> ⚠️ Make sure you have enabled your venv environment using `.venv/Scripts/activate`, otherwise the manual method will not work.
+
 ```
 streamlit run src/SuperSTATs/Main.py
 ```
-
-> ⚠️ Make sure you have enabled your venv environment using `.venv/Scripts/activate`, otherwise this method will not work.
 
 <span style="font-size: 1.2em;">All set! Head to http://localhost:8501 to access the app, or the URL provided when launching.</span>
 
