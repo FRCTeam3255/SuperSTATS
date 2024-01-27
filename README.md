@@ -8,31 +8,43 @@
 
 1. Clone the repository from [GitHub](https://github.com/FRCTeam3255/SuperSTATS/):
 
-    `git clone https://github.com/FRCTeam3255/SuperSTATS.git`
+    ```
+   git clone https://github.com/FRCTeam3255/SuperSTATS.git
+    ```
 
-2. Navigate to the cloned directory:
+3. Navigate to the cloned directory:
 
-    `cd SuperSTATS/`
+    ```
+   cd SuperSTATS/
+    ```
 
-3. Create a virtual environment:
+4. Create a virtual environment:
     
     > ⚠️ Make sure you have Python installed. If not, download and install it from [python.org](https://www.python.org/downloads/). Ensure that Python is added to your system PATH.
 
-    `python3 -m venv .venv`
+    ```
+   python3 -m venv .venv
+    ```
 
-4. Activate the virtual environment:
+5. Activate the virtual environment:
 
-    `source .venv/Scripts/activate`
+    ```
+   source .venv/Scripts/activate
+    ```
 
-6. Install the required dependencies:
+7. Install the required dependencies:
 
-    `pip install -e .`
+    ```
+   pip install -e .
+    ```
 
     Or install them manually with:
 
-    `pip install streamlit~=1.30 tbapy~=1.3 urllib3~=1.26 plotly~=5.17 beautifulsoup4~=4.12.2`
+    ```
+   pip install streamlit~=1.30 tbapy~=1.3 urllib3~=1.26 plotly~=5.17 beautifulsoup4~=4.12.2
+    ```
 
-7. Create secrets.toml in `SuperSTATs/.streamlit`:
+9. Create secrets.toml in `SuperSTATs/.streamlit`:
 
     ```
     GSHEET_DOC_ID = "GOOGLE_SHEET_ID"
@@ -55,11 +67,15 @@
 
 <span style="font-size: 1.2em;">To start the stats app, run the startup script:</span>
 
-`./run` or `./run.bat`
+```
+./run
+```
 
 Or launch it manually with Streamlit:
 
-`streamlit run src/SuperSTATs/Main.py`
+```
+streamlit run src/SuperSTATs/Main.py
+```
 
 > ⚠️ Make sure you have enabled your venv environment using `.venv/Scripts/activate`, otherwise this method will not work.
 
@@ -82,13 +98,17 @@ N/A
     
     Create a new branch for your changes:
 
-    `git checkout -b branch-name`
+    ```
+   git checkout -b branch-name
+    ```
     
     Make your modifications and commit them.
     
     Push your changes to your fork:
     
-    `git push origin branch-name`
+    ```
+   git push origin branch-name
+    ```
     
     
     [Open a pull request](https://github.com/FRCTeam3255/SuperSTATS/pulls) with a clear title and description.
