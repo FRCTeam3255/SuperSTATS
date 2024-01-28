@@ -87,6 +87,7 @@ def display_team(
         with column.container():
             build.gen_bar(
                 key=column,
+                use_presets=False,
                 use_hide_picked=False,
                 use_features=False,
                 use_max_size=False,
@@ -152,8 +153,8 @@ def main():
     columns = st.columns(3)
 
     start_expanded = columns[0].toggle("Auto Expand Scouting", False)
-    calc_bumpers = columns[1].toggle("Calculate Bumpers", True)
-    combined_chart = columns[2].toggle("Show Combined Chart", False)
+    combined_chart = columns[1].toggle("Show Combined Chart", False)
+    calc_bumpers = columns[2].toggle("Calculate Bumpers", True)
 
     columns = st.columns(2)
 
@@ -181,6 +182,7 @@ def main():
 
     if combined_chart:
         build.gen_bar(
+            use_presets=False,
             use_max_size=False,
             displayed_teams=red_alliance + blue_alliance,
             expanders=False,

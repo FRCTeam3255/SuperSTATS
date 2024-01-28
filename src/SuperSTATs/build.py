@@ -3,6 +3,7 @@ import streamlit as st
 import altair as alt
 import pandas as pd
 import numpy as np
+import pickle
 import math
 
 
@@ -109,6 +110,7 @@ def scouting_expander(
 def gen_bar(
     df=st.session_state.df,
     key=0,
+    use_presets=True,
     use_group_filters=True,
     use_hide_picked=True,
     use_hide_nums=True,
@@ -134,6 +136,17 @@ def gen_bar(
 
     variables = [var for var in variables if var != None]
 
+    if use_presets:
+        presets = st.session_state.presets
+        preset_choice = st.selectbox("Preset Choice:", ["None"] + list(presets))
+
+        if preset_choice != "None":
+            st.header(
+                f"Selected Preset: {preset_choice}",
+                False,
+                help=str(presets[preset_choice]),
+            )
+
     if len(variables) != 0:
         columns = st.columns(len(variables))
 
@@ -150,203 +163,231 @@ def gen_bar(
 
         return [variable, var_count]
 
-    group_filters, var_count = gen_toggle(
-        "group_filters", var_count, "Group Filters", True, key
-    )
-
-    inline_legend, var_count = gen_toggle(
-        "inline_legend", var_count, "Inline Legend", True, key
-    )
-
-    hide_picked, var_count = gen_toggle(
-        "hide_picked", var_count, "Hide Picked Teams", False, key
-    )
-
-    hide_nums, var_count = gen_toggle(
-        "hide_nums", var_count, "Hide Team Numbers", False, key
-    )
-
-    features, var_count = gen_toggle("features", var_count, "Features", False, key)
-
-    if use_agg_type:
-        agg_type = st.selectbox(
-            "Aggregation Type:", ("Mean", "Median", "Sum"), key=f"agg_type_{key}"
-        ).lower()
-    else:
-        agg_type = "mean"
-
-    if not group_filters:
-        selected_phases = st.multiselect("Phases:", phases, default=phases, key=key)
-        phases = [
-            col
-            for col in df.columns
-            if any(col.startswith(f"{phase}_") for phase in selected_phases)
-        ]
-        selected_filters = phases
-        filter_choices = phases
-    else:
-        filter_choices = phases
-
-    comment_df = df
-    df = df.drop("COMMENT_GENERAL_STR_1", axis=1)
-
-    for i in range(len(phases)):
-        df.loc[:, phases[i]] = add_cols(
-            df,
-            phases[i],
+    if preset_choice == "None":
+        group_filters, var_count = gen_toggle(
+            "group_filters", var_count, "Group Filters", True, key
         )
 
-    if hide_picked:
-        picked = pd.DataFrame(st.session_state.picked)
-        picked = picked[picked["Unavailable"].str.contains("x", case=False, na=False)]
-        df = df[~df["Team"].isin(picked["Team"])]
+        inline_legend, var_count = gen_toggle(
+            "inline_legend", var_count, "Inline Legend", True, key
+        )
 
-    if displayed_teams:
-        df = df[df["Team"].isin(displayed_teams + compared_teams)]
-    else:
-        df = df
+        hide_picked, var_count = gen_toggle(
+            "hide_picked", var_count, "Hide Picked Teams", False, key
+        )
 
-    if df.empty:
-        df.loc[0] = 0
-        no_data = True
-    else:
-        no_data = False
+        hide_nums, var_count = gen_toggle(
+            "hide_nums", var_count, "Hide Team Numbers", False, key
+        )
 
-    feature_list = list(
-        comment_df["COMMENT_GENERAL_STR_1"].dropna().str.split(", ").explode().unique()
-    )
+        features, var_count = gen_toggle("features", var_count, "Features", False, key)
 
-    df_scouting = st.session_state.scouting
-    dt_types = df_scouting["Drivetrain Type"].unique().tolist() + ["Unknown Drivetrain"]
-
-    feature_choices = []
-
-    for filter in feature_list + dt_types:
-        if str(filter) == "nan":
-            pass
+        if use_agg_type:
+            agg_type = st.selectbox(
+                "Aggregation Type:", ("Mean", "Median", "Sum"), key=f"agg_type_{key}"
+            ).lower()
         else:
-            feature_choices.append(filter)
+            agg_type = "mean"
 
-    selected_features = (
-        st.multiselect(
-            "Features:",
-            feature_choices,
-            default=feature_choices,
-            key=f"selected_features_{key}",
-        )
-        if use_features and features
-        else feature_choices
-    )
+        if not group_filters:
+            selected_phases = st.multiselect("Phases:", phases, default=phases, key=key)
+            phases = [
+                col
+                for col in df.columns
+                if any(col.startswith(f"{phase}_") for phase in selected_phases)
+            ]
+            selected_filters = phases
+            filter_choices = phases
+        else:
+            filter_choices = phases
 
-    df = df.merge(
-        df_scouting[
-            ["Team #", "Drivetrain Type", "Frame Size LENGTH", "Frame Size WIDTH"]
-        ].fillna("Unknown Drivetrain"),
-        left_on="Team",
-        right_on="Team #",
-        how="left",
-    ).drop(columns=["Team #"])
+        comment_df = df
+        df = df.drop("COMMENT_GENERAL_STR_1", axis=1)
 
-    df["Drivetrain Type"] = df["Drivetrain Type"].fillna("Unknown Drivetrain")
-    df = df[(df["Drivetrain Type"].isin(selected_features))]
+        for i in range(len(phases)):
+            df.loc[:, phases[i]] = add_cols(
+                df,
+                phases[i],
+            )
 
-    def get_features(comment):
-        return comment.split(", ")
+        if hide_picked:
+            picked = pd.DataFrame(st.session_state.picked)
+            picked = picked[
+                picked["Unavailable"].str.contains("x", case=False, na=False)
+            ]
+            df = df[~df["Team"].isin(picked["Team"])]
 
-    all_team_features = {}
-    kept_teams = []
+        if displayed_teams:
+            df = df[df["Team"].isin(displayed_teams + compared_teams)]
+        else:
+            df = df
 
-    def has_features(team):
-        if all(item in selected_features for item in all_team_features[team]):
-            return True
-        return False
+        if df.empty:
+            df.loc[0] = 0
+            no_data = True
+        else:
+            no_data = False
 
-    for team in comment_df["Team"]:
-        comment_df = comment_df.dropna()
-        team_values = comment_df.loc[
-            comment_df["Team"] == team, "COMMENT_GENERAL_STR_1"
-        ].tolist()
-
-        team_features = [get_features(value) for value in team_values]
-        team_features = list(
-            set([feature for sublist in team_features for feature in sublist])
-        )
-
-        all_team_features[team] = team_features
-        if has_features(team):
-            kept_teams.append(team)
-
-    df = df[df["Team"].isin(kept_teams)]
-
-    if use_filter_selection:
-        selected_filters = st.multiselect(
-            "Filters:",
-            filter_choices,
-            default=filter_choices,
-            key=f"selected_filters_{key}",
-        )
-    else:
-        selected_filters = filter_choices
-
-    rank_df = df.groupby("Team")[selected_filters].agg(agg_type)
-    rank_df["rank"] = rank_df.sum(axis=1).rank(ascending=False).astype(int)
-    rank_df.reset_index(inplace=True)
-
-    if use_max_size:
-        min_size = df[["Frame Size LENGTH", "Frame Size WIDTH"]].min().min()
-        max_size = df[["Frame Size LENGTH", "Frame Size WIDTH"]].max().max()
-        unscouted_size = max_size + 0.5
-
-        size_limit = st.slider(
-            "Max Size:",
-            min_value=min_size,
-            max_value=unscouted_size,
-            value=max_size,
-            step=0.5,
-            key=f"size_limit_{key}",
+        feature_list = list(
+            comment_df["COMMENT_GENERAL_STR_1"]
+            .dropna()
+            .str.split(", ")
+            .explode()
+            .unique()
         )
 
-        if size_limit == unscouted_size:
-            st.warning("WARNING: Viewing unscouted teams")
-
-        df["Frame Size LENGTH"] = df["Frame Size LENGTH"].fillna(unscouted_size)
-        df["Frame Size WIDTH"] = df["Frame Size WIDTH"].fillna(unscouted_size)
-
-        df = df[
-            (df["Frame Size LENGTH"] <= size_limit)
-            & (df["Frame Size WIDTH"] <= size_limit)
+        df_scouting = st.session_state.scouting
+        dt_types = df_scouting["Drivetrain Type"].unique().tolist() + [
+            "Unknown Drivetrain"
         ]
 
-    calc_df = df.groupby("Team")[selected_filters].agg(agg_type)
-    calc_df["rank"] = calc_df.sum(axis=1).rank(ascending=False).astype(int)
-    calc_df.reset_index(inplace=True)
-    data = pd.melt(
-        calc_df,
-        id_vars=["Team", "rank"],
-        value_vars=selected_filters,
-        var_name="variable",
-        value_name="value",
-    )
+        feature_choices = []
 
-    calc_df["Score Sum"] = calc_df[selected_filters].sum(axis=1)
-    # st.write(data)
+        for filter in feature_list + dt_types:
+            if str(filter) == "nan":
+                pass
+            else:
+                feature_choices.append(filter)
 
-    x_min = (
-        math.floor(calc_df.min().min()) - 2
-        if calc_df.min().min() < 0
-        else math.floor(calc_df.min().min())
-    )
+        selected_features = (
+            st.multiselect(
+                "Features:",
+                feature_choices,
+                default=feature_choices,
+                key=f"selected_features_{key}",
+            )
+            if use_features and features
+            else feature_choices
+        )
 
-    x_range = x_range if x_range else [x_min, (round(calc_df["Score Sum"].max()) + 2)]
-    x_min, x_max = x_range
+        df = df.merge(
+            df_scouting[
+                ["Team #", "Drivetrain Type", "Frame Size LENGTH", "Frame Size WIDTH"]
+            ].fillna("Unknown Drivetrain"),
+            left_on="Team",
+            right_on="Team #",
+            how="left",
+        ).drop(columns=["Team #"])
 
-    data = data[~data["Team"].isin(compared_teams)]
+        df["Drivetrain Type"] = df["Drivetrain Type"].fillna("Unknown Drivetrain")
+        df = df[(df["Drivetrain Type"].isin(selected_features))]
 
-    tba_rankings = st.session_state.tba_ranks
+        def get_features(comment):
+            return comment.split(", ")
 
-    data["Team"] = data["Team"].apply(
-        lambda team: f"{team} [{str(tba_rankings.get(str(team), 'NA')).zfill(2)}]"
-    )
+        all_team_features = {}
+        kept_teams = []
+
+        def has_features(team):
+            if all(item in selected_features for item in all_team_features[team]):
+                return True
+            return False
+
+        for team in comment_df["Team"]:
+            comment_df = comment_df.dropna()
+            team_values = comment_df.loc[
+                comment_df["Team"] == team, "COMMENT_GENERAL_STR_1"
+            ].tolist()
+
+            team_features = [get_features(value) for value in team_values]
+            team_features = list(
+                set([feature for sublist in team_features for feature in sublist])
+            )
+
+            all_team_features[team] = team_features
+            if has_features(team):
+                kept_teams.append(team)
+
+        df = df[df["Team"].isin(kept_teams)]
+
+        if use_filter_selection:
+            selected_filters = st.multiselect(
+                "Filters:",
+                filter_choices,
+                default=filter_choices,
+                key=f"selected_filters_{key}",
+            )
+        else:
+            selected_filters = filter_choices
+
+        rank_df = df.groupby("Team")[selected_filters].agg(agg_type)
+        rank_df["rank"] = rank_df.sum(axis=1).rank(ascending=False).astype(int)
+        rank_df.reset_index(inplace=True)
+
+        if use_max_size:
+            min_size = df[["Frame Size LENGTH", "Frame Size WIDTH"]].min().min()
+            max_size = df[["Frame Size LENGTH", "Frame Size WIDTH"]].max().max()
+            unscouted_size = max_size + 0.5
+
+            size_limit = st.slider(
+                "Max Size:",
+                min_value=min_size,
+                max_value=unscouted_size,
+                value=max_size,
+                step=0.5,
+                key=f"size_limit_{key}",
+            )
+
+            if size_limit == unscouted_size:
+                st.warning("WARNING: Viewing unscouted teams")
+
+            df["Frame Size LENGTH"] = df["Frame Size LENGTH"].fillna(unscouted_size)
+            df["Frame Size WIDTH"] = df["Frame Size WIDTH"].fillna(unscouted_size)
+
+            df = df[
+                (df["Frame Size LENGTH"] <= size_limit)
+                & (df["Frame Size WIDTH"] <= size_limit)
+            ]
+
+        calc_df = df.groupby("Team")[selected_filters].agg(agg_type)
+        calc_df["rank"] = calc_df.sum(axis=1).rank(ascending=False).astype(int)
+        calc_df.reset_index(inplace=True)
+        data = pd.melt(
+            calc_df,
+            id_vars=["Team", "rank"],
+            value_vars=selected_filters,
+            var_name="variable",
+            value_name="value",
+        )
+
+        calc_df["Score Sum"] = calc_df[selected_filters].sum(axis=1)
+
+        x_min = (
+            math.floor(calc_df.min().min()) - 2
+            if calc_df.min().min() < 0
+            else math.floor(calc_df.min().min())
+        )
+
+        x_range = (
+            x_range if x_range else [x_min, (round(calc_df["Score Sum"].max()) + 2)]
+        )
+        x_min, x_max = x_range
+
+        data = data[~data["Team"].isin(compared_teams)]
+
+        tba_rankings = st.session_state.tba_ranks
+
+        data["Team"] = data["Team"].apply(
+            lambda team: f"{team} [{str(tba_rankings.get(str(team), 'NA')).zfill(2)}]"
+        )
+    else:
+        group_filters = ""
+        inline_legend = ""
+        hide_picked = ""
+        hide_nums = ""
+        features = ""
+        agg_type = ""
+        selected_filters = [""]
+        no_data = ""
+
+    if preset_choice != "None":
+        preset = presets[preset_choice]
+        hide_nums = preset["hide_nums"]
+        x_min = preset["x_range"][0]
+        x_max = preset["x_range"][1]
+        inline_legend = preset["inline_legend"]
+        group_filters = preset["group_filters"]
+        data = pd.DataFrame(preset["data"])
 
     chart = (
         alt.Chart(data)
@@ -392,14 +433,33 @@ def gen_bar(
         st.error("Please select at least one filter")
 
     if expanders:
-        ranked = rank_df.sort_values(by="rank").astype(int)
-        for index, row in ranked.iterrows():
-            team_num = row["Team"]
-            scouting_expander(
-                team_num=team_num,
-                df=df_scouting,
-                rank_info=[
-                    ranked.loc[ranked["Team"] == team_num, "rank"].to_list()[0],
-                    st.session_state.tba_ranks[str(team_num)],
-                ],
-            )
+        if st.toggle("Ranked Expanders"):
+            with st.container(border=True):
+                ranked = rank_df.sort_values(by="rank").astype(int)
+                for index, row in ranked.iterrows():
+                    team_num = row["Team"]
+                    scouting_expander(
+                        team_num=team_num,
+                        df=df_scouting,
+                        rank_info=[
+                            ranked.loc[ranked["Team"] == team_num, "rank"].to_list()[0],
+                            st.session_state.tba_ranks[str(team_num)],
+                        ],
+                    )
+
+    if preset_choice == "None":
+        preset_name = st.text_input("New Preset Name:")
+
+        if preset_name:
+            if st.button("Add Preset", use_container_width=True):
+                presets[preset_name] = {
+                    "hide_nums": hide_nums,
+                    "x_range": x_range,
+                    "x_max": x_max,
+                    "inline_legend": inline_legend,
+                    "group_filters": group_filters,
+                    "data": data.to_dict(),
+                }
+                with open("src\\pickles\\presets.pickle", "wb") as f:
+                    pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
+                st.success("Successfully added preset!")

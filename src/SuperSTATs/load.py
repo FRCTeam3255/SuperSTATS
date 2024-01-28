@@ -2,8 +2,10 @@ import streamlit as st
 import pandas as pd
 import requests
 import random
+import pickle
 import base64
 import tbapy
+import json
 import time
 
 
@@ -164,6 +166,18 @@ def get_tba_ranks():
     return tba_ranks
 
 
+def get_presets():
+    presets_path = "src\\pickles\\presets.pickle"
+    try:
+        with open(presets_path, "rb") as f:
+            presets = pickle.load(f)
+        return presets
+    except:
+        with open(presets_path, "wb") as f:
+            pickle.dump({}, f, pickle.HIGHEST_PROTOCOL)
+        return {}
+
+
 def play_audio(file_path, delay):
     with open(f"src\\SuperSTATs\\audio\\{file_path}", "rb") as f:
         data = f.read()
@@ -244,6 +258,9 @@ def app_init():
 
             init_status.text("Loading TBA Rankings...")
             st.session_state.tba_ranks = get_tba_ranks()
+
+            init_status.text("Fetching Presets...")
+            st.session_state.presets = get_presets()
 
             elapsed_time = str(time.time() - start_time)[:4]
 
