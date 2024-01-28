@@ -288,6 +288,10 @@ def gen_bar(
     else:
         selected_filters = filter_choices
 
+    rank_df = df.groupby("Team")[selected_filters].agg(agg_type)
+    rank_df["rank"] = rank_df.sum(axis=1).rank(ascending=False).astype(int)
+    rank_df.reset_index(inplace=True)
+
     if use_max_size:
         min_size = df[["Frame Size LENGTH", "Frame Size WIDTH"]].min().min()
         max_size = df[["Frame Size LENGTH", "Frame Size WIDTH"]].max().max()
@@ -325,6 +329,7 @@ def gen_bar(
     )
 
     calc_df["Score Sum"] = calc_df[selected_filters].sum(axis=1)
+    # st.write(data)
 
     x_min = (
         math.floor(calc_df.min().min()) - 2
@@ -380,20 +385,21 @@ def gen_bar(
     if selected_filters:
         if not no_data:
             st.altair_chart(chart, use_container_width=True)
-            if expanders:
-                ranked = calc_df.sort_values(by="rank").astype(int)
-                for index, row in ranked.iterrows():
-                    team_num = row["Team"]
-                    scouting_expander(
-                        team_num=team_num,
-                        df=df_scouting,
-                        rank_info=[
-                            ranked.loc[ranked["Team"] == team_num, "rank"].to_list()[0],
-                            st.session_state.tba_ranks[str(team_num)],
-                        ],
-                    )
 
         else:
             st.error("Not enough data")
     else:
         st.error("Please select at least one filter")
+
+    if expanders:
+        ranked = rank_df.sort_values(by="rank").astype(int)
+        for index, row in ranked.iterrows():
+            team_num = row["Team"]
+            scouting_expander(
+                team_num=team_num,
+                df=df_scouting,
+                rank_info=[
+                    ranked.loc[ranked["Team"] == team_num, "rank"].to_list()[0],
+                    st.session_state.tba_ranks[str(team_num)],
+                ],
+            )
