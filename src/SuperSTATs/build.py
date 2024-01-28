@@ -146,6 +146,8 @@ def gen_bar(
                 False,
                 help=str(presets[preset_choice]),
             )
+    else:
+        preset_choice = "None"
 
     if len(variables) != 0:
         columns = st.columns(len(variables))
@@ -447,7 +449,7 @@ def gen_bar(
                         ],
                     )
 
-    if preset_choice == "None":
+    if use_presets == True and preset_choice == "None":
         preset_name = st.text_input("New Preset Name:")
 
         if preset_name:

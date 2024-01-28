@@ -62,8 +62,6 @@
 
     TEAM_NUMBER = "YOUR_TEAM_NUMBER_HERE"
     DEFAULT_EVENT_KEY = "EVENT_KEY_HERE"
-
-    SCOUTER_LIST = ["NAME_1", "NAME_2", "NAME_3", ...]
     ```
 
 ## Setup
