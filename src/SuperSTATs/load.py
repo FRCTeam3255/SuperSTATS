@@ -234,6 +234,8 @@ def app_init():
 
             init_status.text("Downloading Raw Data Sheet...")
             df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
+
+            init_status.text("Organizing Raw Data...")
             df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
             df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
             st.session_state.df = df
@@ -243,6 +245,13 @@ def app_init():
 
             init_status.text("Downloading Scouting Data...")
             st.session_state.scouting = download_sheets_raw(st.secrets["GID_SCOUTING"])
+
+            init_status.text("Downloading Scouter Info...")
+            scouts_df = download_sheets_raw(st.secrets["GID_SCOUTS"])
+            st.session_state.scouts = scouts_df["Name"].tolist()
+            st.session_state.assigned = scouts_df.loc[
+                scouts_df["Assigned"] == "x", "Name"
+            ].tolist()
 
             init_status.text("Identifying Phases...")
             st.session_state.phases = get_phases(st.session_state.df)

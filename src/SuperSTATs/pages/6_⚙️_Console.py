@@ -71,6 +71,17 @@ def main():
         except:
             st.error("No Presets Found")
 
+    st.markdown("""---""")
+
+    with st.expander("Scouts"):
+        columns = st.columns(2)
+
+        columns[0].subheader("All Scouts", False)
+        columns[0].write(st.session_state.scouts)
+
+        columns[1].subheader("Assigned Scouts", False)
+        columns[1].write(st.session_state.assigned)
+
 
 if __name__ == "__main__":
     main()
