@@ -54,7 +54,7 @@ def point_values():
     return points
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False, persist=True)
 def get_team_info():
     tba_teams = tba.event_teams(st.secrets["DEFAULT_EVENT_KEY"])
     team_info = {
