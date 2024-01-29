@@ -212,6 +212,9 @@ def gen_bar(
                 phases[i],
             )
 
+        if not use_inline_legend:
+            inline_legend = False
+
         if hide_picked:
             picked = pd.DataFrame(st.session_state.picked)
             picked = picked[

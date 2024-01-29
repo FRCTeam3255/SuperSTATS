@@ -181,14 +181,49 @@ def main():
     )
 
     if combined_chart:
+        match_teams = red_alliance + blue_alliance
+        toggled_teams = []
+
+        with st.expander("Toggle Teams", False):
+            columns = st.columns(len(match_teams))
+
+            for i, team in enumerate(match_teams):
+                toggled_state = columns[i].toggle(
+                    str(team), True, key=f"{team}_toggle_state"
+                )
+
+                if toggled_state:
+                    toggled_teams.append(team)
+
+        if len(toggled_teams) == 0:
+            toggled_teams = red_alliance + blue_alliance
+
         build.gen_bar(
             use_presets=False,
-            use_max_size=False,
-            displayed_teams=red_alliance + blue_alliance,
-            expanders=False,
+            use_hide_picked=False,
             use_inline_legend=False,
+            use_features=False,
+            use_max_size=False,
+            displayed_teams=toggled_teams,
+            expanders=False,
         )
 
+
+# df=st.session_state.df,
+# key=0,
+# use_presets=True,
+# use_group_filters=True,
+# use_hide_picked=True,
+# use_hide_nums=True,
+# use_inline_legend=True,
+# use_features=True,
+# use_agg_type=True,
+# use_filter_selection=True,
+# use_max_size=True,
+# displayed_teams=[],
+# compared_teams=[],
+# x_range=[],
+# expanders=True,
 
 if __name__ == "__main__":
     main()
