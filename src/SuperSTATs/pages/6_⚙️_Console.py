@@ -19,6 +19,12 @@ def main():
     st.button("Update Page", type="primary", use_container_width=True)
     st.markdown("""---""")
 
+    with st.expander("Initialization"):
+        if st.button("Refresh Team Colors", type="primary", use_container_width=True):
+            load.check_team_colors()
+
+    st.markdown("""---""")
+
     with st.expander("Set Presets"):
         uploaded_file = st.file_uploader("Override Presets:")
 
