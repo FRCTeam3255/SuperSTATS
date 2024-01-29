@@ -68,27 +68,30 @@ def get_team_info():
 
 @st.cache_data(show_spinner=False)
 def get_team_colors():
+    team_info = st.session_state.team_info
     team_colors = {}
 
     team_url = ""
-    for team in st.session_state.team_info:
+    for team in team_info:
         team_url += f"team={team}&"
 
     api_url = f"https://frc-colors.com/api/v1/team?{team_url}"
 
-    response = requests.get(api_url)
-    response.raise_for_status()
-    raw_data = response.json()
+    try:
+        response = requests.get(api_url, timeout=5)
+        response.raise_for_status()
+        raw_data = response.json()
 
-    team_colors = {}
-
-    for team in raw_data["teams"].values():
-        if team["colors"] is not None:
-            primary_color = team["colors"]["primaryHex"]
-            secondary_color = team["colors"]["secondaryHex"]
-            team_colors[team["teamNumber"]] = [primary_color, secondary_color]
-        else:
-            team_colors[team["teamNumber"]] = ["003255", "003255"]
+        for team in raw_data["teams"].values():
+            if team["colors"] is not None:
+                primary_color = team["colors"]["primaryHex"]
+                secondary_color = team["colors"]["secondaryHex"]
+                team_colors[team["teamNumber"]] = [primary_color, secondary_color]
+            else:
+                team_colors[team["teamNumber"]] = ["003255", "003255"]
+    except:
+        for team in team_info:
+            team_colors[team] = ["003255", "003255"]
 
     return team_colors
 
