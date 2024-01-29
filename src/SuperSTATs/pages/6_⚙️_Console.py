@@ -40,8 +40,7 @@ def main():
         for i, scout in enumerate(scouts):
             initial_state = True if scout in assigned else False
 
-            with columns[i % 4]:
-                toggled_state = st.toggle(scout, initial_state)
+            toggled_state = columns[i % 4].toggle(scout, initial_state)
 
             if toggled_state:
                 scout_list.append(scout)
@@ -58,6 +57,8 @@ def main():
 
     with st.expander("Set Presets"):
         uploaded_file = st.file_uploader("Override Presets:")
+
+        st.markdown("""---""")
 
         if uploaded_file is not None:
             if st.button("Set Presets", use_container_width=True):
@@ -87,7 +88,7 @@ def main():
 
         if has_presets:
             delete_all = False
-            if st.checkbox("Delete All", False, help="Delete all presets"):
+            if st.checkbox("Delete All", False):
                 delete_all = True
 
         try:
@@ -95,6 +96,7 @@ def main():
                 presets = pickle.load(f)
 
             deleted_presets = []
+
             for name, value in presets.items():
                 if st.checkbox(name, delete_all, help=str(value)):
                     deleted_presets.append(name)
