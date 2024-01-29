@@ -120,7 +120,7 @@ def main():
             "Match [OTHER]:", st.session_state.matches
         )
 
-    scouter_list = st.secrets["SCOUTER_LIST"]
+    scouter_list = st.session_state.assigned
 
     red_scouts = get_matches(scouter_list[::2])[input_match]
     blue_scouts = get_matches(scouter_list[1::2])[input_match]

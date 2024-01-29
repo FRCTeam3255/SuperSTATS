@@ -257,7 +257,9 @@ def app_init():
             st.session_state.scouting = download_sheets_raw(st.secrets["GID_SCOUTING"])
 
             init_status.text("Downloading Scouter Info...")
-            scouts_df = download_sheets_raw(st.secrets["GID_SCOUTS"])
+            scouts_df = download_sheets_raw(st.secrets["GID_SCOUTS"]).sort_values(
+                by="Name"
+            )
             st.session_state.scouts = scouts_df["Name"].tolist()
             st.session_state.assigned = scouts_df.loc[
                 scouts_df["Assigned"] == "x", "Name"

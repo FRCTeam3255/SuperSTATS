@@ -80,13 +80,30 @@ def main():
     st.markdown("""---""")
 
     with st.expander("Scouts"):
-        columns = st.columns(2)
+        scouts = st.session_state.scouts
+        assigned = st.session_state.assigned
 
-        columns[0].subheader("All Scouts", False)
-        columns[0].write(st.session_state.scouts)
+        columns = st.columns(4)
 
-        columns[1].subheader("Assigned Scouts", False)
-        columns[1].write(st.session_state.assigned)
+        scout_toggle = {}
+        scout_list = []
+
+        for i, scout in enumerate(scouts):
+            initial_state = True if scout in assigned else False
+
+            with columns[i % 4]:
+                toggled_state = st.toggle(scout, initial_state)
+
+            if toggled_state:
+                scout_list.append(scout)
+
+        scout_amount = len(scout_list)
+
+        if scout_amount < 6:
+            st.error(f"Not enough scouters! ({scout_amount}/6)")
+            scout_list = scout_list + ["N/A"] * (6 - scout_amount)
+
+        st.session_state.assigned = scout_list
 
 
 if __name__ == "__main__":
