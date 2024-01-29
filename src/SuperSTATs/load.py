@@ -78,7 +78,7 @@ def get_team_colors():
     api_url = f"https://frc-colors.com/api/v1/team?{team_url}"
 
     try:
-        response = requests.get(api_url, timeout=5)
+        response = requests.get(api_url, timeout=2)
         response.raise_for_status()
         raw_data = response.json()
 
@@ -94,6 +94,13 @@ def get_team_colors():
             team_colors[team] = ["003255", "003255"]
 
     return team_colors
+
+
+def check_team_colors():
+    stuff = st.session_state.team_colors
+    values = list(stuff.values())
+    if len(set(map(str, values))) == 1:
+        get_team_colors.clear()
 
 
 def get_match_data():
@@ -231,6 +238,9 @@ def app_init():
 
             init_status.text("Getting Team Colors...")
             st.session_state.team_colors = get_team_colors()
+
+            init_status.text("Checking For Team Colors...")
+            check_team_colors()
 
             init_status.text("Initializing TBA API...")
             st.session_state.tba = tba
