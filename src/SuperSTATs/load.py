@@ -27,6 +27,22 @@ tba = tbapy.TBA(st.secrets["TBA_API"])
 df = download_sheets_raw(st.secrets["GID_RAW"])
 
 
+def get_scouters():
+    try:
+        with open("src\\pickles\\scouts.pickle", "rb") as f:
+            scouts = pickle.load(f)
+
+        st.session_state.scouts = scouts[0]
+        st.session_state.assigned = scouts[1]
+
+    except:
+        scouts_df = download_sheets_raw(st.secrets["GID_SCOUTS"]).sort_values(by="Name")
+        st.session_state.scouts = scouts_df["Name"].tolist()
+        st.session_state.assigned = scouts_df.loc[
+            scouts_df["Assigned"] == "x", "Name"
+        ].tolist()
+
+
 def get_phases(df):
     filtered_columns = []
     for column in df.columns:
@@ -257,13 +273,7 @@ def app_init():
             st.session_state.scouting = download_sheets_raw(st.secrets["GID_SCOUTING"])
 
             init_status.text("Downloading Scouter Info...")
-            scouts_df = download_sheets_raw(st.secrets["GID_SCOUTS"]).sort_values(
-                by="Name"
-            )
-            st.session_state.scouts = scouts_df["Name"].tolist()
-            st.session_state.assigned = scouts_df.loc[
-                scouts_df["Assigned"] == "x", "Name"
-            ].tolist()
+            get_scouters()
 
             init_status.text("Identifying Phases...")
             st.session_state.phases = get_phases(st.session_state.df)

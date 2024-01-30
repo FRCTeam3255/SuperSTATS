@@ -34,7 +34,6 @@ def main():
 
         columns = st.columns(4)
 
-        scout_toggle = {}
         scout_list = []
 
         for i, scout in enumerate(scouts):
@@ -51,16 +50,24 @@ def main():
             st.error(f"Not enough scouters! ({scout_amount}/6)")
             scout_list = scout_list + ["N/A"] * (6 - scout_amount)
 
-        st.session_state.assigned = scout_list
+        st.markdown("""---""")
+
+        if st.button("Set Scouters", type="primary", use_container_width=True):
+            st.session_state.assigned = scout_list
+
+            with open("src\\pickles\\scouts.pickle", "wb") as f:
+                pickle.dump([scouts, scout_list], f, pickle.HIGHEST_PROTOCOL)
+
+            st.success("Successfully Set Scouters!")
 
     st.markdown("""---""")
 
     with st.expander("Set Presets"):
         uploaded_file = st.file_uploader("Override Presets:")
 
-        st.markdown("""---""")
-
         if uploaded_file is not None:
+            st.markdown("""---""")
+
             if st.button("Set Presets", use_container_width=True):
                 bytes_data = uploaded_file.getvalue()
                 bytes_formatted = bytes_data.decode("utf-8")
@@ -110,6 +117,7 @@ def main():
 
                     with open(presets_path, "wb") as f:
                         pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
+
                     st.success("Successfully Deleted Presets!")
 
             else:
