@@ -468,3 +468,41 @@ def gen_bar(
                 with open("src\\pickles\\presets.pickle", "wb") as f:
                     pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
                 st.success("Successfully added preset!")
+
+
+def calc_projected(team_df):
+    score_df = st.session_state.df
+    phases = st.session_state.phases
+
+    phase_count = len(
+        [
+            col
+            for col in score_df.columns
+            if any(col.startswith(f"{phase}_") for phase in phases)
+            and not col.startswith("COMMENT_GENERAL_STR_1")
+        ]
+    ) * len(team_df)
+
+    alliance_score = pd.DataFrame(columns=phases)
+    match_count = 0
+
+    for team in team_df:
+        team_score = score_df[score_df["Team"] == team]
+        st.write(team_score)  # TODO: Need the total score throughout all data
+
+        for i in range(len(phases)):
+            team_score.loc[:, phases[i]] = add_cols(
+                team_score,
+                phases[i],
+            )
+
+        match_count += len(team_score)
+        team_score = team_score[phases].sum().to_frame().T
+        alliance_score = pd.concat([alliance_score, team_score], ignore_index=True)
+
+    alliance_score = alliance_score.sum().sum()
+    projected_score = round(
+        (alliance_score / phase_count) * round(match_count / len(team_df))
+    )
+
+    return projected_score

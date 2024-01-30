@@ -4,13 +4,6 @@ import streamlit as st
 import pandas as pd
 import requests
 
-st.set_page_config(
-    page_title="[SCOUT] SN Stats",
-    page_icon="🤖",
-    initial_sidebar_state="expanded",
-    layout="wide",
-)
-
 
 def get_matches(team):
     match_list = st.session_state.matches["Match"].to_list()

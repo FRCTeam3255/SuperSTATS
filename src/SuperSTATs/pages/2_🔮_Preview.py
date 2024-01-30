@@ -31,38 +31,7 @@ def display_team(
 
     column.markdown("""---""")
 
-    score_df = st.session_state.df
-    phases = st.session_state.phases
-
-    phase_count = len(
-        [
-            col
-            for col in score_df.columns
-            if any(col.startswith(f"{phase}_") for phase in phases)
-            and not col.startswith("COMMENT_GENERAL_STR_1")
-        ]
-    ) * len(team_df)
-
-    alliance_score = pd.DataFrame(columns=phases)
-    match_count = 0
-
-    for team in team_df:
-        team_score = score_df[score_df["Team"] == team]
-
-        for i in range(len(phases)):
-            team_score.loc[:, phases[i]] = build.add_cols(
-                team_score,
-                phases[i],
-            )
-
-        match_count += len(team_score)
-        team_score = team_score[phases].sum().to_frame().T
-        alliance_score = pd.concat([alliance_score, team_score], ignore_index=True)
-
-    alliance_score = alliance_score.sum().sum()
-    projected_score = round(
-        (alliance_score / phase_count) * round(match_count / len(team_df))
-    )
+    projected_score = build.calc_projected(team_df)
 
     text_color = "#f8312f" if team_header[0] == "🔴" else "#0074ba"
     column.markdown(
@@ -208,22 +177,6 @@ def main():
             expanders=False,
         )
 
-
-# df=st.session_state.df,
-# key=0,
-# use_presets=True,
-# use_group_filters=True,
-# use_hide_picked=True,
-# use_hide_nums=True,
-# use_inline_legend=True,
-# use_features=True,
-# use_agg_type=True,
-# use_filter_selection=True,
-# use_max_size=True,
-# displayed_teams=[],
-# compared_teams=[],
-# x_range=[],
-# expanders=True,
 
 if __name__ == "__main__":
     main()

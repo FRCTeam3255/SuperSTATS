@@ -2,13 +2,6 @@ import SuperSTATs.load as load
 import requests, pickle
 import streamlit as st
 
-st.set_page_config(
-    page_title="[SCOUT] SN Stats",
-    page_icon="🤖",
-    initial_sidebar_state="expanded",
-    layout="wide",
-)
-
 
 def main():
     load.app_init()
