@@ -91,10 +91,12 @@ def get_team_colors():
     for team in team_info:
         team_url += f"team={team}&"
 
-    api_url = f"https://frc-colors.com/api/v1/team?{team_url}"
+    api_url = f"https://frc-colors.com/api/v1/team/3255"
 
     try:
-        response = requests.get(api_url, timeout=5)
+        requests.get("https://frc-colors.com/api/v1/team/3255", timeout=5)
+
+        response = requests.get(api_url)
         response.raise_for_status()
         raw_data = response.json()
 
