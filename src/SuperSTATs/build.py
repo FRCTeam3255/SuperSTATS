@@ -488,7 +488,6 @@ def calc_projected(team_df):
 
     for team in team_df:
         team_score = score_df[score_df["Team"] == team]
-        st.write(team_score)  # TODO: Need the total score throughout all data
 
         for i in range(len(phases)):
             team_score.loc[:, phases[i]] = add_cols(
@@ -505,4 +504,4 @@ def calc_projected(team_df):
         (alliance_score / phase_count) * round(match_count / len(team_df))
     )
 
-    return projected_score
+    return [team_score, projected_score]

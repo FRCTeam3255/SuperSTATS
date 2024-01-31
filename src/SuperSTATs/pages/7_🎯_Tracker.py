@@ -35,9 +35,9 @@ def main():
 
     match_num = columns[1].selectbox("Match:", matches)
 
-    team_df = [359, 4276, 7157]
-
-    st.write(build.calc_projected(team_df))
+    team_score = build.calc_projected([team_num])[0]
+    st.write(team_score)
+    st.write(team_score.T.sum()[0])
 
 
 if __name__ == "__main__":

@@ -90,21 +90,7 @@ def main():
     df = st.session_state.df
     matches = st.session_state.matches
 
-    df["Completed"] = df["Match Type"] + " " + df["Match"].astype(str)
-    df_counts = df["Completed"].value_counts()
-
-    df["Completed"] = df["Completed"].apply(lambda x: x if df_counts[x] >= 3 else None)
-
-    df_unique = df["Completed"].dropna().unique()
-    matches_unique = matches["Match"].unique()
-
-    unplayed_matches = pd.concat(
-        [pd.DataFrame(df_unique), pd.DataFrame(matches_unique)]
-    ).drop_duplicates(keep=False)
-
-    unplayed_matches = [
-        match for sublist in unplayed_matches.values.tolist() for match in sublist
-    ]
+    unplayed_matches = st.session_state.unplayed_matches
 
     match_selection = top_columns[1].empty()
     input_match = match_selection.selectbox("Match:", unplayed_matches + ["Other"])
@@ -196,12 +182,12 @@ def main():
 
             if entry_parts[2] == "INT":
                 entry_responses[entry] = st.number_input(
-                    (entry_name + ":"), min_value=0, step=1, key=entry
+                    (f"{entry_name}:"), min_value=0, step=1, key=entry
                 )
 
             elif entry_parts[2] == "STR":
                 selected_options = st.multiselect(
-                    (entry_name + ":"), ["K", "A", "N", "E"], key=entry
+                    (f"{entry_name}:"), ["K", "A", "N", "E"], key=entry
                 )
                 entry_responses[entry] = ", ".join(selected_options)
 

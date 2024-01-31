@@ -184,6 +184,26 @@ def get_matches():
     return df
 
 
+def get_unplayed(df, matches):
+    df["Completed"] = df["Match Type"] + " " + df["Match"].astype(str)
+    df_counts = df["Completed"].value_counts()
+
+    df["Completed"] = df["Completed"].apply(lambda x: x if df_counts[x] >= 3 else None)
+
+    df_unique = df["Completed"].dropna().unique()
+    matches_unique = matches["Match"].unique()
+
+    unplayed_matches = pd.concat(
+        [pd.DataFrame(df_unique), pd.DataFrame(matches_unique)]
+    ).drop_duplicates(keep=False)
+
+    unplayed_matches = [
+        match for sublist in unplayed_matches.values.tolist() for match in sublist
+    ]
+
+    return unplayed_matches
+
+
 def get_tba_ranks():
     event_rankings = tba.event_rankings(st.secrets["DEFAULT_EVENT_KEY"])["rankings"]
     tba_ranks = {}
@@ -288,6 +308,11 @@ def app_init():
 
             init_status.text("Loading Matchs...")
             st.session_state.matches = get_matches()
+
+            init_status.text("Updating Played Matches...")
+            st.session_state.unplayed_matches = get_unplayed(
+                st.session_state.df, st.session_state.matches
+            )
 
             init_status.text("Loading TBA Rankings...")
             st.session_state.tba_ranks = get_tba_ranks()
