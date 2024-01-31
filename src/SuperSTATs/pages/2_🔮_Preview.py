@@ -31,7 +31,7 @@ def display_team(
 
     column.markdown("""---""")
 
-    projected_score = build.calc_projected(team_df)[1]
+    projected_score = build.calc_projected(team_df)
 
     text_color = "#f8312f" if team_header[0] == "🔴" else "#0074ba"
     column.markdown(

@@ -470,7 +470,7 @@ def gen_bar(
                 st.success("Successfully added preset!")
 
 
-def calc_projected(team_df):
+def calc_projected(team_df, return_row=False):
     score_df = st.session_state.df
     phases = st.session_state.phases
 
@@ -495,6 +495,12 @@ def calc_projected(team_df):
                 phases[i],
             )
 
+        if return_row:
+            team_score["Match Name"] = (
+                team_score["Match Type"] + " " + team_score["Match"].astype(str)
+            )
+            return team_score[["Match Name"] + phases]
+
         match_count += len(team_score)
         team_score = team_score[phases].sum().to_frame().T
         alliance_score = pd.concat([alliance_score, team_score], ignore_index=True)
@@ -504,4 +510,4 @@ def calc_projected(team_df):
         (alliance_score / phase_count) * round(match_count / len(team_df))
     )
 
-    return [team_score, projected_score]
+    return projected_score
