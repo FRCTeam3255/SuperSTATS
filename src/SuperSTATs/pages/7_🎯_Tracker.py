@@ -39,6 +39,8 @@ def main():
 
     match_name = columns[1].selectbox("Match:", matches)
 
+    st.markdown("""---""")
+
     team_df = df[df["Team"] == team_num]
     match_count = len(team_df)
 
@@ -63,8 +65,7 @@ def main():
     team_averages = {}
 
     for phase, score in team_scores.items():
-        if phase in use_phases:
-            team_averages[phase] = round(score / match_count)
+        team_averages[phase] = round(score / match_count)
 
     match_scores = team_df.loc[team_df["Match Name"] == match_name]
 
@@ -75,17 +76,21 @@ def main():
     match_score = {}
 
     for phase, score in team_scores.items():
-        if phase in use_phases:
-            match_score[phase] = score
+        match_score[phase] = score
 
     for i, phase in enumerate(phases):
-        columns[i].subheader(f"{match_score[phase]}/{team_averages[phase]}")
+        columns[i].markdown(
+            f"<span style='color: #0074ba; font-size: 2em;'>{match_score[phase]}</span>"
+            f"<span style='color: #ffffff; font-size: 2em;'>/</span>"
+            f"<span style='color: #f8312f; font-size: 2em;'>{team_averages[phase]}</span>",
+            unsafe_allow_html=True,
+        )
 
     df = pd.DataFrame(
         {
             "Phase": use_phases,
-            "Average": list(team_averages.values()),
-            "Match": list(match_score.values()),
+            "Average": [team_averages[phase] for phase in use_phases],
+            "Match": [match_score[phase] for phase in use_phases],
         }
     )
 
@@ -93,13 +98,16 @@ def main():
         alt.Chart(df.melt("Phase"))
         .mark_bar()
         .encode(
-            alt.X("variable:N", axis=alt.Axis(title="")),
-            alt.Y("value:Q", axis=alt.Axis(title="Team Average vs Match", grid=False)),
+            alt.X("variable:N", axis=alt.Axis(title=""), sort=["Match", "Average"]),
+            alt.Y(
+                "value:Q",
+                axis=alt.Axis(title=f"{match_name} vs Team Average", grid=False),
+            ),
             color=alt.Color(
                 "variable:N",
                 scale=alt.Scale(
-                    domain=["Average", "Match"],
-                    range=["#f8312f", "#0074ba"],
+                    domain=["Match", "Average"],
+                    range=["#0074ba", "#f8312f"],
                 ),
                 legend=alt.Legend(title=" "),
             ),
