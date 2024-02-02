@@ -34,12 +34,12 @@ def add_cols(org_df, filter):
 
 
 def scouting_expander(
-    team_num,
     df,
+    team_num,
+    match_name=None,
     rank_info=[],
     start_expanded=False,
     calc_bumpers=False,
-    error_prefix=False,
     column=st,
 ):
     team_name = st.session_state.team_info[team_num]
@@ -48,63 +48,202 @@ def scouting_expander(
     if len(rank_info) == 2:
         expander_name += f" [🦸#{rank_info[0]}/💎#{rank_info[1]}]"
 
-    with column.expander(expander_name, start_expanded):
-        if len(rank_info) == 2:
-            st.text(f"SN Rank: {rank_info[0]} | TBA Rank: {rank_info[1]}")
+    if len(rank_info) == 2:
+        st.text(f"SN Rank: {rank_info[0]} | TBA Rank: {rank_info[1]}")
 
-        sorted_df = df.loc[df["Team #"] == int(team_num)]
-        sorted_df = sorted_df.sort_values(by="Timestamp")
-        sorted_df = sorted_df.drop_duplicates(keep="last", subset="Team #")
+    sorted_df = df.loc[df["Team #"] == int(team_num)]
+    sorted_df = sorted_df.sort_values(by="Timestamp")
+    sorted_df = sorted_df.drop_duplicates(keep="last", subset="Team #")
 
-        time_logged = str(sorted_df["Timestamp"].max())
+    time_logged = str(sorted_df["Timestamp"].max())
+    has_data = False if time_logged == "nan" else True
 
-        if time_logged == "nan":
-            error_message = (
-                f"[{team_num}] {team_name} - No Data" if error_prefix else "No Data"
+    with column.expander(
+        f"[{team_num}] {team_name} {'⚠️' if not has_data else ''}", start_expanded
+    ):
+        with st.container(border=True):
+            gen_match_comp(team_num, match_name, False)
+
+        if has_data:
+            with st.container(border=True):
+                team_data = df.loc[
+                    df["Team #"] == st.secrets["TEAM_NUMBER"],
+                    ["Frame Size LENGTH", "Frame Size WIDTH"],
+                ].iloc[0]
+
+                added_length = team_data["Frame Size LENGTH"]
+                added_width = team_data["Frame Size WIDTH"]
+
+                length = sorted_df["Frame Size LENGTH"].max()
+                width = sorted_df["Frame Size WIDTH"].max()
+
+                bumper_size = 5
+
+                added_length += bumper_size * calc_bumpers
+                added_width += bumper_size * calc_bumpers
+
+                length += bumper_size * calc_bumpers
+                width += bumper_size * calc_bumpers
+
+                added_length = length + added_length
+                added_width = width + added_width
+
+                st.text(f"Length: {length} in ({added_length} in)")
+                st.text(f"Width: {width} in ({added_width} in)")
+                st.text(f"Area: {length * width} in²")
+
+                def check_nan(var_name, var_value, column):
+                    try:
+                        if np.isnan(var_value):
+                            column.text(f"{var_name}: No Data Collected")
+                    except:
+                        column.text(f"{var_name}: {var_value}")
+
+                check_nan("Drivetrain", sorted_df["Drivetrain Type"].max(), st)
+                check_nan("Scouting Comments", sorted_df["Comments"].max(), st)
+
+                st.markdown(
+                    f"<span style='font-size: small; color: #808080;'>Time Logged: {time_logged}</span>",
+                    unsafe_allow_html=True,
+                )
+
+
+def calc_projected(team_df, return_row=False):
+    score_df = st.session_state.df
+    phases = st.session_state.phases
+
+    phase_count = len(
+        [
+            col
+            for col in score_df.columns
+            if any(col.startswith(f"{phase}_") for phase in phases)
+            and not col.startswith("COMMENT_GENERAL_STR_1")
+        ]
+    ) * len(team_df)
+
+    alliance_score = pd.DataFrame(columns=phases)
+    match_count = 0
+
+    for team in team_df:
+        team_score = score_df[score_df["Team"] == team]
+
+        for i in range(len(phases)):
+            team_score.loc[:, phases[i]] = add_cols(
+                team_score,
+                phases[i],
             )
-            column.error(error_message)
 
-        else:
-            team_data = df.loc[
-                df["Team #"] == st.secrets["TEAM_NUMBER"],
-                ["Frame Size LENGTH", "Frame Size WIDTH"],
-            ].iloc[0]
+        if return_row:
+            team_score["Match Name"] = (
+                team_score["Match Type"] + " " + team_score["Match"].astype(str)
+            )
+            return team_score[["Match Name"] + phases]
 
-            added_length = team_data["Frame Size LENGTH"]
-            added_width = team_data["Frame Size WIDTH"]
+        match_count += len(team_score)
+        team_score = team_score[phases].sum().to_frame().T
+        alliance_score = pd.concat([alliance_score, team_score], ignore_index=True)
 
-            length = sorted_df["Frame Size LENGTH"].max()
-            width = sorted_df["Frame Size WIDTH"].max()
+    alliance_score = alliance_score.sum().sum()
+    projected_score = round(
+        (alliance_score / phase_count) * round(match_count / len(team_df))
+    )
 
-            bumper_size = 5
+    return projected_score
 
-            added_length += bumper_size * calc_bumpers
-            added_width += bumper_size * calc_bumpers
 
-            length += bumper_size * calc_bumpers
-            width += bumper_size * calc_bumpers
+def gen_match_comp(team_num, match_name, not_preview=True):
+    df = st.session_state.df
+    phases = st.session_state.phases + ["TOTAL"]
 
-            added_length = length + added_length
-            added_width = width + added_width
+    team_df = df[df["Team"] == team_num]
+    match_count = len(team_df)
 
-            st.text(f"Length: {length} in ({added_length} in)")
-            st.text(f"Width: {width} in ({added_width} in)")
-            st.text(f"Area: {length * width} in²")
+    team_df = calc_projected([team_num], True)
+    team_scores = team_df.drop(columns=["Match Name"])
 
-            def check_nan(var_name, var_value, column):
-                try:
-                    if np.isnan(var_value):
-                        column.text(f"{var_name}: No Data Collected")
-                except:
-                    column.text(f"{var_name}: {var_value}")
+    team_scores = team_scores.sum()
+    team_scores["TOTAL"] = team_scores.sum()
 
-            check_nan("Drivetrain", sorted_df["Drivetrain Type"].max(), st)
-            check_nan("Scouting Comments", sorted_df["Comments"].max(), st)
+    columns = st.columns(len(phases))
 
-            st.markdown(
-                f"<span style='font-size: small; color: #808080;'>Time Logged: {time_logged}</span>",
+    skip_phases = ["INFO", "COMMENT"]
+
+    use_phases = []
+    if not_preview:
+        for i, phase in enumerate(phases):
+            use = columns[i].toggle(
+                phase.title(), False if phase in skip_phases else True
+            )
+            if use:
+                use_phases.append(phase)
+
+        st.markdown("""---""")
+    else:
+        use_phases = ["AUTO", "TELE", "END", "TOTAL"]
+
+    team_averages = {}
+
+    for phase, score in team_scores.items():
+        team_averages[phase] = round(score / match_count)
+
+    match_scores = team_df.loc[team_df["Match Name"] == match_name]
+
+    team_scores = match_scores.drop(columns=["Match Name"])
+    team_scores = team_scores.sum()
+    team_scores["TOTAL"] = team_scores.sum()
+
+    match_score = {}
+
+    for phase, score in team_scores.items():
+        match_score[phase] = score
+
+    if not_preview:
+        for i, phase in enumerate(phases):
+            columns[i].markdown(
+                f"<span style='color: #0074ba; font-size: 2em;'>{match_score[phase]}</span>"
+                f"<span style='color: #ffffff; font-size: 2em;'>/</span>"
+                f"<span style='color: #f8312f; font-size: 2em;'>{team_averages[phase]}</span>",
                 unsafe_allow_html=True,
             )
+
+    df = pd.DataFrame(
+        {
+            "Phase": use_phases,
+            "Average": [team_averages[phase] for phase in use_phases],
+            "Match": [match_score[phase] for phase in use_phases],
+        }
+    )
+
+    chart = (
+        alt.Chart(df.melt("Phase"))
+        .mark_bar()
+        .encode(
+            alt.X("variable:N", axis=alt.Axis(title=""), sort=["Match", "Average"]),
+            alt.Y(
+                "value:Q",
+                axis=alt.Axis(title=f"{match_name} vs {team_num} Average", grid=False),
+            ),
+            color=alt.Color(
+                "variable:N",
+                scale=alt.Scale(
+                    domain=["Match", "Average"],
+                    range=["#0074ba", "#f8312f"],
+                ),
+                legend=alt.Legend(
+                    title=None,
+                    orient=("right" if not_preview else "bottom"),
+                    symbolType="circle",
+                ),
+            ),
+            column="Phase:O",
+        )
+        .properties(height=250)
+        .configure_axis(labelAngle=0)
+    )
+
+    alt_size = st.columns(len(use_phases) + 1)
+    with alt_size[0].container():
+        st.altair_chart(chart, use_container_width=True)
 
 
 def gen_bar(
@@ -444,8 +583,8 @@ def gen_bar(
                 for index, row in ranked.iterrows():
                     team_num = row["Team"]
                     scouting_expander(
-                        team_num=team_num,
                         df=df_scouting,
+                        team_num=team_num,
                         rank_info=[
                             ranked.loc[ranked["Team"] == team_num, "rank"].to_list()[0],
                             st.session_state.tba_ranks[str(team_num)],
@@ -468,46 +607,3 @@ def gen_bar(
                 with open("src\\pickles\\presets.pickle", "wb") as f:
                     pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
                 st.success("Successfully added preset!")
-
-
-def calc_projected(team_df, return_row=False):
-    score_df = st.session_state.df
-    phases = st.session_state.phases
-
-    phase_count = len(
-        [
-            col
-            for col in score_df.columns
-            if any(col.startswith(f"{phase}_") for phase in phases)
-            and not col.startswith("COMMENT_GENERAL_STR_1")
-        ]
-    ) * len(team_df)
-
-    alliance_score = pd.DataFrame(columns=phases)
-    match_count = 0
-
-    for team in team_df:
-        team_score = score_df[score_df["Team"] == team]
-
-        for i in range(len(phases)):
-            team_score.loc[:, phases[i]] = add_cols(
-                team_score,
-                phases[i],
-            )
-
-        if return_row:
-            team_score["Match Name"] = (
-                team_score["Match Type"] + " " + team_score["Match"].astype(str)
-            )
-            return team_score[["Match Name"] + phases]
-
-        match_count += len(team_score)
-        team_score = team_score[phases].sum().to_frame().T
-        alliance_score = pd.concat([alliance_score, team_score], ignore_index=True)
-
-    alliance_score = alliance_score.sum().sum()
-    projected_score = round(
-        (alliance_score / phase_count) * round(match_count / len(team_df))
-    )
-
-    return projected_score

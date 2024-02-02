@@ -21,11 +21,11 @@ def display_team(
 
     for team_num in team_df:
         build.scouting_expander(
-            team_num=team_num,
             df=df,
+            team_num=team_num,
+            match_name=match_choice,
             start_expanded=start_expanded,
             calc_bumpers=calc_bumpers,
-            error_prefix=True,
             column=column,
         )
 
