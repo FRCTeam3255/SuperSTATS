@@ -45,8 +45,16 @@ def display_team(
     actual_score = match_breakdown[team_header[1].lower()]["totalPoints"]
 
     match_key = match_df["key"].to_list()[0]
+    match_url = f"https://www.thebluealliance.com/match/{match_key}"
+
+    percent_error = (
+        round((actual_score - projected_score) / actual_score * 100)
+        if actual_score != 0
+        else "inf"
+    )
+
     column.markdown(
-        f"<h6><a href='https://www.thebluealliance.com/match/{match_key}' style='color: #808080; text-decoration: none;'>Actual Score: {actual_score}</a></h6>",
+        f"<h6><a href='{match_url}' style='color: #808080; text-decoration: none;'>Actual Score: {actual_score} ({percent_error}%)</a></h6>",
         unsafe_allow_html=True,
     )
 
