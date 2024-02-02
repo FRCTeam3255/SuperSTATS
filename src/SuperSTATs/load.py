@@ -94,7 +94,8 @@ def get_team_colors():
     api_url = f"https://frc-colors.com/api/v1/team/3255"
 
     try:
-        requests.get("https://frc-colors.com/api/v1/team/3255", timeout=5)
+        # TODO: Check that this logic is correct with api_url
+        requests.get(api_url, timeout=5)
 
         response = requests.get(api_url)
         response.raise_for_status()

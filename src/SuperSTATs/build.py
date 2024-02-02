@@ -186,7 +186,20 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     for phase, score in team_scores.items():
         team_averages[phase] = round(score / match_count)
 
-    match_scores = team_df.loc[team_df["Match Name"] == match_name]
+    if not_preview:
+        match_scores = team_df.loc[team_df["Match Name"] == match_name]
+    else:
+        team_df = team_df.sort_index()
+
+        try:
+            last_match = max(0, team_df["Match Name"].tolist().index(match_name) - 1)
+            match_scores = team_df.reset_index(drop=True).loc[last_match].to_frame().T
+        except:
+            match_scores = (
+                team_df.reset_index(drop=True).loc[len(team_df) - 1].to_frame().T
+            )
+
+        match_name = match_scores["Match Name"].to_list()[0]
 
     team_scores = match_scores.drop(columns=["Match Name"])
     team_scores = team_scores.sum()
