@@ -181,6 +181,7 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     else:
         use_phases = ["AUTO", "TELE", "END", "TOTAL"]
 
+    alt_size = st.columns(len(use_phases) + 1)
     team_averages = {}
 
     for phase, score in team_scores.items():
@@ -191,15 +192,14 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     else:
         team_df = team_df.sort_index()
 
-        try:
-            last_match = max(0, team_df["Match Name"].tolist().index(match_name) - 1)
-            match_scores = team_df.reset_index(drop=True).loc[last_match].to_frame().T
-        except:
-            match_scores = (
-                team_df.reset_index(drop=True).loc[len(team_df) - 1].to_frame().T
-            )
-
+        match_scores = team_df.reset_index(drop=True).loc[len(team_df) - 1].to_frame().T
         match_name = match_scores["Match Name"].to_list()[0]
+
+        st.link_button(
+            "Send to Team Tracker",
+            f"Tracker/?team_num={team_num}&match_name={match_name}",
+            use_container_width=True,
+        )
 
     team_scores = match_scores.drop(columns=["Match Name"])
     team_scores = team_scores.sum()
@@ -254,7 +254,6 @@ def gen_match_comp(team_num, match_name, not_preview=True):
         .configure_axis(labelAngle=0)
     )
 
-    alt_size = st.columns(len(use_phases) + 1)
     with alt_size[0].container():
         st.altair_chart(chart, use_container_width=True)
 
