@@ -263,6 +263,7 @@ def app_init():
         "Perchance.",
         "Putting out fires... 🔥",
         "Brewing tea... 🫖",
+        "Downloading More RAM...",
     ]
 
     with st.spinner(random.choice(load_messages)):

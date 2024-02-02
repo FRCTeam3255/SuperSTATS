@@ -20,10 +20,12 @@ def main():
     st.markdown("""---""")
 
     with st.expander("Initialization"):
-        if st.button("Clear Team Info Cache", type="primary", use_container_width=True):
+        if st.button("Reset Team Info Cache", type="primary", use_container_width=True):
             load.get_team_info.clear()
 
-        if st.button("Refresh Team Colors", type="primary", use_container_width=True):
+        if st.button(
+            "Reset Team Colors Cache", type="primary", use_container_width=True
+        ):
             load.check_team_colors()
 
     st.markdown("""---""")
@@ -62,13 +64,13 @@ def main():
 
     st.markdown("""---""")
 
-    with st.expander("Set Presets"):
-        uploaded_file = st.file_uploader("Override Presets:")
+    with st.expander("Presets"):
+        uploaded_file = st.file_uploader("Override Presets:", ".json")
 
         if uploaded_file is not None:
             st.markdown("""---""")
 
-            if st.button("Set Presets", use_container_width=True):
+            if st.button("Set Presets", type="primary", use_container_width=True):
                 bytes_data = uploaded_file.getvalue()
                 bytes_formatted = bytes_data.decode("utf-8")
                 data = json.loads(bytes_formatted)
@@ -88,6 +90,7 @@ def main():
                 f"Download Presets",
                 json.dumps(presets).encode("utf-8"),
                 "presets.json",
+                type="primary",
                 use_container_width=True,
             )
 
@@ -111,7 +114,9 @@ def main():
             if has_presets:
                 st.markdown("""---""")
 
-                if st.button("Delete Selected", use_container_width=True):
+                if st.button(
+                    "Delete Selected", type="primary", use_container_width=True
+                ):
                     for preset in deleted_presets:
                         presets.pop(preset)
 
