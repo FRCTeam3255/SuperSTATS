@@ -101,7 +101,7 @@ def main():
             alt.X("variable:N", axis=alt.Axis(title=""), sort=["Match", "Average"]),
             alt.Y(
                 "value:Q",
-                axis=alt.Axis(title=f"{match_name} vs Team Average", grid=False),
+                axis=alt.Axis(title=f"{match_name} vs {team_num} Average", grid=False),
             ),
             color=alt.Color(
                 "variable:N",
@@ -109,11 +109,11 @@ def main():
                     domain=["Match", "Average"],
                     range=["#0074ba", "#f8312f"],
                 ),
-                legend=alt.Legend(title=" "),
+                legend=alt.Legend(title=None, symbolType="circle"),
             ),
             column="Phase:O",
         )
-        .configure_view(stroke="transparent")
+        .properties(height=250)
         .configure_axis(labelAngle=0)
     )
 
