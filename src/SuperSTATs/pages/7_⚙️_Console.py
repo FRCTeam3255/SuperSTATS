@@ -17,7 +17,7 @@ def main():
     st.title("")
 
     st.button("Update Page", type="primary", use_container_width=True)
-    st.markdown("""---""")
+    st.divider()
 
     with st.expander("Initialization"):
         if st.button("Reset Team Info Cache", type="primary", use_container_width=True):
@@ -28,7 +28,7 @@ def main():
         ):
             load.check_team_colors()
 
-    st.markdown("""---""")
+    st.divider()
 
     with st.expander("Scouts"):
         scouts = st.session_state.scouts
@@ -52,7 +52,7 @@ def main():
             st.error(f"Not enough scouters! ({scout_amount}/6)")
             scout_list.extend([f"N/A {i}" for i in range(6 - scout_amount)])
 
-        st.markdown("""---""")
+        st.divider()
 
         if st.button("Set Scouters", type="primary", use_container_width=True):
             st.session_state.assigned = scout_list
@@ -62,13 +62,13 @@ def main():
 
             st.success("Successfully Set Scouters!")
 
-    st.markdown("""---""")
+    st.divider()
 
     with st.expander("Presets"):
         uploaded_file = st.file_uploader("Override Presets:", ".json")
 
         if uploaded_file is not None:
-            st.markdown("""---""")
+            st.divider()
 
             if st.button("Set Presets", type="primary", use_container_width=True):
                 bytes_data = uploaded_file.getvalue()
@@ -94,7 +94,7 @@ def main():
                 use_container_width=True,
             )
 
-        st.markdown("""---""")
+        st.divider()
 
         if has_presets:
             delete_all = False
@@ -112,7 +112,7 @@ def main():
                     deleted_presets.append(name)
 
             if has_presets:
-                st.markdown("""---""")
+                st.divider()
 
                 if st.button(
                     "Delete Selected", type="primary", use_container_width=True

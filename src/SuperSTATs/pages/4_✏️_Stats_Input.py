@@ -58,7 +58,7 @@ def main():
     st.title("")
 
     st.button("Update Page", type="primary", use_container_width=True)
-    st.markdown("""---""")
+    st.divider()
 
     url = st.secrets["FORM_URL"]
 
@@ -132,7 +132,7 @@ def main():
     color_icon = "🔴" if input_color == "R" else "🔵"
     input_name = f"{input_sub} [⇄]" if input_sub else input_name
 
-    st.markdown("""---""")
+    st.divider()
 
     st.markdown(
         f'<div style="text-align: center; font-size: 2.5em;">{color_icon} {input_team} | {st.session_state.team_info[input_team]} {color_icon}</div>',
@@ -160,7 +160,7 @@ def main():
     entry_responses = {}
 
     def phase_header(phase):
-        st.markdown("""---""")
+        st.divider()
         st.markdown(
             f'<div style="text-align: center; font-size: 32px;">{phase}</div>',
             unsafe_allow_html=True,
@@ -210,7 +210,7 @@ def main():
         gen_phase_input("INFO")
         gen_phase_input("COMMENT")
 
-        st.markdown("""---""")
+        st.divider()
 
         gen_combined = {}
 

@@ -45,11 +45,6 @@ def scouting_expander(
     team_name = st.session_state.team_info[team_num]
 
     expander_name = f"[{team_num}] {team_name}"
-    if len(rank_info) == 2:
-        expander_name += f" [🦸#{rank_info[0]}/💎#{rank_info[1]}]"
-
-    if len(rank_info) == 2:
-        st.text(f"SN Rank: {rank_info[0]} | TBA Rank: {rank_info[1]}")
 
     sorted_df = df.loc[df["Team #"] == int(team_num)]
     sorted_df = sorted_df.sort_values(by="Timestamp")
@@ -58,14 +53,20 @@ def scouting_expander(
     time_logged = str(sorted_df["Timestamp"].max())
     has_data = False if time_logged == "nan" else True
 
+    if len(rank_info) == 2:
+        expander_name += f" [🦸#{rank_info[0]}/💎#{rank_info[1]}]"
+
     with column.expander(
-        f"[{team_num}] {team_name} {'⚠️' if not has_data else ''}", start_expanded
+        f"{expander_name} {'⚠️' if not has_data else ''}", start_expanded
     ):
         with st.container(border=True):
             gen_match_comp(team_num, match_name, False)
 
         if has_data:
             with st.container(border=True):
+                if len(rank_info) == 2:
+                    st.text(f"SN Rank: {rank_info[0]} | TBA Rank: {rank_info[1]}")
+
                 team_data = df.loc[
                     df["Team #"] == st.secrets["TEAM_NUMBER"],
                     ["Frame Size LENGTH", "Frame Size WIDTH"],
@@ -205,7 +206,7 @@ def gen_match_comp(team_num, match_name, not_preview=True):
             if use:
                 use_phases.append(phase)
 
-        st.markdown("""---""")
+        st.divider()
     else:
         use_phases = ["AUTO", "TELE", "END", "TOTAL"]
 
@@ -602,7 +603,7 @@ def gen_bar(
             color=alt.Color(
                 "variable:N",
                 title=" ",
-                scale=alt.Scale(domain=selected_filters, scheme="rainbow"),
+                scale=alt.Scale(domain=selected_filters, scheme="darkblue"),
                 legend=alt.Legend(
                     title=None,
                     orient=(

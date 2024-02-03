@@ -14,7 +14,7 @@ def main():
     st.title("")
 
     st.button("Update Page", type="primary", use_container_width=True)
-    st.markdown("""---""")
+    st.divider()
 
     build.gen_bar()
 
