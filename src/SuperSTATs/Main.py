@@ -7,6 +7,8 @@ import datetime
 def main():
     load.app_init()
 
+    # st.write(st.session_state.team_colors)
+
     import SuperSTATs.styles as style
 
     st.markdown(style.rainbow(), unsafe_allow_html=True)
@@ -89,9 +91,9 @@ def main():
 
             matches = matches[matches[team_cols].isin([team]).any(axis=1)].astype(str)
             matches = matches.style.map(
-                lambda cell: f"color: {team_color}"
-                if cell == str(team)
-                else "color: #808080",
+                lambda cell: (
+                    f"color: {team_color}" if cell == str(team) else "color: #808080"
+                ),
                 subset=pd.IndexSlice[:, team_cols],
             )
         else:

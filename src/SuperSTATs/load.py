@@ -91,23 +91,22 @@ def get_team_colors():
     for team in team_info:
         team_url += f"team={team}&"
 
-    api_url = f"https://frc-colors.com/api/v1/team/3255"
+    api = f"https://frc-colors.com/api/v1/team"
 
     try:
-        # TODO: Check that this logic is correct with api_url
-        requests.get(api_url, timeout=5)
+        ping = requests.get(f"{api}/3255", timeout=5)
+        ping.raise_for_status()
 
-        response = requests.get(api_url)
-        response.raise_for_status()
+        response = requests.get(f"{api}?{team_url}")
         raw_data = response.json()
 
-        for team in raw_data["teams"].values():
-            if team["colors"] is not None:
-                primary_color = team["colors"]["primaryHex"]
-                secondary_color = team["colors"]["secondaryHex"]
-                team_colors[team["teamNumber"]] = [primary_color, secondary_color]
+        for team, colors in raw_data["colors"].items():
+            if colors != None:
+                primary_color = colors["primaryHex"]
+                secondary_color = colors["secondaryHex"]
+                team_colors[int(team)] = [primary_color, secondary_color]
             else:
-                team_colors[team["teamNumber"]] = ["003255", "003255"]
+                team_colors[int(team)] = ["003255", "003255"]
     except:
         for team in team_info:
             team_colors[team] = ["003255", "003255"]
@@ -225,6 +224,7 @@ def get_presets():
         with open(presets_path, "wb") as f:
             pickle.dump({}, f, pickle.HIGHEST_PROTOCOL)
         return {}
+
 
 def app_init():
     try:
