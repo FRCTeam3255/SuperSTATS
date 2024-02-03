@@ -165,8 +165,10 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     team_df = df[df["Team"] == team_num]
     match_count = len(team_df)
 
+    config_columns = st.columns(3)
+
     if not_preview:
-        show_ungrouped = st.toggle("Ungroup", False)
+        show_ungrouped = config_columns[0].toggle("Ungroup", False)
     else:
         show_ungrouped = False
 
@@ -194,6 +196,8 @@ def gen_match_comp(team_num, match_name, not_preview=True):
 
     team_scores = team_scores.sum()
     team_scores["TOTAL"] = team_scores.sum()
+
+    st.divider()
 
     columns = st.columns(len(phases))
 
@@ -245,12 +249,33 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     for phase, score in team_scores.items():
         match_score[phase] = score
 
+    use_team_colors = config_columns[1].toggle("Use Team Colors")
+    team_colors = st.session_state.team_colors[team_num]
+    default_colors = ["#0074ba", "#f8312f"]
+
+    if use_team_colors:
+        if team_colors[0] == "003255" or team_colors[1] == "003255":
+            config_columns[2].toggle("Use Secondary Color", disabled=True)
+            use_colors = default_colors
+            st.toast(
+                f"Team colors not found for {st.session_state.team_info[team_num]} (Team {team_num})",
+                icon="⚠️",
+            )
+        else:
+            if config_columns[2].toggle("Swap Colors"):
+                use_colors = [team_colors[1], team_colors[0]]
+            else:
+                use_colors = [team_colors[0], team_colors[1]]
+    else:
+        config_columns[2].toggle("Use Secondary Color", disabled=True)
+        use_colors = default_colors
+
     if not_preview:
         for i, phase in enumerate(phases):
             columns[i].markdown(
-                f"<span style='color: #0074ba; font-size: 2em;'>{match_score[phase]}</span>"
+                f"<span style='color: {use_colors[0]}; font-size: 2em;'>{match_score[phase]}</span>"
                 f"<span style='color: #ffffff; font-size: 2em;'>/</span>"
-                f"<span style='color: #f8312f; font-size: 2em;'>{team_averages[phase]}</span>",
+                f"<span style='color: {use_colors[1]}; font-size: 2em;'>{team_averages[phase]}</span>",
                 unsafe_allow_html=True,
             )
 
@@ -279,7 +304,7 @@ def gen_match_comp(team_num, match_name, not_preview=True):
                 "variable:N",
                 scale=alt.Scale(
                     domain=["Match", "Average"],
-                    range=["#0074ba", "#f8312f"],
+                    range=[use_colors[0], use_colors[1]],
                 ),
                 legend=alt.Legend(
                     title=None,
