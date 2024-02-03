@@ -49,7 +49,7 @@ def main():
             with open("src\\pickles\\scouts.pickle", "wb") as f:
                 pickle.dump([scouts, scout_list], f, pickle.HIGHEST_PROTOCOL)
 
-            st.success("Successfully Set Scouters!")
+            st.toast("Successfully Set Scouters!", icon="✅")
 
     st.divider()
 
@@ -67,7 +67,7 @@ def main():
                 with open(presets_path, "wb") as f:
                     pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
 
-                st.success("Successfully Updated Presets!")
+                st.toast("Successfully Updated Presets!", icon="✅")
 
         with open(presets_path, "rb") as f:
             presets = pickle.load(f)
@@ -112,7 +112,7 @@ def main():
                     with open(presets_path, "wb") as f:
                         pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
 
-                    st.success("Successfully Deleted Presets!")
+                    st.toast("Successfully Deleted Presets!", icon="✅")
 
             else:
                 st.error("No Presets Found")

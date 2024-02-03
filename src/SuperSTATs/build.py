@@ -663,4 +663,4 @@ def gen_bar(
                 }
                 with open("src\\pickles\\presets.pickle", "wb") as f:
                     pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
-                st.success("Successfully added preset!")
+                st.toast("Successfully added preset!", icon="✅")

@@ -9,7 +9,9 @@ def main():
     import SuperSTATs.styles as style
 
     st.markdown(style.shimmer("#ffb8e5"), unsafe_allow_html=True)
-    st.markdown("<div class='shimmer'>📝 Scouting Input 📝</div>", unsafe_allow_html=True)
+    st.markdown(
+        "<div class='shimmer'>📝 Scouting Input 📝</div>", unsafe_allow_html=True
+    )
 
     df = st.session_state.scouting
 
@@ -63,12 +65,9 @@ def main():
 
         if 0.0 not in [length, width, weight]:
             if st.button("Submit", type="primary", use_container_width=True):
-                req = requests.get(prefill_url)
-                if req.status_code == 200:
-                    st.success("Submitted Successfully! Please Refresh...")
-                    st.balloons()
-                else:
-                    st.error("Submission Unsuccessful! Please Try Again...")
+                requests.get(prefill_url)
+                st.toast("Submitted Successfully! Please Refresh...", icon="✅")
+                st.balloons()
         else:
             st.button("Submit", type="primary", use_container_width=True, disabled=True)
             st.warning("Required Input Missing")

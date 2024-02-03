@@ -240,7 +240,7 @@ def main():
     if submitted:
         requests.get(prefill_url)
         st.balloons()
-        st.success("Submission successful! Please refresh the page...")
+        st.toast("Submission successful! Please refresh the page...", icon="✅")
 
 
 if __name__ == "__main__":
