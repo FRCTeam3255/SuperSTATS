@@ -7,8 +7,6 @@ import datetime
 def main():
     load.app_init()
 
-    # st.write(st.session_state.team_colors)
-
     import SuperSTATs.styles as style
 
     st.markdown(style.rainbow(), unsafe_allow_html=True)

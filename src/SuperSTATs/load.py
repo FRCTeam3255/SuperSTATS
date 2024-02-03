@@ -85,19 +85,33 @@ def get_team_info():
 @st.cache_data(show_spinner=False)
 def get_team_colors():
     team_info = st.session_state.team_info
-    team_colors = {}
 
-    team_url = ""
-    for team in team_info:
-        team_url += f"team={team}&"
+    team_colors = {}
+    unrecorded = []
+
+    try:
+        with open("src\\pickles\\colors.pickle", "rb") as f:
+            recorded = pickle.load(f)
+
+        for team in team_info.keys():
+            colors = recorded[team]
+            if colors == None or colors == ["003255", "003255"]:
+                unrecorded.append(team)
+            else:
+                team_colors[team] = colors
+    except:
+        unrecorded.extend(team for team in team_info.keys())
+
+    teams_url = ""
+    for team in unrecorded:
+        teams_url += f"team={team}&"
 
     api = f"https://frc-colors.com/api/v1/team"
 
     try:
-        ping = requests.get(f"{api}/3255", timeout=5)
-        ping.raise_for_status()
+        requests.get(f"{api}/3255", timeout=5)
 
-        response = requests.get(f"{api}?{team_url}")
+        response = requests.get(f"{api}?{teams_url}")
         raw_data = response.json()
 
         for team, colors in raw_data["colors"].items():
@@ -107,8 +121,11 @@ def get_team_colors():
                 team_colors[int(team)] = [primary_color, secondary_color]
             else:
                 team_colors[int(team)] = ["003255", "003255"]
+
+        with open("src\\pickles\\colors.pickle", "wb") as f:
+            pickle.dump(team_colors, f, pickle.HIGHEST_PROTOCOL)
     except:
-        for team in team_info:
+        for team in unrecorded:
             team_colors[team] = ["003255", "003255"]
 
     return team_colors
