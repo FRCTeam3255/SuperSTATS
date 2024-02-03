@@ -108,7 +108,7 @@ def scouting_expander(
                 )
 
 
-def calc_projected(team_df, return_row=False):
+def calc_projected(team_df, show_ungrouped=False, return_row=False):
     score_df = st.session_state.df
     phases = st.session_state.phases
 
@@ -117,7 +117,6 @@ def calc_projected(team_df, return_row=False):
             col
             for col in score_df.columns
             if any(col.startswith(f"{phase}_") for phase in phases)
-            and not col.startswith("COMMENT_GENERAL_STR_1")
         ]
     ) * len(team_df)
 
@@ -126,6 +125,14 @@ def calc_projected(team_df, return_row=False):
 
     for team in team_df:
         team_score = score_df[score_df["Team"] == team]
+
+        if show_ungrouped:
+            phases = [
+                col
+                for col in team_score.columns
+                if any(col.startswith(f"{phase}_") for phase in phases)
+                and col != "COMMENT_GENERAL_STR_1"
+            ]
 
         for i in range(len(phases)):
             team_score.loc[:, phases[i]] = add_cols(
@@ -137,7 +144,7 @@ def calc_projected(team_df, return_row=False):
             team_score["Match Name"] = (
                 team_score["Match Type"] + " " + team_score["Match"].astype(str)
             )
-            return team_score[["Match Name"] + phases]
+            return {"score": team_score[["Match Name"] + phases], "phases": phases}
 
         match_count += len(team_score)
         team_score = team_score[phases].sum().to_frame().T
@@ -153,20 +160,41 @@ def calc_projected(team_df, return_row=False):
 
 def gen_match_comp(team_num, match_name, not_preview=True):
     df = st.session_state.df
-    phases = st.session_state.phases + ["TOTAL"]
 
     team_df = df[df["Team"] == team_num]
     match_count = len(team_df)
 
-    team_df = calc_projected([team_num], True)
+    if not_preview:
+        show_ungrouped = st.toggle("Ungroup", False)
+    else:
+        show_ungrouped = False
+
+    team_df = calc_projected([team_num], show_ungrouped, return_row=True)
+
+    phases = team_df["phases"]
+    team_df = team_df["score"]
+
+    skip_phases = ["INFO", "COMMENT"]
+
+    if not_preview and show_ungrouped:
+        selected_phase = st.selectbox(
+            "Phase:",
+            # [phase for phase in st.session_state.phases if phase not in skip_phases],
+            ["AUTO", "TELE", "END"],
+        )
+
+        if selected_phase:
+            if any("_" in phase for phase in phases):
+                phases = [
+                    phase for phase in phases if phase.startswith(f"{selected_phase}_")
+                ]
+
     team_scores = team_df.drop(columns=["Match Name"])
 
     team_scores = team_scores.sum()
     team_scores["TOTAL"] = team_scores.sum()
 
     columns = st.columns(len(phases))
-
-    skip_phases = ["INFO", "COMMENT"]
 
     use_phases = []
     if not_preview:
@@ -195,10 +223,16 @@ def gen_match_comp(team_num, match_name, not_preview=True):
         match_scores = team_df.reset_index(drop=True).loc[len(team_df) - 1].to_frame().T
         match_name = match_scores["Match Name"].to_list()[0]
 
-        st.link_button(
-            "Send to Team Tracker",
-            f"Tracker/?team_num={team_num}&match_name={match_name}",
-            use_container_width=True,
+        query_url = f"Tracker/?team_num={team_num}&match_name={match_name}"
+        button_style = (
+            "background-color: #141414; border: 1px solid #424242; border-radius: 8px;"
+            "color: #ffffff; text-align: center; text-decoration: none;"
+            "display: block; width: 100%; padding: 8px 0;"
+        )
+
+        st.markdown(
+            f"<a href='{query_url}' target='_self' style='{button_style}'>Send To Team Tracker</a>",
+            unsafe_allow_html=True,
         )
 
     team_scores = match_scores.drop(columns=["Match Name"])
@@ -231,7 +265,11 @@ def gen_match_comp(team_num, match_name, not_preview=True):
         alt.Chart(df.melt("Phase"))
         .mark_bar()
         .encode(
-            alt.X("variable:N", axis=alt.Axis(title=""), sort=["Match", "Average"]),
+            alt.X(
+                "variable:N",
+                axis=alt.Axis(title=""),
+                sort=["Match", "Average"],
+            ),
             alt.Y(
                 "value:Q",
                 axis=alt.Axis(title=f"{match_name} vs {team_num} Average", grid=False),
@@ -250,12 +288,16 @@ def gen_match_comp(team_num, match_name, not_preview=True):
             ),
             column="Phase:O",
         )
-        .properties(height=250)
+        .properties(height=200, width=225)
         .configure_axis(labelAngle=0)
     )
 
-    with alt_size[0].container():
-        st.altair_chart(chart, use_container_width=True)
+    if show_ungrouped:
+        st.altair_chart(chart, use_container_width=False)
+
+    else:
+        with alt_size[0].container():
+            st.altair_chart(chart, use_container_width=True)
 
 
 def gen_bar(
@@ -526,6 +568,7 @@ def gen_bar(
         data["Team"] = data["Team"].apply(
             lambda team: f"{team} [{str(tba_rankings.get(str(team), 'NA')).zfill(2)}]"
         )
+
     else:
         group_filters = ""
         inline_legend = ""
@@ -559,6 +602,7 @@ def gen_bar(
             color=alt.Color(
                 "variable:N",
                 title=" ",
+                scale=alt.Scale(domain=selected_filters, scheme="rainbow"),
                 legend=alt.Legend(
                     title=None,
                     orient=(

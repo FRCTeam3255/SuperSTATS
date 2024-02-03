@@ -241,7 +241,6 @@ def main():
         requests.get(prefill_url)
         st.balloons()
         st.success("Submission successful! Please refresh the page...")
-        load.play_audio("yippee.mp3", 4)
 
 
 if __name__ == "__main__":

@@ -67,7 +67,6 @@ def main():
                 if req.status_code == 200:
                     st.success("Submitted Successfully! Please Refresh...")
                     st.balloons()
-                    load.play_audio("yippee.mp3", 4)
                 else:
                     st.error("Submission Unsuccessful! Please Try Again...")
         else:

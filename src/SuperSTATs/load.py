@@ -226,22 +226,6 @@ def get_presets():
             pickle.dump({}, f, pickle.HIGHEST_PROTOCOL)
         return {}
 
-
-def play_audio(file_path, delay):
-    with open(f"src\\SuperSTATs\\audio\\{file_path}", "rb") as f:
-        data = f.read()
-        b64 = base64.b64encode(data).decode()
-        html = f"""
-           <audio autoplay="true">
-           <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
-           </audio>
-           """
-        placeholder = st.empty()
-        placeholder.markdown(html, unsafe_allow_html=True)
-        time.sleep(delay)
-        placeholder.empty()
-
-
 def app_init():
     try:
         st.set_page_config(
