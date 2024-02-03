@@ -19,17 +19,6 @@ def main():
     st.button("Update Page", type="primary", use_container_width=True)
     st.divider()
 
-    with st.expander("Initialization"):
-        if st.button("Reset Team Info Cache", type="primary", use_container_width=True):
-            load.get_team_info.clear()
-
-        if st.button(
-            "Reset Team Colors Cache", type="primary", use_container_width=True
-        ):
-            load.check_team_colors()
-
-    st.divider()
-
     with st.expander("Scouts"):
         scouts = st.session_state.scouts
         assigned = st.session_state.assigned
