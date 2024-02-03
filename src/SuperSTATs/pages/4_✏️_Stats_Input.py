@@ -87,9 +87,7 @@ def main():
 
     top_columns = st.columns(2)
 
-    df = st.session_state.df
     matches = st.session_state.matches
-
     unplayed_matches = st.session_state.unplayed_matches
 
     match_selection = top_columns[1].empty()
@@ -111,7 +109,7 @@ def main():
     if input_name == "SUB":
         bot_columns = st.columns(2)
         input_name = name_selection.selectbox("Original:", match_scouts).upper()
-        input_sub = bot_columns[0].text_input("Sub:", max_chars=2).upper()
+        input_sub = bot_columns[0].selectbox("Sub:", st.session_state.scouts).upper()
     else:
         input_sub = None
 
