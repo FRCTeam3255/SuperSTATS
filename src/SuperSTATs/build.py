@@ -182,7 +182,6 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     if not_preview and show_ungrouped:
         selected_phase = st.selectbox(
             "Phase:",
-            # [phase for phase in st.session_state.phases if phase not in skip_phases],
             ["AUTO", "TELE", "END"],
         )
 
@@ -197,7 +196,8 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     team_scores = team_scores.sum()
     team_scores["TOTAL"] = team_scores.sum()
 
-    st.divider()
+    if not_preview:
+        st.divider()
 
     columns = st.columns(len(phases))
 
@@ -249,28 +249,29 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     for phase, score in team_scores.items():
         match_score[phase] = score
 
-    use_team_colors = config_columns[1].toggle("Use Team Colors")
-    team_colors = st.session_state.team_colors[team_num]
     default_colors = ["#0074ba", "#f8312f"]
 
-    if use_team_colors:
-        if team_colors[0] == "003255" or team_colors[1] == "003255":
+    if not_preview:
+        use_team_colors = config_columns[1].toggle("Use Team Colors")
+        team_colors = st.session_state.team_colors[team_num]
+
+        if use_team_colors:
+            if team_colors[0] == "003255" or team_colors[1] == "003255":
+                config_columns[2].toggle("Use Secondary Color", disabled=True)
+                use_colors = default_colors
+                st.toast(
+                    f"Team colors not found for {st.session_state.team_info[team_num]} (Team {team_num})",
+                    icon="⚠️",
+                )
+            else:
+                if config_columns[2].toggle("Swap Colors"):
+                    use_colors = [team_colors[1], team_colors[0]]
+                else:
+                    use_colors = [team_colors[0], team_colors[1]]
+        else:
             config_columns[2].toggle("Use Secondary Color", disabled=True)
             use_colors = default_colors
-            st.toast(
-                f"Team colors not found for {st.session_state.team_info[team_num]} (Team {team_num})",
-                icon="⚠️",
-            )
-        else:
-            if config_columns[2].toggle("Swap Colors"):
-                use_colors = [team_colors[1], team_colors[0]]
-            else:
-                use_colors = [team_colors[0], team_colors[1]]
-    else:
-        config_columns[2].toggle("Use Secondary Color", disabled=True)
-        use_colors = default_colors
 
-    if not_preview:
         for i, phase in enumerate(phases):
             columns[i].markdown(
                 f"<span style='color: {use_colors[0]}; font-size: 2em;'>{match_score[phase]}</span>"
@@ -278,6 +279,8 @@ def gen_match_comp(team_num, match_name, not_preview=True):
                 f"<span style='color: {use_colors[1]}; font-size: 2em;'>{team_averages[phase]}</span>",
                 unsafe_allow_html=True,
             )
+    else:
+        use_colors = default_colors
 
     df = pd.DataFrame(
         {
@@ -312,6 +315,8 @@ def gen_match_comp(team_num, match_name, not_preview=True):
                     symbolType="circle",
                 ),
             ),
+            stroke=alt.value("#ffffff"),
+            strokeWidth=alt.value(2),
             column="Phase:O",
         )
         .properties(height=200, width=225)
