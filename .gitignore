@@ -160,5 +160,4 @@ cython_debug/
 #.idea/
 
 .streamlit/secrets.toml
-*/secrets.toml
-*.pickle
+src/pickles/*

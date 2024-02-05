@@ -51,8 +51,6 @@ def main():
 
             st.toast("Successfully Set Scouters!", icon="✅")
 
-    st.divider()
-
     with st.expander("Presets"):
         uploaded_file = st.file_uploader("Override Presets:", ".json")
 
@@ -82,8 +80,6 @@ def main():
                 type="primary",
                 use_container_width=True,
             )
-
-        st.divider()
 
         if has_presets:
             delete_all = False
