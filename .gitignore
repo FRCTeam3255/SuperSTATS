@@ -160,6 +160,7 @@ cython_debug/
 #.idea/
 
 # Setup
+src/setup/*
 .streamlit/secrets.toml
 src/pickles/*
 run.bat
