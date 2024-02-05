@@ -204,8 +204,9 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     use_phases = []
     if not_preview:
         for i, phase in enumerate(phases):
+            phase_name = phase.split("_")[1] if show_ungrouped else phase
             use = columns[i].toggle(
-                phase.title().split("_")[1], False if phase in skip_phases else True
+                phase_name.title(), False if phase in skip_phases else True
             )
             if use:
                 use_phases.append(phase)
