@@ -1,17 +1,15 @@
 import shutil, os
 
-setup = f"src\\setup"
-py_prefixes = ["python3", "py"]
-
+launch_dir = os.path.dirname(os.path.abspath(__file__))
+app_dir = os.path.abspath(os.path.join(launch_dir, os.pardir, os.pardir))
 venv_path = ".venv\\Scripts\\activate.bat"
+setup = f"src\\setup"
 
 to_move = {
     f"{setup}\\pickles": "src\\pickles",
     f"{setup}\\streamlit\\secrets.toml": ".streamlit\\secrets.toml",
-    f"{setup}\\root\\run.bat": "run.bat"
+    f"{setup}\\app\\run.bat": "run.bat",
 }
-
-empty_folders = ["streamlit", "root"]
 
 batch_content = """@echo off
 set VENV_PATH=.venv\\Scripts\\activate
@@ -19,26 +17,28 @@ call %VENV_PATH%
 streamlit run src\\SuperSTATs\\Main.py
 """
 
-for py in py_prefixes:
+os.chdir(app_dir)
+
+for py in ["python3", "py"]:
     print(f"Attempting enviornment creation with '{py}'...")
     os.system(f"{py} -m venv .venv")
-    
+
     if os.path.exists(venv_path):
         print("Enviornment creation successful...")
-        
+
         print("Moving setup files...")
-        for origin, destination in to_move:
+        for origin, destination in to_move.items():
             shutil.move(origin, destination)
-        
+
         print("Removing empty folders")
-        for folder in empty_folders:
+        for folder in ["streamlit", "app"]:
             os.rmdir(f"{setup}\\{folder}")
-        
+
         print("Installing libraries...")
         os.system("call .venv/Scripts/activate & pip install -e .")
-        
+
         break
-    
+
     else:
         print(f"Enviornment creation failed with '{py}'...")
 
