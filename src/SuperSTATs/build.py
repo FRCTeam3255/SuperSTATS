@@ -205,7 +205,7 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     if not_preview:
         for i, phase in enumerate(phases):
             use = columns[i].toggle(
-                phase.title(), False if phase in skip_phases else True
+                phase.title().split("_")[1], False if phase in skip_phases else True
             )
             if use:
                 use_phases.append(phase)
@@ -290,6 +290,9 @@ def gen_match_comp(team_num, match_name, not_preview=True):
         }
     )
 
+    if show_ungrouped:
+        df["Phase"] = df["Phase"].apply(lambda x: x.split("_")[1])
+
     chart = (
         alt.Chart(df.melt("Phase"))
         .mark_bar()
@@ -323,12 +326,8 @@ def gen_match_comp(team_num, match_name, not_preview=True):
         .configure_axis(labelAngle=0)
     )
 
-    if show_ungrouped:
-        st.altair_chart(chart, use_container_width=False)
-
-    else:
-        with alt_size[0].container():
-            st.altair_chart(chart, use_container_width=True)
+    with alt_size[0].container():
+        st.altair_chart(chart, use_container_width=True)
 
 
 def gen_bar(
