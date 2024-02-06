@@ -27,7 +27,6 @@ def main():
         url_team_num = int(url_query["team_num"])
         url_team_name = f"{url_team_num} | {team_info[url_team_num]}"
         url_match_name = url_query["match_name"]
-        st.query_params.clear()
     else:
         url_team_num = None
         url_match_name = None
@@ -42,6 +41,7 @@ def main():
         teams,
         index=teams.index(url_team_name) if url_team_num else 0,
     )
+
     team_num = int(team.split(" | ")[0])
     team_cols = [f"Red {i}" for i in range(1, 4)] + [f"Blue {i}" for i in range(1, 4)]
 
@@ -49,10 +49,18 @@ def main():
     match_df = match_df[match_df[team_cols].isin([team_num]).any(axis=1)]
     matches = match_df["Match"].to_list()
 
+    try:
+        match_index = matches.index(url_match_name)
+    except:
+        match_index = 0
+        if url_query:
+            st.query_params.clear()
+            st.toast("URL Parameters Cleared", icon="🗑️")
+
     match_name = columns[1].selectbox(
         "Match:",
         matches,
-        index=matches.index(url_match_name) if url_match_name else 0,
+        index=match_index,
     )
 
     st.write("""---""")

@@ -108,7 +108,7 @@ def main():
                     with open(presets_path, "wb") as f:
                         pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
 
-                    st.toast("Successfully Deleted Presets!", icon="✅")
+                    st.toast("Successfully Deleted Presets!", icon="🗑️")
 
             else:
                 st.error("No Presets Found")
