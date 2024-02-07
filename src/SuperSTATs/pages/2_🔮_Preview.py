@@ -65,8 +65,11 @@ def display_team(
             build.gen_bar(
                 key=column,
                 use_presets=False,
+                use_group_filters=False,
                 use_hide_picked=False,
+                use_hide_nums=False,
                 use_features=False,
+                use_agg_type=False,
                 use_max_size=False,
                 displayed_teams=team_df,
                 compared_teams=opposing_df,
@@ -81,7 +84,9 @@ def main():
     import SuperSTATs.styles as style
 
     st.markdown(style.shimmer("#d9adff"), unsafe_allow_html=True)
-    st.markdown("<div class='shimmer'>🔮 Match Preview 🔮</div>", unsafe_allow_html=True)
+    st.markdown(
+        "<div class='shimmer'>🔮 Match Preview 🔮</div>", unsafe_allow_html=True
+    )
     st.title("")
 
     st.button("Update Page", type="primary", use_container_width=True)
