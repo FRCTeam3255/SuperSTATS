@@ -255,7 +255,6 @@ def app_init():
     except:
         pass
 
-    init = st.empty()
     load_messages = [
         "Error at frc.robot.subsystems.Drivetrain.getPose2d(Drivetrain.java:408): Unhandled exception: java.lang.OutOfBoundsException: SCP 3255 has escaped containment",
         "Yippee!",
@@ -268,68 +267,73 @@ def app_init():
         "Exploding Falcons... 💥",
     ]
 
-    with st.spinner(random.choice(load_messages)):
-        init_status = st.empty()
+    init_status = st.empty()
 
-        if "init" not in st.session_state:
-            init_status.text("Running initialization...")
+    if "init" not in st.session_state:
+        with init_status.status(random.choice(load_messages), expanded=True) as status:
+            st.divider()
+
+            st.text("Starting initialization...")
+            time.sleep(1)
             start_time = time.time()
 
-            init_status.text("Downloading Team Info...")
+            st.text("- Downloading Team Info")
             st.session_state.team_info = get_team_info()
 
-            init_status.text("Getting Team Colors...")
+            st.text("- Getting Team Colors")
             st.session_state.team_colors = get_team_colors()
 
-            init_status.text("Initializing TBA API...")
+            st.text("- Initializing The Blue Alliance API")
             st.session_state.tba = tba
 
-            init_status.text("Downloading Raw Data Sheet...")
+            st.text("- Downloading Raw Data Sheet")
             df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
 
-            init_status.text("Organizing Raw Data...")
+            st.text("- Organizing Raw Data")
             df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
             df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
             st.session_state.df = df
 
-            init_status.text("Downloading Picked Team Data...")
+            st.text("- Downloading Picked Team Data")
             st.session_state.picked = download_sheets_raw(st.secrets["GID_PICKED"])
 
-            init_status.text("Downloading Scouting Data...")
+            st.text("- Downloading Scouting Data")
             st.session_state.scouting = download_sheets_raw(st.secrets["GID_SCOUTING"])
 
-            init_status.text("Downloading Scouter Info...")
+            st.text("- Fetching Scouter Info")
             get_scouters()
 
-            init_status.text("Identifying Phases...")
+            st.text("- Identifying Phases")
             st.session_state.phases = get_phases(st.session_state.df)
 
-            init_status.text("Calculating Point Values...")
+            st.text("- Calculating Point Values")
             st.session_state.points = point_values()
 
-            init_status.text("Loading Match Data...")
+            st.text("- Loading Match Data")
             st.session_state.match_data = get_match_data()
 
-            init_status.text("Loading Matchs...")
+            st.text("- Loading Matchs")
             st.session_state.matches = get_matches()
 
-            init_status.text("Updating Played Matches...")
+            st.text("- Updating Played Matches")
             st.session_state.unplayed_matches = get_unplayed(
                 st.session_state.df, st.session_state.matches
             )
 
-            init_status.text("Loading TBA Rankings...")
+            st.text("- Loading TBA Rankings")
             st.session_state.tba_ranks = get_tba_ranks()
 
-            init_status.text("Fetching Presets...")
+            st.text("- Fetching Presets")
             st.session_state.presets = get_presets()
 
-            elapsed_time = str(time.time() - start_time)[:4]
+            elapsed_time = round(time.time() - start_time, 2)
 
-            init_status.text(f"Initialization complete in {elapsed_time} seconds...")
+            status.update(
+                label=f"Initialization complete in {elapsed_time} seconds!",
+                state="complete",
+                expanded=True,
+            )
             st.session_state.init = True
 
             time.sleep(1)
             init_status.empty()
-
-    init.empty()
