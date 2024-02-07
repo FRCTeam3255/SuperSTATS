@@ -5,7 +5,7 @@ import pandas as pd
 import requests
 
 
-def get_matches(team):
+def get_match_scouts(team):
     match_list = st.session_state.matches["Match"].to_list()
     scouts = {}
     rotation = 3
@@ -15,9 +15,9 @@ def get_matches(team):
     i = 0
 
     while processed < len(match_list):
-        p1 = team[count]
-        p2 = team[count - 1]
-        p3 = team[count - 2]
+        scout_1 = team[count]
+        scout_2 = team[count - 1]
+        scout_3 = team[count - 2]
 
         if i % rotation == 0:
             count += 1
@@ -28,8 +28,9 @@ def get_matches(team):
         for match_type in ["Quals", "Playoffs", "Finals"]:
             for j in range(rotation):
                 match_name = f"{match_type} {(i + 1) + j}"
+
                 if match_name in match_list:
-                    scouts[match_name] = [p1, p2, p3]
+                    scouts[match_name] = [scout_1, scout_2, scout_3]
                     processed += 1
 
         i += rotation
@@ -96,8 +97,8 @@ def main():
 
     scouter_list = st.session_state.assigned
 
-    red_scouts = get_matches(scouter_list[::2])[input_match]
-    blue_scouts = get_matches(scouter_list[1::2])[input_match]
+    red_scouts = get_match_scouts(scouter_list[::2])[input_match]
+    blue_scouts = get_match_scouts(scouter_list[1::2])[input_match]
     match_scouts = red_scouts + blue_scouts
 
     name_selection = top_columns[0].empty()
