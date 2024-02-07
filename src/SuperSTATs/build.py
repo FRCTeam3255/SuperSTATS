@@ -180,10 +180,7 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     skip_phases = ["INFO", "COMMENT"]
 
     if not_preview and show_ungrouped:
-        selected_phase = st.selectbox(
-            "Phase:",
-            ["AUTO", "TELE", "END"],
-        )
+        selected_phase = st.selectbox("Phase:", ["AUTO", "TELE", "END"], index=1)
 
         if selected_phase:
             if any("_" in phase for phase in phases):
@@ -273,11 +270,18 @@ def gen_match_comp(team_num, match_name, not_preview=True):
             config_columns[2].toggle("Use Secondary Color", disabled=True)
             use_colors = default_colors
 
+        def score_markdown(color, score):
+            if use_team_colors:
+                px_size = "0.8px"
+                shadow_hex = "#4D4D4D"
+                return f"<span style='color: {color}; font-size: 2em; font-family:Arial; text-shadow: {px_size} 0 0 {shadow_hex}, -{px_size} 0 0 {shadow_hex}, 0 {px_size} 0 {shadow_hex}, 0 -{px_size} 0 {shadow_hex};'><b>{score}</b></span>"
+            return f"<span style='color: {color}; font-size: 2em; font-family:Arial;'><b>{score}</b></span>"
+
         for i, phase in enumerate(phases):
             columns[i].markdown(
-                f"<span style='color: {use_colors[0]}; font-size: 2em;'>{match_score[phase]}</span>"
-                f"<span style='color: #ffffff; font-size: 2em;'>/</span>"
-                f"<span style='color: {use_colors[1]}; font-size: 2em;'>{team_averages[phase]}</span>",
+                f"{score_markdown(use_colors[0], match_score[phase])}"
+                f"{score_markdown('#ffffff', ' / ')}"
+                f"{score_markdown(use_colors[1], team_averages[phase])}",
                 unsafe_allow_html=True,
             )
     else:

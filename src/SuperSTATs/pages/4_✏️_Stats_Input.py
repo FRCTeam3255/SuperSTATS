@@ -41,10 +41,7 @@ def name_check(value, lst):
     mid_index = len(lst) // 2
     if value in lst[:mid_index]:
         return "R"
-    elif value in lst[mid_index:]:
-        return "B"
-    else:
-        return "Other"
+    return "B"
 
 
 def main():
