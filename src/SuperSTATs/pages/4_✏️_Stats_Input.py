@@ -167,13 +167,15 @@ def main():
             entry_parts = entry.split("_")
             entry_name = entry_parts[1].title()
 
-            replacements = {
-                "⚠️": "Cone",
-                "🟪": "Cube",
-            }
-
-            for key, value in replacements.items():
-                entry_name = entry_name.replace(key, value)
+            feature_list = [
+                "Pick Up ⚠️ Off Ground",
+                "Double Substation",
+                "Pick Up 🟪 Off Ground",
+                "Single Substation",
+                "Pick Up Tipped ⚠️",
+                "Mechanism Damaged/Disabled",
+                "Tipped",
+            ]
 
             if entry_parts[2] == "INT":
                 entry_responses[entry] = st.number_input(
@@ -182,7 +184,7 @@ def main():
 
             elif entry_parts[2] == "STR":
                 selected_options = st.multiselect(
-                    (f"{entry_name}:"), ["K", "A", "N", "E"], key=entry
+                    (f"{entry_name}:"), feature_list, key=entry
                 )
                 entry_responses[entry] = ", ".join(selected_options)
 

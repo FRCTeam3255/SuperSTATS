@@ -32,15 +32,15 @@ def get_scouters():
         with open("src\\pickles\\scouts.pickle", "rb") as f:
             scouts = pickle.load(f)
 
-        st.session_state.scouts = scouts[0]
-        st.session_state.assigned = scouts[1]
+        return {"scouts": scouts[0], "assigned": scouts[1]}
 
     except:
         scouts_df = download_sheets_raw(st.secrets["GID_SCOUTS"]).sort_values(by="Name")
-        st.session_state.scouts = scouts_df["Name"].tolist()
-        st.session_state.assigned = scouts_df.loc[
-            scouts_df["Assigned"] == "x", "Name"
-        ].tolist()
+
+        return {
+            "scouts": scouts_df["Name"].tolist(),
+            "assigned": scouts_df.loc[scouts_df["Assigned"] == "x", "Name"].tolist(),
+        }
 
 
 def get_phases(df):
@@ -300,7 +300,9 @@ def app_init():
             st.session_state.scouting = download_sheets_raw(st.secrets["GID_SCOUTING"])
 
             st.text("✅ Fetching Scouter Info")
-            get_scouters()
+            scouters = get_scouters()
+            st.session_state.scouts = scouters["scouts"]
+            st.session_state.assigned = scouters["assigned"]
 
             st.text("✅ Identifying Phases")
             st.session_state.phases = get_phases(st.session_state.df)
