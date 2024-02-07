@@ -15,8 +15,10 @@ def display_team(
     match_choice,
 ):
     df = st.session_state.scouting
-    column.header(
-        f"{team_header[0]} {team_header[1]} Alliance {team_header[0]}", anchor=False
+
+    column.markdown(
+        f"<center style='font-size: 2.5em;'>{team_header[0]} {team_header[1]} Alliance {team_header[0]}</center>",
+        unsafe_allow_html=True,
     )
 
     for team_num in team_df:
