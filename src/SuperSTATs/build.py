@@ -4,6 +4,7 @@ import altair as alt
 import pandas as pd
 import numpy as np
 import pickle
+import time
 import math
 
 
@@ -670,9 +671,12 @@ def gen_bar(
     if expanders:
         if st.toggle("Ranked Expanders"):
             with st.container(border=True):
+                start_time = time.time()
                 ranked = rank_df.sort_values(by="rank").astype(int)
+
                 for index, row in ranked.iterrows():
                     team_num = row["Team"]
+
                     scouting_expander(
                         df=df_scouting,
                         team_num=team_num,
@@ -681,6 +685,11 @@ def gen_bar(
                             st.session_state.tba_ranks[str(team_num)],
                         ],
                     )
+
+                st.markdown(
+                    f"<span style='font-size: small; color: #808080;'>Loaded in {round(time.time() - start_time, 2)} seconds...</span>",
+                    unsafe_allow_html=True,
+                )
 
     if use_presets == True and preset_choice == "None":
         preset_name = st.text_input("New Preset Name:")
