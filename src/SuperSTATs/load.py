@@ -277,53 +277,53 @@ def app_init():
             time.sleep(1)
             start_time = time.time()
 
-            st.text("- Downloading Team Info")
+            st.text("✅ Downloading Team Info")
             st.session_state.team_info = get_team_info()
 
-            st.text("- Getting Team Colors")
+            st.text("✅ Getting Team Colors")
             st.session_state.team_colors = get_team_colors()
 
-            st.text("- Initializing The Blue Alliance API")
+            st.text("✅ Initializing The Blue Alliance API")
             st.session_state.tba = tba
 
-            st.text("- Downloading Raw Data Sheet")
+            st.text("✅ Downloading Raw Data Sheet")
             df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
 
-            st.text("- Organizing Raw Data")
+            st.text("✅ Organizing Raw Data")
             df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
             df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
             st.session_state.df = df
 
-            st.text("- Downloading Picked Team Data")
+            st.text("✅ Downloading Picked Team Data")
             st.session_state.picked = download_sheets_raw(st.secrets["GID_PICKED"])
 
-            st.text("- Downloading Scouting Data")
+            st.text("✅ Downloading Scouting Data")
             st.session_state.scouting = download_sheets_raw(st.secrets["GID_SCOUTING"])
 
-            st.text("- Fetching Scouter Info")
+            st.text("✅ Fetching Scouter Info")
             get_scouters()
 
-            st.text("- Identifying Phases")
+            st.text("✅ Identifying Phases")
             st.session_state.phases = get_phases(st.session_state.df)
 
-            st.text("- Calculating Point Values")
+            st.text("✅ Calculating Point Values")
             st.session_state.points = point_values()
 
-            st.text("- Loading Match Data")
+            st.text("✅ Loading Match Data")
             st.session_state.match_data = get_match_data()
 
-            st.text("- Loading Matchs")
+            st.text("✅ Loading Matchs")
             st.session_state.matches = get_matches()
 
-            st.text("- Updating Played Matches")
+            st.text("✅ Updating Played Matches")
             st.session_state.unplayed_matches = get_unplayed(
                 st.session_state.df, st.session_state.matches
             )
 
-            st.text("- Loading TBA Rankings")
+            st.text("✅ Loading TBA Rankings")
             st.session_state.tba_ranks = get_tba_ranks()
 
-            st.text("- Fetching Presets")
+            st.text("✅ Fetching Presets")
             st.session_state.presets = get_presets()
 
             elapsed_time = round(time.time() - start_time, 2)
