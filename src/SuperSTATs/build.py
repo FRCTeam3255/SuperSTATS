@@ -228,6 +228,7 @@ def gen_match_comp(team_num, match_name, not_preview=True):
         match_name = match_scores["Match Name"].to_list()[0]
 
         query_url = f"Tracker/?team_num={team_num}&match_name={match_name}"
+
         button_style = (
             "background-color: #141414; border: 1px solid #424242; border-radius: 8px;"
             "color: #ffffff; text-align: center; text-decoration: none;"
@@ -240,6 +241,10 @@ def gen_match_comp(team_num, match_name, not_preview=True):
         )
 
     team_scores = match_scores.drop(columns=["Match Name"])
+
+    if team_scores.empty:
+        st.error(f"No data collected for team {team_num} in {match_name}")
+
     team_scores = team_scores.sum()
     team_scores["TOTAL"] = team_scores.sum()
 
@@ -272,11 +277,15 @@ def gen_match_comp(team_num, match_name, not_preview=True):
             use_colors = default_colors
 
         def score_markdown(color, score):
-            if use_team_colors:
-                px_size = "0.8px"
-                shadow_hex = "#4D4D4D"
-                return f"<span style='color: {color}; font-size: 2em; font-family:Arial; text-shadow: {px_size} 0 0 {shadow_hex}, -{px_size} 0 0 {shadow_hex}, 0 {px_size} 0 {shadow_hex}, 0 -{px_size} 0 {shadow_hex};'><b>{score}</b></span>"
-            return f"<span style='color: {color}; font-size: 2em; font-family:Arial;'><b>{score}</b></span>"
+            r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
+            brightness = (r * 299 + g * 587 + b * 114) / 1000
+            dark_hex = brightness < 80
+
+            if use_team_colors and dark_hex:
+                px_size = "0.6px"
+                shadow_hex = "#ffffff"
+                return f"<span style='color: {color}; font-size: 2.35em; font-family:Arial; text-shadow: {px_size} 0 0 {shadow_hex}, -{px_size} 0 0 {shadow_hex}, 0 {px_size} 0 {shadow_hex}, 0 -{px_size} 0 {shadow_hex};'><b>{score}</b></span>"
+            return f"<span style='color: {color}; font-size: 2.35em; font-family:Arial;'><b>{score}</b></span>"
 
         for i, phase in enumerate(phases):
             columns[i].markdown(
