@@ -276,23 +276,12 @@ def gen_match_comp(team_num, match_name, not_preview=True):
             config_columns[2].toggle("Use Secondary Color", disabled=True)
             use_colors = default_colors
 
-        def score_markdown(color, score):
-            r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
-            brightness = (r * 299 + g * 587 + b * 114) / 1000
-            dark_hex = brightness < 80
-
-            if use_team_colors and dark_hex:
-                px_size = "0.6px"
-                shadow_hex = "#ffffff"
-                return f"<span style='color: {color}; font-size: 2.35em; font-family:Arial; text-shadow: {px_size} 0 0 {shadow_hex}, -{px_size} 0 0 {shadow_hex}, 0 {px_size} 0 {shadow_hex}, 0 -{px_size} 0 {shadow_hex};'><b>{score}</b></span>"
-            return f"<span style='color: {color}; font-size: 2.35em; font-family:Arial;'><b>{score}</b></span>"
-
         for i, phase in enumerate(phases):
-            columns[i].markdown(
-                f"{score_markdown(use_colors[0], match_score[phase])}"
-                f"{score_markdown('#ffffff', ' / ')}"
-                f"{score_markdown(use_colors[1], team_averages[phase])}",
-                unsafe_allow_html=True,
+            columns[i].metric(
+                label=phase,
+                value=match_score[phase],
+                delta=(match_score[phase] - team_averages[phase]),
+                help=(f"{match_score[phase]} / {team_averages[phase]}"),
             )
     else:
         use_colors = default_colors
