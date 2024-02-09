@@ -8,14 +8,7 @@ setup = f"src\\setup"
 to_move = {
     f"{setup}\\pickles": "src\\pickles",
     f"{setup}\\streamlit\\secrets.toml": ".streamlit\\secrets.toml",
-    f"{setup}\\app\\run.bat": "run.bat",
 }
-
-batch_content = """@echo off
-set VENV_PATH=.venv\\Scripts\\activate
-call %VENV_PATH%
-streamlit run src\\SuperSTATs\\Main.py
-"""
 
 os.chdir(app_dir)
 
