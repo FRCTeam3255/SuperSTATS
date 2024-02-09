@@ -3,14 +3,6 @@ import streamlit as st
 import json
 
 
-st.set_page_config(
-    page_title="[STATS] SN Stats",
-    page_icon="🤖",
-    initial_sidebar_state="expanded",
-    layout="wide",
-)
-
-
 def show_raw(match_num, match_info, match_key):
     try:
         if st.toggle("📊 Show RAW Data", key=f"{match_num}_RAW"):
@@ -35,7 +27,7 @@ def main():
     st.title("")
 
     st.button("Update Page", type="primary", use_container_width=True)
-    st.markdown("""---""")
+    st.divider()
 
     df = st.session_state.df
 

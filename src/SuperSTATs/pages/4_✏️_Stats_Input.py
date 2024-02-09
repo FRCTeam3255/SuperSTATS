@@ -4,15 +4,8 @@ import streamlit as st
 import pandas as pd
 import requests
 
-st.set_page_config(
-    page_title="[SCOUT] SN Stats",
-    page_icon="🤖",
-    initial_sidebar_state="expanded",
-    layout="wide",
-)
 
-
-def get_matches(team):
+def get_match_scouts(team):
     match_list = st.session_state.matches["Match"].to_list()
     scouts = {}
     rotation = 3
@@ -22,9 +15,9 @@ def get_matches(team):
     i = 0
 
     while processed < len(match_list):
-        p1 = team[count]
-        p2 = team[count - 1]
-        p3 = team[count - 2]
+        scout_1 = team[count]
+        scout_2 = team[count - 1]
+        scout_3 = team[count - 2]
 
         if i % rotation == 0:
             count += 1
@@ -35,8 +28,9 @@ def get_matches(team):
         for match_type in ["Quals", "Playoffs", "Finals"]:
             for j in range(rotation):
                 match_name = f"{match_type} {(i + 1) + j}"
+
                 if match_name in match_list:
-                    scouts[match_name] = [p1, p2, p3]
+                    scouts[match_name] = [scout_1, scout_2, scout_3]
                     processed += 1
 
         i += rotation
@@ -48,10 +42,7 @@ def name_check(value, lst):
     mid_index = len(lst) // 2
     if value in lst[:mid_index]:
         return "R"
-    elif value in lst[mid_index:]:
-        return "B"
-    else:
-        return "Other"
+    return "B"
 
 
 def main():
@@ -65,7 +56,7 @@ def main():
     st.title("")
 
     st.button("Update Page", type="primary", use_container_width=True)
-    st.markdown("""---""")
+    st.divider()
 
     url = st.secrets["FORM_URL"]
 
@@ -94,24 +85,8 @@ def main():
 
     top_columns = st.columns(2)
 
-    df = st.session_state.df
     matches = st.session_state.matches
-
-    df["Completed"] = df["Match Type"] + " " + df["Match"].astype(str)
-    df_counts = df["Completed"].value_counts()
-
-    df["Completed"] = df["Completed"].apply(lambda x: x if df_counts[x] >= 3 else None)
-
-    df_unique = df["Completed"].dropna().unique()
-    matches_unique = matches["Match"].unique()
-
-    unplayed_matches = pd.concat(
-        [pd.DataFrame(df_unique), pd.DataFrame(matches_unique)]
-    ).drop_duplicates(keep=False)
-
-    unplayed_matches = [
-        match for sublist in unplayed_matches.values.tolist() for match in sublist
-    ]
+    unplayed_matches = st.session_state.unplayed_matches
 
     match_selection = top_columns[1].empty()
     input_match = match_selection.selectbox("Match:", unplayed_matches + ["Other"])
@@ -120,10 +95,10 @@ def main():
             "Match [OTHER]:", st.session_state.matches
         )
 
-    scouter_list = st.secrets["SCOUTER_LIST"]
+    scouter_list = st.session_state.assigned
 
-    red_scouts = get_matches(scouter_list[::2])[input_match]
-    blue_scouts = get_matches(scouter_list[1::2])[input_match]
+    red_scouts = get_match_scouts(scouter_list[::2])[input_match]
+    blue_scouts = get_match_scouts(scouter_list[1::2])[input_match]
     match_scouts = red_scouts + blue_scouts
 
     name_selection = top_columns[0].empty()
@@ -132,7 +107,7 @@ def main():
     if input_name == "SUB":
         bot_columns = st.columns(2)
         input_name = name_selection.selectbox("Original:", match_scouts).upper()
-        input_sub = bot_columns[0].text_input("Sub:", max_chars=2).upper()
+        input_sub = bot_columns[0].selectbox("Sub:", st.session_state.scouts).upper()
     else:
         input_sub = None
 
@@ -153,7 +128,7 @@ def main():
     color_icon = "🔴" if input_color == "R" else "🔵"
     input_name = f"{input_sub} [⇄]" if input_sub else input_name
 
-    st.markdown("""---""")
+    st.divider()
 
     st.markdown(
         f'<div style="text-align: center; font-size: 2.5em;">{color_icon} {input_team} | {st.session_state.team_info[input_team]} {color_icon}</div>',
@@ -181,7 +156,7 @@ def main():
     entry_responses = {}
 
     def phase_header(phase):
-        st.markdown("""---""")
+        st.divider()
         st.markdown(
             f'<div style="text-align: center; font-size: 32px;">{phase}</div>',
             unsafe_allow_html=True,
@@ -193,27 +168,29 @@ def main():
             entry_parts = entry.split("_")
             entry_name = entry_parts[1].title()
 
-            replacements = {
-                "⚠️": "Cone",
-                "🟪": "Cube",
-            }
-
-            for key, value in replacements.items():
-                entry_name = entry_name.replace(key, value)
+            feature_list = [
+                "Pick Up ⚠️ Off Ground",
+                "Double Substation",
+                "Pick Up 🟪 Off Ground",
+                "Single Substation",
+                "Pick Up Tipped ⚠️",
+                "Mechanism Damaged/Disabled",
+                "Tipped",
+            ]
 
             if entry_parts[2] == "INT":
                 entry_responses[entry] = st.number_input(
-                    (entry_name + ":"), min_value=0, step=1, key=entry
+                    (f"{entry_name}:"), min_value=0, step=1, key=entry
                 )
 
             elif entry_parts[2] == "STR":
                 selected_options = st.multiselect(
-                    (entry_name + ":"), ["K", "A", "N", "E"], key=entry
+                    (f"{entry_name}:"), feature_list, key=entry
                 )
                 entry_responses[entry] = ", ".join(selected_options)
 
             elif entry_parts[2] == "BOOL":
-                entry_responses[entry] = int(st.checkbox(entry_name, key=entry))
+                entry_responses[entry] = int(st.toggle(entry_name, key=entry))
 
     submitted = False
 
@@ -231,7 +208,7 @@ def main():
         gen_phase_input("INFO")
         gen_phase_input("COMMENT")
 
-        st.markdown("""---""")
+        st.divider()
 
         gen_combined = {}
 
@@ -261,8 +238,7 @@ def main():
     if submitted:
         requests.get(prefill_url)
         st.balloons()
-        st.success("Submission successful! Please refresh the page...")
-        load.play_audio("yippee.mp3", 4)
+        st.toast("Submission successful! Please refresh the page...", icon="✅")
 
 
 if __name__ == "__main__":

@@ -2,6 +2,15 @@
 
 <span style="font-size: 1.2em;">Welcome to SuperSTATs, a tool designed to process and analyze FIRST Robotics competition collected data in a user-friendly manner developed by FRC team 3255, the [SuperNURDs](https://www.frcteam3255.com/). The app is built using Python and leverages several libraries to perform statistical operations and display them in an easily manageable and configurable way.</span>
 
+## Contents
+
+[🚀 Getting Started](#getting-started) |
+[⚙️ Setup](#setup) |
+[📈 Usage](#usage) |
+[💡 Get Involved](#get-involved) |
+[💎 Contributors](#contributors) |
+[📜 License](#license)
+
 ## Getting Started
 
 <span style="font-size: 1.2em;">To get started with SuperSTATs, follow these steps:</span>
@@ -12,72 +21,37 @@
    git clone https://github.com/FRCTeam3255/SuperSTATS.git
     ```
 
-3. Navigate to the cloned directory:
+2. Navigate to the cloned directory:
 
     ```
    cd SuperSTATS/
     ```
 
-4. Create a virtual environment:
+3. Run the setup script with one of the following depending on your Python installation
+
+   ```
+   python3 -m src/setup/setup.py
+   ```
+
+   ```
+   py src/setup/setup.py
+   ```
     
-    > ⚠️ Make sure you have Python installed. If not, download and install it from [python.org](https://www.python.org/downloads/). Ensure that Python is added to your system PATH.
-
-    ```
-   python3 -m venv .venv
-    ```
-
-5. Activate the virtual environment:
-
-    ```
-   source .venv/Scripts/activate
-    ```
-
-7. Install the required dependencies:
-
-    ```
-   pip install -e .
-    ```
-
-    Or install them manually with:
-
-    ```
-   pip install streamlit~=1.30 tbapy~=1.3 urllib3~=1.26 plotly~=5.17 beautifulsoup4~=4.12.2
-    ```
-
-9. Create secrets.toml in `SuperSTATs/.streamlit`:
-
-    ```
-    GSHEET_DOC_ID = "GOOGLE_SHEET_ID"
-    TBA_API = "THE_BLUE_ALLIANCE_API_KEY"
-    
-    GID_RAW = "RAW_STATS_DATA_GID"
-    GID_PICKED = "PICKED_TEAMS_GID"
-    GID_MATCHES = "MATCH_LIST_GID"
-    GID_SCOUTING = "SCOUTING_DATA_GID"
-    
-    FORM_URL = "GOOGLE_FORM_URL"
-    
-    TEAM_NUMBER = TEAM_NUMBER
-    DEFAULT_EVENT_KEY = "EVENT_KEY"
-
-    SCOUTER_LIST = ["NAME_1", "NAME_2", "NAME_3", ...]
-    ```
-
 ## Setup
 
 <span style="font-size: 1.2em;">To start the stats app, run the startup script:</span>
 
 ```
-./run
+./run.bat
 ```
 
 Or launch it manually with Streamlit:
 
+> ⚠️ Make sure you have enabled your venv environment using `source .venv/Scripts/activate`, otherwise this method will not work.
+
 ```
 streamlit run src/SuperSTATs/Main.py
 ```
-
-> ⚠️ Make sure you have enabled your venv environment using `.venv/Scripts/activate`, otherwise this method will not work.
 
 <span style="font-size: 1.2em;">All set! Head to http://localhost:8501 to access the app, or the URL provided when launching.</span>
 
@@ -85,7 +59,7 @@ streamlit run src/SuperSTATs/Main.py
 
 N/A
 
-## Contributing
+## Get Involved
 
 <span style="font-size: 1.2em;">We welcome and greatly appreciate contributions to enhance SuperSTATs! Whether you find a bug, have a suggestion, or want to contribute code, your input is valuable to us. Here's how you can help out:<span>
 
@@ -115,7 +89,11 @@ N/A
 
 <span style="font-size: 1.2em;">Feel free to [reach out](https://www.frcteam3255.com/contact) if you have any questions or need assistance in contributing!</span>
 
+## Contributors
 
+- [Kane Barnes](https://github.com/FRCTeam3255/SuperSTATS/commits/package-conversion/?author=KaneBarnes) - [3255](https://github.com/FRCTeam3255)
+
+- [Tayler Uva](https://github.com/FRCTeam3255/SuperSTATS/commits/package-conversion/?author=TaylerUva) - [3255](https://github.com/FRCTeam3255)
 
 ## License
 

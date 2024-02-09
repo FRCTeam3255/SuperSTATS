@@ -1,7 +1,6 @@
 import SuperSTATs.build as build
 import SuperSTATs.load as load
 import streamlit as st
-import pandas as pd
 
 
 def main():
@@ -15,7 +14,7 @@ def main():
     st.title("")
 
     st.button("Update Page", type="primary", use_container_width=True)
-    st.markdown("""---""")
+    st.divider()
 
     build.gen_bar()
 

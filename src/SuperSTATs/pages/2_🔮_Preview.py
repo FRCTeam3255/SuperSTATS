@@ -15,54 +15,25 @@ def display_team(
     match_choice,
 ):
     df = st.session_state.scouting
-    column.header(
-        f"{team_header[0]} {team_header[1]} Alliance {team_header[0]}", anchor=False
+
+    column.markdown(
+        f"<center style='font-size: 2.5em;'>{team_header[0]} {team_header[1]} Alliance {team_header[0]}</center>",
+        unsafe_allow_html=True,
     )
 
     for team_num in team_df:
         build.scouting_expander(
-            team_num=team_num,
             df=df,
+            team_num=team_num,
+            match_name=match_choice,
             start_expanded=start_expanded,
             calc_bumpers=calc_bumpers,
-            error_prefix=True,
             column=column,
         )
 
     column.markdown("""---""")
 
-    score_df = st.session_state.df
-    phases = st.session_state.phases
-
-    phase_count = len(
-        [
-            col
-            for col in score_df.columns
-            if any(col.startswith(f"{phase}_") for phase in phases)
-            and not col.startswith("COMMENT_GENERAL_STR_1")
-        ]
-    ) * len(team_df)
-
-    alliance_score = pd.DataFrame(columns=phases)
-    match_count = 0
-
-    for team in team_df:
-        team_score = score_df[score_df["Team"] == team]
-
-        for i in range(len(phases)):
-            team_score.loc[:, phases[i]] = build.add_cols(
-                team_score,
-                phases[i],
-            )
-
-        match_count += len(team_score)
-        team_score = team_score[phases].sum().to_frame().T
-        alliance_score = pd.concat([alliance_score, team_score], ignore_index=True)
-
-    alliance_score = alliance_score.sum().sum()
-    projected_score = round(
-        (alliance_score / phase_count) * round(match_count / len(team_df))
-    )
+    projected_score = build.calc_projected(team_df)
 
     text_color = "#f8312f" if team_header[0] == "🔴" else "#0074ba"
     column.markdown(
@@ -76,8 +47,16 @@ def display_team(
     actual_score = match_breakdown[team_header[1].lower()]["totalPoints"]
 
     match_key = match_df["key"].to_list()[0]
+    match_url = f"https://www.thebluealliance.com/match/{match_key}"
+
+    percent_error = (
+        round((actual_score - projected_score) / actual_score * 100)
+        if actual_score != 0
+        else "inf"
+    )
+
     column.markdown(
-        f"<h6><a href='https://www.thebluealliance.com/match/{match_key}' style='color: #808080; text-decoration: none;'>Actual Score: {actual_score}</a></h6>",
+        f"<h6><a href='{match_url}' style='color: #808080; text-decoration: none;'>Actual Score: {actual_score} ({percent_error}%)</a></h6>",
         unsafe_allow_html=True,
     )
 
@@ -87,8 +66,12 @@ def display_team(
         with column.container():
             build.gen_bar(
                 key=column,
+                use_presets=False,
+                use_group_filters=False,
                 use_hide_picked=False,
+                use_hide_nums=False,
                 use_features=False,
+                use_agg_type=False,
                 use_max_size=False,
                 displayed_teams=team_df,
                 compared_teams=opposing_df,
@@ -103,11 +86,13 @@ def main():
     import SuperSTATs.styles as style
 
     st.markdown(style.shimmer("#d9adff"), unsafe_allow_html=True)
-    st.markdown("<div class='shimmer'>🔮 Match Preview 🔮</div>", unsafe_allow_html=True)
+    st.markdown(
+        "<div class='shimmer'>🔮 Match Preview 🔮</div>", unsafe_allow_html=True
+    )
     st.title("")
 
     st.button("Update Page", type="primary", use_container_width=True)
-    st.markdown("""---""")
+    st.divider()
 
     df = st.session_state.matches
 
@@ -152,8 +137,8 @@ def main():
     columns = st.columns(3)
 
     start_expanded = columns[0].toggle("Auto Expand Scouting", False)
-    calc_bumpers = columns[1].toggle("Calculate Bumpers", True)
-    combined_chart = columns[2].toggle("Show Combined Chart", False)
+    combined_chart = columns[1].toggle("Show Combined Chart", False)
+    calc_bumpers = columns[2].toggle("Calculate Bumpers", True)
 
     columns = st.columns(2)
 
@@ -180,11 +165,31 @@ def main():
     )
 
     if combined_chart:
+        match_teams = red_alliance + blue_alliance
+        toggled_teams = []
+
+        with st.expander("Toggle Teams", False):
+            columns = st.columns(len(match_teams))
+
+            for i, team in enumerate(match_teams):
+                toggled_state = columns[i].toggle(
+                    str(team), True, key=f"{team}_toggle_state"
+                )
+
+                if toggled_state:
+                    toggled_teams.append(team)
+
+        if len(toggled_teams) == 0:
+            toggled_teams = red_alliance + blue_alliance
+
         build.gen_bar(
-            use_max_size=False,
-            displayed_teams=red_alliance + blue_alliance,
-            expanders=False,
+            use_presets=False,
+            use_hide_picked=False,
             use_inline_legend=False,
+            use_features=False,
+            use_max_size=False,
+            displayed_teams=toggled_teams,
+            expanders=False,
         )
 
 
