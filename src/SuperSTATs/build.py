@@ -277,10 +277,12 @@ def gen_match_comp(team_num, match_name, not_preview=True):
             use_colors = default_colors
 
         for i, phase in enumerate(phases):
+            delta = match_score[phase] - team_averages[phase]
             columns[i].metric(
                 label=phase,
                 value=match_score[phase],
-                delta=(match_score[phase] - team_averages[phase]),
+                delta=delta,
+                delta_color="off" if delta == 0 else "normal",
                 help=(f"{match_score[phase]} / {team_averages[phase]}"),
             )
     else:
