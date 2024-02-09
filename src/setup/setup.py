@@ -24,8 +24,7 @@ for py in ["python3", "py"]:
             shutil.move(origin, destination)
 
         print("Removing empty folders")
-        for folder in ["streamlit", "app"]:
-            os.rmdir(f"{setup}\\{folder}")
+        os.rmdir(f"{setup}\\streamlit")
 
         print("Installing libraries...")
         os.system("call .venv/Scripts/activate & pip install -e .")
