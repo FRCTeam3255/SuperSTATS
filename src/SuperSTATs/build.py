@@ -615,23 +615,16 @@ def gen_bar(
         )
 
     else:
-        group_filters = ""
-        inline_legend = ""
-        hide_picked = ""
-        hide_nums = ""
-        features = ""
-        agg_type = ""
-        selected_filters = [""]
-        no_data = ""
+        no_data = False
 
     if preset_choice != "None":
         preset = presets[preset_choice]
+        data = pd.DataFrame(preset["data"])
+        x_min, x_max = preset["x_range"]
         hide_nums = preset["hide_nums"]
-        x_min = preset["x_range"][0]
-        x_max = preset["x_range"][1]
+        selected_filters = preset["selected_filters"]
         inline_legend = preset["inline_legend"]
         group_filters = preset["group_filters"]
-        data = pd.DataFrame(preset["data"])
 
     chart = (
         alt.Chart(data)
@@ -677,7 +670,7 @@ def gen_bar(
     else:
         st.error("Please select at least one filter")
 
-    if expanders:
+    if expanders and preset_choice == "None":
         if st.toggle("Ranked Expanders"):
             with st.container(border=True):
                 start_time = time.time()
@@ -703,16 +696,17 @@ def gen_bar(
     if use_presets == True and preset_choice == "None":
         preset_name = st.text_input("New Preset Name:")
 
-        if preset_name:
+        if preset_name.replace(" ", ""):
             if st.button("Add Preset", use_container_width=True):
                 presets[preset_name] = {
-                    "hide_nums": hide_nums,
+                    "data": data.to_dict(),
                     "x_range": x_range,
-                    "x_max": x_max,
+                    "hide_nums": hide_nums,
+                    "selected_filters": selected_filters,
                     "inline_legend": inline_legend,
                     "group_filters": group_filters,
-                    "data": data.to_dict(),
                 }
+
                 with open("src\\pickles\\presets.pickle", "wb") as f:
                     pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
                 st.toast("Successfully added preset!", icon="✅")
