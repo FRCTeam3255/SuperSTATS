@@ -335,6 +335,26 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     with alt_size[0].container():
         st.altair_chart(chart, use_container_width=True)
 
+    if not_preview:
+        st.divider()
+
+        column_config = {}
+        for phase in [phase for phase in phases if phase != "COMMENT"]:
+            column_config[phase] = st.column_config.ProgressColumn(
+                phase.title(),
+                format="%f",
+                min_value=min(team_df[phase]),
+                max_value=max(team_df[phase]),
+            )
+
+        st.data_editor(
+            team_df.drop(columns=["COMMENT"]),
+            column_config=column_config,
+            hide_index=True,
+            use_container_width=True,
+            disabled=True,
+        )
+
 
 def gen_bar(
     df=st.session_state.df,
