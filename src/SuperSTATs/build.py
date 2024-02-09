@@ -338,18 +338,24 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     if not_preview:
         st.divider()
 
+        match_progress = team_df
+        match_progress["Match Name"] = match_progress["Match Name"].apply(
+            lambda x: f"{x} ⭐" if x == match_name else x
+        )
+
         column_config = {}
         for phase in [phase for phase in phases if phase != "COMMENT"]:
             column_config[phase] = st.column_config.ProgressColumn(
                 phase.title(),
-                format="%f",
-                min_value=min(team_df[phase]),
-                max_value=max(team_df[phase]),
+                format=f"%f/{max(match_progress[phase])}",
+                min_value=min(match_progress[phase]),
+                max_value=max(match_progress[phase]),
             )
 
         st.data_editor(
-            team_df.drop(columns=["COMMENT"]),
+            match_progress.drop(columns=["COMMENT"]),
             column_config=column_config,
+            column_order=("Match Name", "AUTO", "TELE", "END", "INFO"),
             hide_index=True,
             use_container_width=True,
             disabled=True,
