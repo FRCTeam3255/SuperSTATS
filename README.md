@@ -21,49 +21,22 @@
    git clone https://github.com/FRCTeam3255/SuperSTATS.git
     ```
 
-3. Navigate to the cloned directory:
+2. Navigate to the cloned directory:
 
     ```
    cd SuperSTATS/
     ```
 
-4. Create a virtual environment:
+3. Run the setup script with one of the following depending on your Python installation
+
+   ```
+   python3 -m src/setup/setup.py
+   ```
+
+   ```
+   py src/setup/setup.py
+   ```
     
-    > ⚠️ Make sure you have Python installed. If not, download and install it from [python.org](https://www.python.org/downloads/). Ensure that Python is added to your system PATH.
-
-    ```
-   python3 -m venv .venv
-    ```
-
-5. Activate the virtual environment:
-
-    ```
-   source .venv/Scripts/activate
-    ```
-
-7. Install the required dependencies:
-
-    ```
-   pip install -e .
-    ```
-
-9. Within the `SuperSTATs/.streamlit` folder create `secrets.toml` and add your values:
-
-    ```
-    GSHEET_DOC_ID = "YOUR_GOOGLE_SHEET_ID_HERE"
-    TBA_API = "YOUR_BLUE_ALLIANCE_API_KEY_HERE"
-
-    GID_RAW = "RAW_STATS_DATA_GID_HERE"
-    GID_PICKED = "PICKED_TEAMS_GID_HERE"
-    GID_MATCHES = "MATCH_LIST_GID_HERE"
-    GID_SCOUTING = "SCOUTING_DATA_GID_HERE"
-
-    FORM_URL = "YOUR_GOOGLE_FORM_URL_HERE"
-
-    TEAM_NUMBER = "YOUR_TEAM_NUMBER_HERE"
-    DEFAULT_EVENT_KEY = "EVENT_KEY_HERE"
-    ```
-
 ## Setup
 
 <span style="font-size: 1.2em;">To start the stats app, run the startup script:</span>
@@ -74,7 +47,7 @@
 
 Or launch it manually with Streamlit:
 
-> ⚠️ Make sure you have enabled your venv environment using `.venv/Scripts/activate`, otherwise the manual method will not work.
+> ⚠️ Make sure you have enabled your venv environment using `.venv/Scripts/activate`, otherwise this method will not work.
 
 ```
 streamlit run src/SuperSTATs/Main.py
