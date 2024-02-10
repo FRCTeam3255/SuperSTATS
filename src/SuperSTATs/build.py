@@ -367,8 +367,8 @@ def gen_bar(
     key=0,
     use_presets=True,
     use_group_filters=True,
-    use_hide_picked=True,
-    use_hide_nums=True,
+    use_show_available=True,
+    use_show_nums=True,
     use_inline_legend=True,
     use_features=True,
     use_agg_type=True,
@@ -384,8 +384,8 @@ def gen_bar(
     variables = [
         "group_filters" if use_group_filters else None,
         "inline_legend" if use_inline_legend else None,
-        "hide_picked" if use_hide_picked else None,
-        "hide_nums" if use_hide_nums else None,
+        "show_available" if use_show_available else None,
+        "show_nums" if use_show_nums else None,
         "features" if use_features else None,
     ]
 
@@ -429,12 +429,12 @@ def gen_bar(
             "inline_legend", var_count, "Inline Legend", True, key
         )
 
-        hide_picked, var_count = gen_toggle(
-            "hide_picked", var_count, "Hide Picked Teams", False, key
+        show_available, var_count = gen_toggle(
+            "show_available", var_count, "Availability", True, key
         )
 
-        hide_nums, var_count = gen_toggle(
-            "hide_nums", var_count, "Hide Team Numbers", False, key
+        show_nums, var_count = gen_toggle(
+            "show_nums", var_count, "Team Numbers", True, key
         )
 
         features, var_count = gen_toggle("features", var_count, "Features", False, key)
@@ -470,12 +470,8 @@ def gen_bar(
         if not use_inline_legend:
             inline_legend = False
 
-        if hide_picked:
-            picked = pd.DataFrame(st.session_state.picked)
-            picked = picked[
-                picked["Unavailable"].str.contains("x", case=False, na=False)
-            ]
-            df = df[~df["Team"].isin(picked["Team"])]
+        picked = pd.DataFrame(st.session_state.picked)
+        picked = picked[picked["Unavailable"].str.contains("x", case=False, na=False)]
 
         if displayed_teams:
             df = df[df["Team"].isin(displayed_teams + compared_teams)]
@@ -589,7 +585,7 @@ def gen_bar(
             )
 
             if size_limit == unscouted_size:
-                st.warning("WARNING: Viewing unscouted teams")
+                st.toast("Viewing unscouted teams", icon="⚠️")
 
             df["Frame Size LENGTH"] = df["Frame Size LENGTH"].fillna(unscouted_size)
             df["Frame Size WIDTH"] = df["Frame Size WIDTH"].fillna(unscouted_size)
@@ -612,11 +608,15 @@ def gen_bar(
 
         calc_df["Score Sum"] = calc_df[selected_filters].sum(axis=1)
 
-        x_min = (
-            math.floor(calc_df.min().min()) - 2
-            if calc_df.min().min() < 0
-            else math.floor(calc_df.min().min())
-        )
+        try:
+            x_min = (
+                math.floor(calc_df.min().min()) - 2
+                if calc_df.min().min() < 0
+                else math.floor(calc_df.min().min())
+            )
+        except:
+            st.error("No bots found with selected features")
+            st.stop()
 
         x_range = (
             x_range if x_range else [x_min, (round(calc_df["Score Sum"].max()) + 2)]
@@ -627,8 +627,19 @@ def gen_bar(
 
         tba_rankings = st.session_state.tba_ranks
 
+        def format_y(team, show_available, picked):
+            if show_available:
+                picked = "🔴" if team in picked["Team"].values else "🟢"
+
+            else:
+                picked = ""
+
+            rank = str(tba_rankings.get(str(team), "NA")).zfill(2)
+
+            return f"{picked} {str(team).rjust(4)} [{rank}]"
+
         data["Team"] = data["Team"].apply(
-            lambda team: f"{team} [{str(tba_rankings.get(str(team), 'NA')).zfill(2)}]"
+            lambda team: format_y(team, show_available, picked)
         )
 
     else:
@@ -638,7 +649,7 @@ def gen_bar(
         preset = presets[preset_choice]
         data = pd.DataFrame(preset["data"])
         x_min, x_max = preset["x_range"]
-        hide_nums = preset["hide_nums"]
+        show_nums = preset["show_nums"]
         selected_filters = preset["selected_filters"]
         inline_legend = preset["inline_legend"]
         group_filters = preset["group_filters"]
@@ -652,7 +663,7 @@ def gen_bar(
                 "Team:N",
                 sort=alt.EncodingSortField(field="rank", order="ascending"),
                 title="",
-                axis=alt.Axis(labels=not hide_nums),
+                axis=alt.Axis(labels=show_nums),
             ),
             color=alt.Color(
                 "variable:N",
@@ -718,7 +729,7 @@ def gen_bar(
                 presets[preset_name] = {
                     "data": data.to_dict(),
                     "x_range": x_range,
-                    "hide_nums": hide_nums,
+                    "show_nums": show_nums,
                     "selected_filters": selected_filters,
                     "inline_legend": inline_legend,
                     "group_filters": group_filters,

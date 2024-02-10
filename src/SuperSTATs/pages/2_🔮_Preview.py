@@ -68,8 +68,8 @@ def display_team(
                 key=column,
                 use_presets=False,
                 use_group_filters=False,
-                use_hide_picked=False,
-                use_hide_nums=False,
+                use_show_available=False,
+                use_show_nums=False,
                 use_features=False,
                 use_agg_type=False,
                 use_max_size=False,
@@ -184,7 +184,7 @@ def main():
 
         build.gen_bar(
             use_presets=False,
-            use_hide_picked=False,
+            use_show_available=False,
             use_inline_legend=False,
             use_features=False,
             use_max_size=False,
