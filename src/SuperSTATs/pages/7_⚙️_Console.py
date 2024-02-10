@@ -129,9 +129,11 @@ def main():
                 bytes_formatted = bytes_data.decode("utf-8")
                 data = json.loads(bytes_formatted)
 
-                st.session_state.team_colors = data
                 with open(colors_path, "wb") as f:
                     pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
+
+                st.session_state.team_colors = data
+                load.get_team_colors.clear()
 
                 st.toast("Successfully Updated Colors!", icon="✅")
 
