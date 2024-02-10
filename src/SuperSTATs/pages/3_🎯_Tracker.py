@@ -55,7 +55,7 @@ def main():
         match_index = 0
         if url_query:
             st.query_params.clear()
-            st.toast("URL Parameters Cleared", icon="🗑️")
+            st.toast("URL parameters cleared", icon="🗑️")
 
     match_name = columns[1].selectbox(
         "Match:",

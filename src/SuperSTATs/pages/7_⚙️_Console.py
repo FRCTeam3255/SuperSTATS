@@ -50,7 +50,7 @@ def main():
             with open("src\\pickles\\scouts.pickle", "wb") as f:
                 pickle.dump([scouts, scout_list], f, pickle.HIGHEST_PROTOCOL)
 
-            st.toast("Successfully Set Scouters!", icon="✅")
+            st.toast("Successfully set scouters! Please refresh...", icon="✅")
 
     with st.expander("Presets"):
         uploaded_file = st.file_uploader("Override Presets:", ".json")
@@ -67,7 +67,7 @@ def main():
                 with open(presets_path, "wb") as f:
                     pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
 
-                st.toast("Successfully Updated Presets!", icon="✅")
+                st.toast("Successfully updated presets! Please refresh...", icon="✅")
 
         with open(presets_path, "rb") as f:
             presets = pickle.load(f)
@@ -110,7 +110,7 @@ def main():
                     with open(presets_path, "wb") as f:
                         pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
 
-                    st.toast("Successfully Deleted Presets!", icon="🗑️")
+                    st.toast("Successfully deleted presets! Please refresh...", icon="🗑️")
 
             else:
                 st.error("No Presets Found")
@@ -135,7 +135,7 @@ def main():
                 st.session_state.team_colors = data
                 load.get_team_colors.clear()
 
-                st.toast("Successfully Updated Colors!", icon="✅")
+                st.toast("Successfully updated colors! Please refresh...", icon="✅")
 
         try:
             with open(colors_path, "rb") as f:
