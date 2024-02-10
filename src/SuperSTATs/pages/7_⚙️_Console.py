@@ -8,6 +8,7 @@ def main():
     load.app_init()
 
     presets_path = "src\\pickles\\presets.pickle"
+    colors_path = "src\\pickles\\colors.pickle"
 
     import SuperSTATs.styles as style
 
@@ -62,6 +63,7 @@ def main():
                 bytes_formatted = bytes_data.decode("utf-8")
                 data = json.loads(bytes_formatted)
 
+                st.session_state.presets = data
                 with open(presets_path, "wb") as f:
                     pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
 
@@ -115,6 +117,37 @@ def main():
 
         except:
             st.error("No Presets Found")
+
+    with st.expander("Colors"):
+        uploaded_file = st.file_uploader("Upload Team Colors:", ".json")
+
+        if uploaded_file is not None:
+            st.divider()
+
+            if st.button("Set Colors", type="primary", use_container_width=True):
+                bytes_data = uploaded_file.getvalue()
+                bytes_formatted = bytes_data.decode("utf-8")
+                data = json.loads(bytes_formatted)
+
+                st.session_state.team_colors = data
+                with open(colors_path, "wb") as f:
+                    pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
+
+                st.toast("Successfully Updated Colors!", icon="✅")
+
+        try:
+            with open(colors_path, "rb") as f:
+                colors = pickle.load(f)
+
+            st.download_button(
+                f"Download colors",
+                json.dumps(colors).encode("utf-8"),
+                "colors.json",
+                type="primary",
+                use_container_width=True,
+            )
+        except:
+            pass
 
 
 if __name__ == "__main__":

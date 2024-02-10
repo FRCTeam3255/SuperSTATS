@@ -257,7 +257,7 @@ def gen_match_comp(team_num, match_name, not_preview=True):
 
     if not_preview:
         use_team_colors = config_columns[1].toggle("Use Team Colors")
-        team_colors = st.session_state.team_colors[team_num]
+        team_colors = st.session_state.team_colors[str(team_num)]
 
         if use_team_colors:
             if team_colors[0] == "003255" or team_colors[1] == "003255":
@@ -344,7 +344,7 @@ def gen_match_comp(team_num, match_name, not_preview=True):
         )
 
         column_config = {}
-        for phase in [phase for phase in phases if phase != "COMMENT"]:
+        for phase in ["AUTO", "TELE", "END", "INFO"]:
             column_config[phase] = st.column_config.ProgressColumn(
                 phase.title(),
                 format=f"%f/{max(match_progress[phase])}",

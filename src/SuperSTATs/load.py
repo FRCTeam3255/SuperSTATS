@@ -94,11 +94,18 @@ def get_team_colors():
             recorded = pickle.load(f)
 
         for team in team_info.keys():
-            colors = recorded[team]
-            if colors == None or colors == ["003255", "003255"]:
+            try:
+                colors = recorded[str(team)]
+
+                if colors == None or colors == ["003255", "003255"]:
+                    unrecorded.append(team)
+
+                else:
+                    team_colors[str(team)] = colors
+
+            except:
                 unrecorded.append(team)
-            else:
-                team_colors[team] = colors
+
     except:
         unrecorded.extend(team for team in team_info.keys())
 
@@ -107,35 +114,31 @@ def get_team_colors():
         teams_url += f"team={team}&"
 
     api = f"https://frc-colors.com/api/v1/team"
+    response = requests.get(f"{api}/3255", timeout=5)
 
-    try:
-        requests.get(f"{api}/3255", timeout=5)
-
+    if response.status_code == 200:
         response = requests.get(f"{api}?{teams_url}")
         raw_data = response.json()
 
-        for team, colors in raw_data["colors"].items():
+        for team, colors in raw_data["teams"].items():
+            colors = colors["colors"]
+
             if colors != None:
                 primary_color = colors["primaryHex"]
                 secondary_color = colors["secondaryHex"]
-                team_colors[int(team)] = [primary_color, secondary_color]
+                team_colors[str(team)] = [primary_color, secondary_color]
+
             else:
-                team_colors[int(team)] = ["003255", "003255"]
+                team_colors[str(team)] = ["003255", "003255"]
 
         with open("src\\pickles\\colors.pickle", "wb") as f:
             pickle.dump(team_colors, f, pickle.HIGHEST_PROTOCOL)
-    except:
+
+    else:
         for team in unrecorded:
             team_colors[team] = ["003255", "003255"]
 
     return team_colors
-
-
-def check_team_colors():
-    stuff = st.session_state.team_colors
-    values = list(stuff.values())
-    if len(set(map(str, values))) == 1:
-        get_team_colors.clear()
 
 
 def get_match_data():
@@ -232,6 +235,7 @@ def get_tba_ranks():
 
 def get_presets():
     presets_path = "src\\pickles\\presets.pickle"
+
     try:
         with open(presets_path, "rb") as f:
             presets = pickle.load(f)

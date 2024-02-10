@@ -65,7 +65,7 @@ def main():
             team = int(str(team).split(" | ")[0])
 
             use_team_colors = columns[1].toggle("Use Team Colors")
-            team_colors = st.session_state.team_colors[team]
+            team_colors = st.session_state.team_colors[str(team)]
 
             if use_team_colors:
                 if team_colors[0] == "003255" or team_colors[1] == "003255":
