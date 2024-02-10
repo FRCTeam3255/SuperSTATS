@@ -44,10 +44,10 @@ def main():
             ]
 
             if str(data) != "nan":
-                red_data = str(data["red"]["totalPoints"]).zfill(3)
-                blue_data = str(data["blue"]["totalPoints"]).zfill(3)
+                red_data = str(data["red"]["totalPoints"]).ljust(3)
+                blue_data = str(data["blue"]["totalPoints"]).ljust(3)
 
-                if red_data > blue_data:
+                if int(red_data) > int(blue_data):
                     red_data = f"🔴 {str(red_data)} 🏆"
                     blue_data = f"🔵 {str(blue_data)}"
                 else:
@@ -97,7 +97,10 @@ def main():
         else:
             matches = matches.astype(str)
 
-        st.table(matches)
+        st.dataframe(
+            matches.set_index("Match"),
+            use_container_width=True,
+        )
 
     with st.expander("Event Keys", True):
         columns = st.columns(2)

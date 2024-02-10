@@ -55,7 +55,7 @@ def scouting_expander(
     has_data = False if time_logged == "nan" else True
 
     if len(rank_info) == 2:
-        expander_name += f" [🦸#{rank_info[0]}/💎#{rank_info[1]}]"
+        expander_name += f" [🦸{rank_info[0]}/💎{rank_info[1]}]"
 
     with column.expander(
         f"{expander_name} {'⚠️' if not has_data else ''}", start_expanded
@@ -108,6 +108,9 @@ def scouting_expander(
                     f"<span style='font-size: small; color: #808080;'>Time Logged: {time_logged}</span>",
                     unsafe_allow_html=True,
                 )
+
+        else:
+            st.error("⚠️ No scouting data!")
 
 
 def calc_projected(team_df, show_ungrouped=False, return_row=False):
@@ -283,7 +286,7 @@ def gen_match_comp(team_num, match_name, not_preview=True):
                 value=match_score[phase],
                 delta=delta,
                 delta_color="off" if delta == 0 else "normal",
-                help=(f"{match_score[phase]} / {team_averages[phase]}"),
+                label_visibility="hidden",
             )
     else:
         use_colors = default_colors
@@ -409,10 +412,10 @@ def gen_bar(
 
     var_count = 0
 
-    def gen_toggle(var_name, var_count, box_name, default, key):
+    def gen_toggle(var_name, var_count, box_name, default, key, disabled):
         if var_name in variables:
             variable = columns[var_count].toggle(
-                box_name, default, key=f"{var_name}_{key}"
+                box_name, default, key=f"{var_name}_{key}", disabled=disabled
             )
             var_count += 1
         else:
@@ -422,22 +425,24 @@ def gen_bar(
 
     if preset_choice == "None":
         group_filters, var_count = gen_toggle(
-            "group_filters", var_count, "Group Filters", True, key
+            "group_filters", var_count, "Group Filters", True, key, False
         )
 
         inline_legend, var_count = gen_toggle(
-            "inline_legend", var_count, "Inline Legend", True, key
+            "inline_legend", var_count, "Inline Legend", True, key, group_filters
         )
 
         show_available, var_count = gen_toggle(
-            "show_available", var_count, "Availability", True, key
+            "show_available", var_count, "Availability", use_show_available, key, False
         )
 
         show_nums, var_count = gen_toggle(
-            "show_nums", var_count, "Team Numbers", True, key
+            "show_nums", var_count, "Team Numbers", True, key, False
         )
 
-        features, var_count = gen_toggle("features", var_count, "Features", False, key)
+        features, var_count = gen_toggle(
+            "features", var_count, "Features", False, key, False
+        )
 
         if use_agg_type:
             agg_type = st.selectbox(
@@ -570,7 +575,7 @@ def gen_bar(
         rank_df["rank"] = rank_df.sum(axis=1).rank(ascending=False).astype(int)
         rank_df.reset_index(inplace=True)
 
-        if use_max_size:
+        if use_max_size and features:
             min_size = df[["Frame Size LENGTH", "Frame Size WIDTH"]].min().min()
             max_size = df[["Frame Size LENGTH", "Frame Size WIDTH"]].max().max()
             unscouted_size = max_size + 0.5
@@ -579,7 +584,7 @@ def gen_bar(
                 "Max Size:",
                 min_value=min_size,
                 max_value=unscouted_size,
-                value=max_size,
+                value=unscouted_size,
                 step=0.5,
                 key=f"size_limit_{key}",
             )
@@ -629,7 +634,11 @@ def gen_bar(
 
         def format_y(team, show_available, picked):
             if show_available:
-                picked = "🔴" if team in picked["Team"].values else "🟢"
+                picked = (
+                    "💎"
+                    if team == st.secrets["TEAM_NUMBER"]
+                    else "🔴" if team in picked["Team"].values else "🟢"
+                )
 
             else:
                 picked = ""
