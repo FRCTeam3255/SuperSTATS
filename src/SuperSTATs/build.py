@@ -429,7 +429,12 @@ def gen_bar(
         )
 
         inline_legend, var_count = gen_toggle(
-            "inline_legend", var_count, "Inline Legend", True, key, group_filters
+            "inline_legend",
+            var_count,
+            "Inline Legend",
+            not group_filters,
+            key,
+            group_filters,
         )
 
         show_available, var_count = gen_toggle(

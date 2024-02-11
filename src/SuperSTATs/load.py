@@ -57,7 +57,7 @@ def get_phases(df):
     return sorted(list(set(phases)))
 
 
-def point_values():
+def get_point_values():
     points = {
         f"{value[0]}_{value[1]}_{value[2]}": int(value[3])
         for value in df.columns.str.split("_")
@@ -312,7 +312,7 @@ def app_init():
             st.session_state.phases = get_phases(st.session_state.df)
 
             st.text("✅ Calculating Point Values")
-            st.session_state.points = point_values()
+            st.session_state.points = get_point_values()
 
             st.text("✅ Loading Match Data")
             st.session_state.match_data = get_match_data()
