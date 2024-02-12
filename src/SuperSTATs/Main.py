@@ -94,13 +94,15 @@ def main():
                 ),
                 subset=pd.IndexSlice[:, team_cols],
             )
+
+            st.dataframe(matches)
         else:
             matches = matches.astype(str)
 
-        st.dataframe(
-            matches.set_index("Match"),
-            use_container_width=True,
-        )
+            st.dataframe(
+                matches.set_index("Match"),
+                use_container_width=True,
+            )
 
     with st.expander("Event Keys", True):
         columns = st.columns(2)
