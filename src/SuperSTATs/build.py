@@ -110,7 +110,7 @@ def scouting_expander(
                 )
 
         else:
-            st.error("⚠️ No scouting data!")
+            st.error("⚠️ No scouting data")
 
 
 def calc_projected(team_df, show_ungrouped=False, return_row=False):

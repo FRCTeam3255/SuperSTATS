@@ -166,7 +166,7 @@ def get_match_data():
 
         return df
     except:
-        st.error(f"ERROR: Nonexistent Match Data...")
+        st.error(f"Error getting match data. Please refresh...")
         st.stop()
 
 
@@ -270,65 +270,110 @@ def app_init():
         "Exploding Falcons... 💥",
     ]
 
+    ascii_SN = [
+        "     yyyyyyyyyyyyyyyyyyyyyyyyyy     ",
+        "   yyyrryyyyyyyrrryyyrrrrrryyryyy   ",
+        " yyyrrryyyrrrryyrryyyyrrrrryyrrryyy ",
+        " yyrrrryyyrrrrrrrryyyryyrrryyrrrryy ",
+        "  yyyrrryyyyyyrrrryyyrryyrryyrryyy  ",
+        "    yyrrrryyyyyyrryyyrrryyryyryy    ",
+        "      yyrrrrrryyyryyyrrrryyyyy      ",
+        "        yyyrrrryyryyyrrrryyy        ",
+        "          yyyyyyrryyrrryyy          ",
+        "            yyyrrryyyryy            ",
+        "              yyrryyyy              ",
+        "                yyyy                ",
+        "                                    ",
+    ]
+
+    for line in range(len(ascii_SN)):
+        ascii_SN[line] = (
+            ascii_SN[line]
+            .replace("r", "<font color='C40301'>#</font>")
+            .replace("y", "<font color='ECC412'><b>#</b></font>")
+        )
+
+    states = [
+        "team_info",
+        "team_colors",
+        "tba",
+        "df_raw",
+        "df",
+        "picked",
+        "scouting",
+        "scouts",
+        "phases",
+        "points",
+        "match_data",
+        "matches",
+        "unplayed_matches",
+        "tba_ranks",
+        "presets",
+    ]
+
+    status_messages = {}
+
+    for i, state in enumerate(states):
+        i = len(ascii_SN) - 1 if i > len(ascii_SN) - 1 else i
+        status_messages[state] = f"<div style='text-align: center'>{ascii_SN[i]}</div>"
+
     init_status = st.empty()
 
     if "init" not in st.session_state:
         with init_status.status(random.choice(load_messages), expanded=True) as status:
             st.divider()
 
-            st.text("Starting initialization...")
-            time.sleep(1)
             start_time = time.time()
 
-            st.text("✅ Downloading Team Info")
+            st.markdown(status_messages["team_info"], unsafe_allow_html=True)
             st.session_state.team_info = get_team_info()
 
-            st.text("✅ Getting Team Colors")
+            st.markdown(status_messages["team_colors"], unsafe_allow_html=True)
             st.session_state.team_colors = get_team_colors()
 
-            st.text("✅ Initializing The Blue Alliance API")
+            st.markdown(status_messages["tba"], unsafe_allow_html=True)
             st.session_state.tba = tba
 
-            st.text("✅ Downloading Raw Data Sheet")
+            st.markdown(status_messages["df_raw"], unsafe_allow_html=True)
             df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
 
-            st.text("✅ Organizing Raw Data")
+            st.markdown(status_messages["df"], unsafe_allow_html=True)
             df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
             df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
             st.session_state.df = df
 
-            st.text("✅ Downloading Picked Team Data")
+            st.markdown(status_messages["picked"], unsafe_allow_html=True)
             st.session_state.picked = download_sheets_raw(st.secrets["GID_PICKED"])
 
-            st.text("✅ Downloading Scouting Data")
+            st.markdown(status_messages["scouting"], unsafe_allow_html=True)
             st.session_state.scouting = download_sheets_raw(st.secrets["GID_SCOUTING"])
 
-            st.text("✅ Fetching Scouter Info")
+            st.markdown(status_messages["scouts"], unsafe_allow_html=True)
             scouters = get_scouters()
             st.session_state.scouts = scouters["scouts"]
             st.session_state.assigned = scouters["assigned"]
 
-            st.text("✅ Identifying Phases")
+            st.markdown(status_messages["phases"], unsafe_allow_html=True)
             st.session_state.phases = get_phases(st.session_state.df)
 
-            st.text("✅ Calculating Point Values")
+            st.markdown(status_messages["points"], unsafe_allow_html=True)
             st.session_state.points = get_point_values()
 
-            st.text("✅ Loading Match Data")
+            st.markdown(status_messages["match_data"], unsafe_allow_html=True)
             st.session_state.match_data = get_match_data()
 
-            st.text("✅ Loading Matchs")
+            st.markdown(status_messages["matches"], unsafe_allow_html=True)
             st.session_state.matches = get_matches()
 
-            st.text("✅ Updating Played Matches")
+            st.markdown(status_messages["unplayed_matches"], unsafe_allow_html=True)
             st.session_state.unplayed_matches = get_unplayed(
                 st.session_state.df, st.session_state.matches
             )
 
-            st.text("✅ Loading TBA Rankings")
+            st.markdown(status_messages["tba_ranks"], unsafe_allow_html=True)
             st.session_state.tba_ranks = get_tba_ranks()
 
-            st.text("✅ Fetching Presets")
+            st.markdown(status_messages["presets"], unsafe_allow_html=True)
             st.session_state.presets = get_presets()
 
             elapsed_time = round(time.time() - start_time, 2)
