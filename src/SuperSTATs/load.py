@@ -260,11 +260,6 @@ def get_configs():
         return default_configs
 
 
-@st.cache_resource(ttl="4d")
-def store_creds(user, icon, password):
-    return {"user": user, "icon": icon, "pass": password}
-
-
 def app_init():
     try:
         st.set_page_config(
@@ -447,7 +442,7 @@ def app_init():
                     "." if password == "" else password,
                 )
 
-                creds = store_creds(user, icon[0], password)
+                creds = {"user": user, "icon": icon[0], "pass": password}
                 sign_in.empty()
                 st.markdown(
                     f'<iframe src="https://ezchat.streamlit.app/?user={creds["user"]}&icon={creds["icon"]}&pass={creds["pass"]}&embed=true" height="450" style="width: 100%; border: none;"></iframe>',
