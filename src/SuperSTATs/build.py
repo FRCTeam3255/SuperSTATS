@@ -264,7 +264,7 @@ def gen_match_comp(team_num, match_name, not_preview=True):
 
         if use_team_colors:
             if team_colors[0] == "003255" or team_colors[1] == "003255":
-                config_columns[2].toggle("Use Secondary Color", disabled=True)
+                config_columns[2].toggle("Swap Colors", disabled=True)
                 use_colors = default_colors
                 st.toast(
                     f"Team colors not found for {st.session_state.team_info[team_num]} (Team {team_num})",
@@ -276,7 +276,7 @@ def gen_match_comp(team_num, match_name, not_preview=True):
                 else:
                     use_colors = [team_colors[0], team_colors[1]]
         else:
-            config_columns[2].toggle("Use Secondary Color", disabled=True)
+            config_columns[2].toggle("Swap Colors", disabled=True)
             use_colors = default_colors
 
         for i, phase in enumerate(phases):

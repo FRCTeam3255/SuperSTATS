@@ -253,7 +253,11 @@ def app_init():
             page_icon="🤖",
             initial_sidebar_state="expanded",
             layout="wide",
-            menu_items={"About": "Errorz Was Here 🐢"},
+            menu_items={
+                "Get Help": "https://supernurds.com/contact",
+                "Report a bug": "https://github.com/FRCTeam3255/SuperSTATS/issues",
+                "About": "Errorz Was Here 🐢",
+            },
         )
     except:
         pass
