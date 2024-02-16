@@ -95,7 +95,7 @@ def main():
                 subset=pd.IndexSlice[:, team_cols],
             )
 
-            st.dataframe(matches)
+            st.dataframe(matches, use_container_width=True)
         else:
             matches = matches.astype(str)
 

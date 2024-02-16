@@ -246,6 +246,25 @@ def get_presets():
         return {}
 
 
+def get_configs():
+    configs_path = "src\\pickles\\configs.pickle"
+    default_configs = {"use_chat": False}
+
+    try:
+        with open(configs_path, "rb") as f:
+            configs = pickle.load(f)
+        return configs
+    except:
+        with open(configs_path, "wb") as f:
+            pickle.dump(default_configs, f, pickle.HIGHEST_PROTOCOL)
+        return default_configs
+
+
+@st.cache_resource(ttl="4d")
+def store_creds(user, icon, password):
+    return {"user": user, "icon": icon, "pass": password}
+
+
 def app_init():
     try:
         st.set_page_config(
@@ -313,6 +332,7 @@ def app_init():
         "unplayed_matches",
         "tba_ranks",
         "presets",
+        "configs",
     ]
 
     status_messages = {}
@@ -380,6 +400,9 @@ def app_init():
             st.markdown(status_messages["presets"], unsafe_allow_html=True)
             st.session_state.presets = get_presets()
 
+            st.markdown(status_messages["configs"], unsafe_allow_html=True)
+            st.session_state.configs = get_configs()
+
             elapsed_time = round(time.time() - start_time, 2)
 
             status.update(
@@ -391,3 +414,42 @@ def app_init():
 
             time.sleep(1)
             init_status.empty()
+
+    if st.session_state.configs["use_chat"]:
+        with st.sidebar:
+            sign_in = st.empty()
+
+            with sign_in.container():
+                login_cols = st.columns(2)
+
+                user = login_cols[0].text_input(
+                    "Username:",
+                    max_chars=17,
+                    key="login_user",
+                )
+
+                icon = login_cols[1].text_input(
+                    "Icon:",
+                    key="login_icon",
+                )
+
+                if user in st.secrets["MODERATORS"]:
+                    password = st.text_input(
+                        "Password:", key="login_pass", type="password"
+                    )
+                else:
+                    password = "."
+
+            if st.button("Login", key="login_submit", use_container_width=True):
+                user, icon, password = (
+                    "Guest" if user == "" else user,
+                    "👤" if icon == "" else icon[0],
+                    "." if password == "" else password,
+                )
+
+                creds = store_creds(user, icon[0], password)
+                sign_in.empty()
+                st.markdown(
+                    f'<iframe src="https://ezchat.streamlit.app/?user={creds["user"]}&icon={creds["icon"]}&pass={creds["pass"]}&embed=true" height="450" style="width: 100%; border: none;"></iframe>',
+                    unsafe_allow_html=True,
+                )

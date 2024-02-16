@@ -642,7 +642,7 @@ def gen_bar(
                 picked = (
                     "💎"
                     if team == st.secrets["TEAM_NUMBER"]
-                    else "🔴" if team in picked["Team"].values else "🟢"
+                    else "🚫" if team in picked["Team"].values else "🟢"
                 )
 
             else:

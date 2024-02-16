@@ -20,6 +20,22 @@ def main():
     st.button("Update Page", type="primary", use_container_width=True)
     st.divider()
 
+    with st.expander("Config"):
+        updated_configs = {}
+
+        for config, status in st.session_state.configs.items():
+            updated_configs[config] = st.toggle(
+                config.title().replace("_", " "), status
+            )
+
+        if st.button("Update Configs", type="primary", use_container_width=True):
+            st.session_state.configs = updated_configs
+
+            with open("src\\pickles\\configs.pickle", "wb") as f:
+                pickle.dump(updated_configs, f, pickle.HIGHEST_PROTOCOL)
+
+            st.toast("Successfully updated configs! Please refresh...", icon="✅")
+
     with st.expander("Scouts"):
         scouts = st.session_state.scouts
         assigned = st.session_state.assigned
@@ -110,7 +126,9 @@ def main():
                     with open(presets_path, "wb") as f:
                         pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
 
-                    st.toast("Successfully deleted presets! Please refresh...", icon="🗑️")
+                    st.toast(
+                        "Successfully deleted presets! Please refresh...", icon="🗑️"
+                    )
 
             else:
                 st.error("No Presets Found")
