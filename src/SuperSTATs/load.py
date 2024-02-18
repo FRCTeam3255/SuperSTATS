@@ -409,6 +409,13 @@ def app_init():
             display_status("configs")
             st.session_state.configs = get_configs()
 
+            st.session_state.chat = {
+                "logged_in": False,
+                "user": "",
+                "icon": "",
+                "pass": "",
+            }
+
             elapsed_time = round(time.time() - start_time, 2)
 
             status.update(
@@ -422,40 +429,57 @@ def app_init():
             init_status.empty()
 
     if st.session_state.configs["use_chat"]:
-        with st.sidebar:
-            sign_in = st.empty()
+        try:
+            with st.sidebar:
+                sign_in = st.empty()
 
-            with sign_in.container():
-                login_cols = st.columns(2)
+                with st.form("chat_login", border=False):
+                    login_cols = st.columns(2)
 
-                user = login_cols[0].text_input(
-                    "Username:",
-                    max_chars=17,
-                    key="login_user",
-                )
+                    if not st.session_state.chat["logged_in"]:
+                        st.session_state.chat["user"] = login_cols[0].text_input(
+                            "Username:",
+                            max_chars=17,
+                            value=(
+                                st.session_state.chat["user"]
+                                if st.session_state.chat["user"] != ""
+                                else ""
+                            ),
+                            key="login_user",
+                        )
 
-                icon = login_cols[1].text_input(
-                    "Icon:",
-                    key="login_icon",
-                )
+                        st.session_state.chat["icon"] = login_cols[1].text_input(
+                            "Icon:",
+                            value=(
+                                st.session_state.chat["icon"]
+                                if st.session_state.chat["icon"] != ""
+                                else ""
+                            ),
+                            key="login_icon",
+                        )
 
-                if user in st.secrets["MODERATORS"]:
-                    password = st.text_input(
-                        "Password:", key="login_pass", type="password"
-                    )
-                else:
-                    password = "."
+                        st.session_state.chat["pass"] = st.text_input(
+                            "Password:",
+                            type="password",
+                            value=(
+                                st.session_state.chat["pass"]
+                                if st.session_state.chat["pass"] != ""
+                                else ""
+                            ),
+                            key="login_pass",
+                        )
+                    else:
+                        pass
 
-            if st.button("Login", key="login_submit", use_container_width=True):
-                user, icon, password = (
-                    "Guest" if user == "" else user,
-                    "👤" if icon == "" else icon[0],
-                    "." if password == "" else password,
-                )
-
-                creds = {"user": user, "icon": icon[0], "pass": password}
-                sign_in.empty()
-                st.markdown(
-                    f'<iframe src="https://ezchat.streamlit.app/?user={creds["user"]}&icon={creds["icon"]}&pass={creds["pass"]}&embed=true" height="450" style="width: 100%; border: none;"></iframe>',
-                    unsafe_allow_html=True,
-                )
+                    login = st.form_submit_button("Login", use_container_width=True)
+                    if login:
+                        creds = st.session_state.chat
+                        if not any(value is "" for value in creds.values()):
+                            st.session_state.chat["logged_in"] = True
+                            sign_in.empty()
+                            st.markdown(
+                                f'<iframe src="https://ezchat.streamlit.app/?user={creds["user"]}&icon={creds["icon"]}&pass={creds["pass"]}&embed=true" height="450" style="width: 100%; border: none;"></iframe>',
+                                unsafe_allow_html=True,
+                            )
+        except:
+            pass
