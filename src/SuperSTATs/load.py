@@ -331,10 +331,17 @@ def app_init():
     ]
 
     status_messages = {}
+    displayed_rows = []
 
     for i, state in enumerate(states):
-        i = len(ascii_SN) - 1 if i > len(ascii_SN) - 1 else i
-        status_messages[state] = f"<div style='text-align: center'>{ascii_SN[i]}</div>"
+        row = round(len(ascii_SN) / len(states) * (i + 1)) - 1
+        if row not in displayed_rows:
+            status_messages[state] = (
+                f"<div style='text-align: center'>{ascii_SN[row]}</div>"
+            )
+        else:
+            status_messages[state] = None
+        displayed_rows.append(row)
 
     init_status = st.empty()
 
@@ -344,58 +351,62 @@ def app_init():
 
             start_time = time.time()
 
-            st.markdown(status_messages["team_info"], unsafe_allow_html=True)
+            def display_status(state):
+                if status_messages[state] is not None:
+                    st.markdown(status_messages[state], unsafe_allow_html=True)
+
+            display_status("team_info")
             st.session_state.team_info = get_team_info()
 
-            st.markdown(status_messages["team_colors"], unsafe_allow_html=True)
+            display_status("team_colors")
             st.session_state.team_colors = get_team_colors()
 
-            st.markdown(status_messages["tba"], unsafe_allow_html=True)
+            display_status("tba")
             st.session_state.tba = tba
 
-            st.markdown(status_messages["df_raw"], unsafe_allow_html=True)
+            display_status("df_raw")
             df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
 
-            st.markdown(status_messages["df"], unsafe_allow_html=True)
+            display_status("df")
             df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
             df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
             st.session_state.df = df
 
-            st.markdown(status_messages["picked"], unsafe_allow_html=True)
+            display_status("picked")
             st.session_state.picked = download_sheets_raw(st.secrets["GID_PICKED"])
 
-            st.markdown(status_messages["scouting"], unsafe_allow_html=True)
+            display_status("scouting")
             st.session_state.scouting = download_sheets_raw(st.secrets["GID_SCOUTING"])
 
-            st.markdown(status_messages["scouts"], unsafe_allow_html=True)
+            display_status("scouts")
             scouters = get_scouters()
             st.session_state.scouts = scouters["scouts"]
             st.session_state.assigned = scouters["assigned"]
 
-            st.markdown(status_messages["phases"], unsafe_allow_html=True)
+            display_status("phases")
             st.session_state.phases = get_phases(st.session_state.df)
 
-            st.markdown(status_messages["points"], unsafe_allow_html=True)
+            display_status("points")
             st.session_state.points = get_point_values()
 
-            st.markdown(status_messages["match_data"], unsafe_allow_html=True)
+            display_status("match_data")
             st.session_state.match_data = get_match_data()
 
-            st.markdown(status_messages["matches"], unsafe_allow_html=True)
+            display_status("matches")
             st.session_state.matches = get_matches()
 
-            st.markdown(status_messages["unplayed_matches"], unsafe_allow_html=True)
+            display_status("unplayed_matches")
             st.session_state.unplayed_matches = get_unplayed(
                 st.session_state.df, st.session_state.matches
             )
 
-            st.markdown(status_messages["tba_ranks"], unsafe_allow_html=True)
+            display_status("tba_ranks")
             st.session_state.tba_ranks = get_tba_ranks()
 
-            st.markdown(status_messages["presets"], unsafe_allow_html=True)
+            display_status("presets")
             st.session_state.presets = get_presets()
 
-            st.markdown(status_messages["configs"], unsafe_allow_html=True)
+            display_status("configs")
             st.session_state.configs = get_configs()
 
             elapsed_time = round(time.time() - start_time, 2)

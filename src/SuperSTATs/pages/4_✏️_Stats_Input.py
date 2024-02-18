@@ -166,7 +166,7 @@ def main():
     def gen_phase_input(entries):
         for entry in sorted_entries[entries]:
             entry_parts = entry.split("_")
-            entry_name = entry_parts[1].title()
+            entry_name = entry_parts[1].title().replace("Rsl", "RSL")
 
             feature_list = [
                 "Floor Pickup",
