@@ -43,7 +43,7 @@ def main():
                 0
             ]
 
-            if str(data) != "nan":
+            try:
                 red_data = str(data["red"]["totalPoints"]).ljust(3)
                 blue_data = str(data["blue"]["totalPoints"]).ljust(3)
 
@@ -53,7 +53,7 @@ def main():
                 else:
                     red_data = f"🔴 {str(red_data)}"
                     blue_data = f"🔵 {str(blue_data)} 🏆"
-            else:
+            except:
                 red_data = blue_data = "🕑 N/A"
 
             matches.loc[matches["Match"] == match_name, "Red Score"] = red_data

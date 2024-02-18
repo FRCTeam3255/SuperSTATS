@@ -169,13 +169,7 @@ def main():
             entry_name = entry_parts[1].title()
 
             feature_list = [
-                "Pick Up ⚠️ Off Ground",
-                "Double Substation",
-                "Pick Up 🟪 Off Ground",
-                "Single Substation",
-                "Pick Up Tipped ⚠️",
-                "Mechanism Damaged/Disabled",
-                "Tipped",
+                "Floor Pickup",
             ]
 
             if entry_parts[2] == "INT":

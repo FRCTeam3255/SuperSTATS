@@ -519,7 +519,7 @@ def gen_bar(
             st.multiselect(
                 "Features:",
                 feature_choices,
-                default=feature_choices,
+                default=dt_types,
                 key=f"selected_features_{key}",
             )
             if use_features and features
@@ -545,9 +545,19 @@ def gen_bar(
         kept_teams = []
 
         def has_features(team):
-            if all(item in selected_features for item in all_team_features[team]):
+            if not features:
                 return True
-            return False
+
+            remaining_features = set(selected_features) - set(dt_types)
+
+            if not remaining_features:
+                return True
+
+            for feature in remaining_features:
+                if feature not in all_team_features[team]:
+                    return False
+
+            return True
 
         for team in comment_df["Team"]:
             comment_df = comment_df.dropna()
