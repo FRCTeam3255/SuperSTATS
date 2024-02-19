@@ -23,14 +23,18 @@ def main():
     with st.expander("Config"):
         updated_configs = {}
 
-        for config, status in st.session_state.console.items():
-            updated_configs[config] = st.toggle(
+        columns = st.columns(4)
+
+        for i, (config, status) in enumerate(st.session_state.console.items()):
+            updated_configs[config] = columns[i % 4].toggle(
                 config.title().replace("_", " "), status
             )
 
         settings_raw = [
             f"{key}={str(value).lower()}" for key, value in updated_configs.items()
         ]
+
+        st.divider()
 
         if st.button("Update Configs", type="primary", use_container_width=True):
             st.session_state.configs["Console"] = settings_raw
