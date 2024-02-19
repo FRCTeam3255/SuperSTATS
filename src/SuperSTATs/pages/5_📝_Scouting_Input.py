@@ -66,7 +66,7 @@ def main():
         if 0.0 not in [length, width, weight]:
             if st.button("Submit", type="primary", use_container_width=True):
                 requests.get(prefill_url)
-                st.toast("Submitted Successfully! Please Refresh...", icon="✅")
+                st.toast("Submission successful! Please Refresh...", icon="✅")
                 st.balloons()
         else:
             st.button("Submit", type="primary", use_container_width=True, disabled=True)

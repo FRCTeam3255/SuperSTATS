@@ -166,17 +166,9 @@ def main():
     def gen_phase_input(entries):
         for entry in sorted_entries[entries]:
             entry_parts = entry.split("_")
-            entry_name = entry_parts[1].title()
+            entry_name = entry_parts[1].title().replace("Rsl", "RSL")
 
-            feature_list = [
-                "Pick Up ⚠️ Off Ground",
-                "Double Substation",
-                "Pick Up 🟪 Off Ground",
-                "Single Substation",
-                "Pick Up Tipped ⚠️",
-                "Mechanism Damaged/Disabled",
-                "Tipped",
-            ]
+            feature_list = st.session_state.configs["Features"]
 
             if entry_parts[2] == "INT":
                 entry_responses[entry] = st.number_input(
@@ -238,7 +230,7 @@ def main():
     if submitted:
         requests.get(prefill_url)
         st.balloons()
-        st.toast("Submission successful! Please refresh the page...", icon="✅")
+        st.toast("Submission successful! Please refresh...", icon="✅")
 
 
 if __name__ == "__main__":

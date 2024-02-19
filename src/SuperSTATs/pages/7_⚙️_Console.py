@@ -8,6 +8,7 @@ def main():
     load.app_init()
 
     presets_path = "src\\pickles\\presets.pickle"
+    colors_path = "src\\pickles\\colors.pickle"
 
     import SuperSTATs.styles as style
 
@@ -18,6 +19,31 @@ def main():
 
     st.button("Update Page", type="primary", use_container_width=True)
     st.divider()
+
+    with st.expander("Config"):
+        updated_configs = {}
+
+        columns = st.columns(4)
+
+        for i, (config, status) in enumerate(st.session_state.console.items()):
+            updated_configs[config] = columns[i % 4].toggle(
+                config.title().replace("_", " "), status
+            )
+
+        settings_raw = [
+            f"{key}={str(value).lower()}" for key, value in updated_configs.items()
+        ]
+
+        st.divider()
+
+        if st.button("Update Configs", type="primary", use_container_width=True):
+            st.session_state.configs["Console"] = settings_raw
+            st.session_state.console = updated_configs
+
+            with open("src\\pickles\\configs.pickle", "wb") as f:
+                pickle.dump(st.session_state.configs, f, pickle.HIGHEST_PROTOCOL)
+
+            st.toast("Successfully updated configs! Please refresh...", icon="✅")
 
     with st.expander("Scouts"):
         scouts = st.session_state.scouts
@@ -49,7 +75,7 @@ def main():
             with open("src\\pickles\\scouts.pickle", "wb") as f:
                 pickle.dump([scouts, scout_list], f, pickle.HIGHEST_PROTOCOL)
 
-            st.toast("Successfully Set Scouters!", icon="✅")
+            st.toast("Successfully set scouters! Please refresh...", icon="✅")
 
     with st.expander("Presets"):
         uploaded_file = st.file_uploader("Override Presets:", ".json")
@@ -62,10 +88,11 @@ def main():
                 bytes_formatted = bytes_data.decode("utf-8")
                 data = json.loads(bytes_formatted)
 
+                st.session_state.presets = data
                 with open(presets_path, "wb") as f:
                     pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
 
-                st.toast("Successfully Updated Presets!", icon="✅")
+                st.toast("Successfully updated presets! Please refresh...", icon="✅")
 
         with open(presets_path, "rb") as f:
             presets = pickle.load(f)
@@ -108,13 +135,48 @@ def main():
                     with open(presets_path, "wb") as f:
                         pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
 
-                    st.toast("Successfully Deleted Presets!", icon="🗑️")
+                    st.toast(
+                        "Successfully deleted presets! Please refresh...", icon="🗑️"
+                    )
 
             else:
                 st.error("No Presets Found")
 
         except:
             st.error("No Presets Found")
+
+    with st.expander("Colors"):
+        uploaded_file = st.file_uploader("Upload Team Colors:", ".json")
+
+        if uploaded_file is not None:
+            st.divider()
+
+            if st.button("Set Colors", type="primary", use_container_width=True):
+                bytes_data = uploaded_file.getvalue()
+                bytes_formatted = bytes_data.decode("utf-8")
+                data = json.loads(bytes_formatted)
+
+                with open(colors_path, "wb") as f:
+                    pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
+
+                st.session_state.team_colors = data
+                load.get_team_colors.clear()
+
+                st.toast("Successfully updated colors! Please refresh...", icon="✅")
+
+        try:
+            with open(colors_path, "rb") as f:
+                colors = pickle.load(f)
+
+            st.download_button(
+                f"Download colors",
+                json.dumps(colors).encode("utf-8"),
+                "colors.json",
+                type="primary",
+                use_container_width=True,
+            )
+        except:
+            pass
 
 
 if __name__ == "__main__":

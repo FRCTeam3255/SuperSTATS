@@ -43,17 +43,20 @@ def main():
                 0
             ]
 
-            if str(data) != "nan":
-                red_data = str(data["red"]["totalPoints"]).zfill(3)
-                blue_data = str(data["blue"]["totalPoints"]).zfill(3)
+            try:
+                red_data = str(data["red"]["totalPoints"]).ljust(3)
+                blue_data = str(data["blue"]["totalPoints"]).ljust(3)
 
-                if red_data > blue_data:
-                    red_data = f"🔴 {str(red_data)} 🏆"
-                    blue_data = f"🔵 {str(blue_data)}"
+                if int(red_data) > int(blue_data):
+                    red_data = f"🔴 {red_data} 🏆"
+                    blue_data = f"🔵 {blue_data}"
+                elif int(red_data) < int(blue_data):
+                    red_data = f"🔴 {red_data}"
+                    blue_data = f"🔵 {blue_data} 🏆"
                 else:
-                    red_data = f"🔴 {str(red_data)}"
-                    blue_data = f"🔵 {str(blue_data)} 🏆"
-            else:
+                    red_data = f"🔴 {red_data}"
+                    blue_data = f"🔵 {blue_data}"
+            except:
                 red_data = blue_data = "🕑 N/A"
 
             matches.loc[matches["Match"] == match_name, "Red Score"] = red_data
@@ -65,7 +68,7 @@ def main():
             team = int(str(team).split(" | ")[0])
 
             use_team_colors = columns[1].toggle("Use Team Colors")
-            team_colors = st.session_state.team_colors[team]
+            team_colors = st.session_state.team_colors[str(team)]
 
             if use_team_colors:
                 if team_colors[0] == "003255" or team_colors[1] == "003255":
@@ -94,10 +97,15 @@ def main():
                 ),
                 subset=pd.IndexSlice[:, team_cols],
             )
+
+            st.dataframe(matches, use_container_width=True)
         else:
             matches = matches.astype(str)
 
-        st.table(matches)
+            st.dataframe(
+                matches.set_index("Match"),
+                use_container_width=True,
+            )
 
     with st.expander("Event Keys", True):
         columns = st.columns(2)

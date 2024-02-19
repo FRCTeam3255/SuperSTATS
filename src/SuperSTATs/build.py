@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import SuperSTATs.load as load
 import streamlit as st
 import altair as alt
@@ -55,7 +56,7 @@ def scouting_expander(
     has_data = False if time_logged == "nan" else True
 
     if len(rank_info) == 2:
-        expander_name += f" [🦸#{rank_info[0]}/💎#{rank_info[1]}]"
+        expander_name += f" [🦸{rank_info[0]}/💎{rank_info[1]}]"
 
     with column.expander(
         f"{expander_name} {'⚠️' if not has_data else ''}", start_expanded
@@ -68,10 +69,13 @@ def scouting_expander(
                 if len(rank_info) == 2:
                     st.text(f"SN Rank: {rank_info[0]} | TBA Rank: {rank_info[1]}")
 
-                team_data = df.loc[
-                    df["Team #"] == st.secrets["TEAM_NUMBER"],
-                    ["Frame Size LENGTH", "Frame Size WIDTH"],
-                ].iloc[0]
+                if st.secrets["TEAM_NUMBER"] not in df["Team #"].values:
+                    team_data = {"Frame Size LENGTH": 0, "Frame Size WIDTH": 0}
+                else:
+                    team_data = df.loc[
+                        df["Team #"] == st.secrets["TEAM_NUMBER"],
+                        ["Frame Size LENGTH", "Frame Size WIDTH"],
+                    ].iloc[0]
 
                 added_length = team_data["Frame Size LENGTH"]
                 added_width = team_data["Frame Size WIDTH"]
@@ -108,6 +112,9 @@ def scouting_expander(
                     f"<span style='font-size: small; color: #808080;'>Time Logged: {time_logged}</span>",
                     unsafe_allow_html=True,
                 )
+
+        else:
+            st.error("⚠️ No scouting data")
 
 
 def calc_projected(team_df, show_ungrouped=False, return_row=False):
@@ -150,6 +157,8 @@ def calc_projected(team_df, show_ungrouped=False, return_row=False):
 
         match_count += len(team_score)
         team_score = team_score[phases].sum().to_frame().T
+        alliance_score = alliance_score.dropna(axis=1, how="all")
+        team_score = team_score.dropna(axis=1, how="all")
         alliance_score = pd.concat([alliance_score, team_score], ignore_index=True)
 
     alliance_score = alliance_score.sum().sum()
@@ -216,29 +225,34 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     alt_size = st.columns(len(use_phases) + 1)
     team_averages = {}
 
-    for phase, score in team_scores.items():
-        team_averages[phase] = round(score / match_count)
+    try:
+        for phase, score in team_scores.items():
+            team_averages[phase] = round(score / match_count)
 
-    if not_preview:
+        if not_preview:
+            match_scores = team_df.loc[team_df["Match Name"] == match_name]
+        else:
+            team_df = team_df.sort_index()
+
+            match_scores = (
+                team_df.reset_index(drop=True).loc[len(team_df) - 1].to_frame().T
+            )
+            match_name = match_scores["Match Name"].to_list()[0]
+
+            query_url = f"Tracker/?team_num={team_num}&match_name={match_name}"
+
+            button_style = (
+                "background-color: #141414; border: 1px solid #424242; border-radius: 8px;"
+                "color: #ffffff; text-align: center; text-decoration: none;"
+                "display: block; width: 100%; padding: 8px 0;"
+            )
+
+            st.markdown(
+                f"<a href='{query_url}' target='_self' style='{button_style}'>Send To Team Tracker</a>",
+                unsafe_allow_html=True,
+            )
+    except:
         match_scores = team_df.loc[team_df["Match Name"] == match_name]
-    else:
-        team_df = team_df.sort_index()
-
-        match_scores = team_df.reset_index(drop=True).loc[len(team_df) - 1].to_frame().T
-        match_name = match_scores["Match Name"].to_list()[0]
-
-        query_url = f"Tracker/?team_num={team_num}&match_name={match_name}"
-
-        button_style = (
-            "background-color: #141414; border: 1px solid #424242; border-radius: 8px;"
-            "color: #ffffff; text-align: center; text-decoration: none;"
-            "display: block; width: 100%; padding: 8px 0;"
-        )
-
-        st.markdown(
-            f"<a href='{query_url}' target='_self' style='{button_style}'>Send To Team Tracker</a>",
-            unsafe_allow_html=True,
-        )
 
     team_scores = match_scores.drop(columns=["Match Name"])
 
@@ -257,11 +271,11 @@ def gen_match_comp(team_num, match_name, not_preview=True):
 
     if not_preview:
         use_team_colors = config_columns[1].toggle("Use Team Colors")
-        team_colors = st.session_state.team_colors[team_num]
+        team_colors = st.session_state.team_colors[str(team_num)]
 
         if use_team_colors:
             if team_colors[0] == "003255" or team_colors[1] == "003255":
-                config_columns[2].toggle("Use Secondary Color", disabled=True)
+                config_columns[2].toggle("Swap Colors", disabled=True)
                 use_colors = default_colors
                 st.toast(
                     f"Team colors not found for {st.session_state.team_info[team_num]} (Team {team_num})",
@@ -273,37 +287,43 @@ def gen_match_comp(team_num, match_name, not_preview=True):
                 else:
                     use_colors = [team_colors[0], team_colors[1]]
         else:
-            config_columns[2].toggle("Use Secondary Color", disabled=True)
+            config_columns[2].toggle("Swap Colors", disabled=True)
             use_colors = default_colors
 
-        def score_markdown(color, score):
-            r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
-            brightness = (r * 299 + g * 587 + b * 114) / 1000
-            dark_hex = brightness < 80
-
-            if use_team_colors and dark_hex:
-                px_size = "0.6px"
-                shadow_hex = "#ffffff"
-                return f"<span style='color: {color}; font-size: 2.35em; font-family:Arial; text-shadow: {px_size} 0 0 {shadow_hex}, -{px_size} 0 0 {shadow_hex}, 0 {px_size} 0 {shadow_hex}, 0 -{px_size} 0 {shadow_hex};'><b>{score}</b></span>"
-            return f"<span style='color: {color}; font-size: 2.35em; font-family:Arial;'><b>{score}</b></span>"
-
-        for i, phase in enumerate(phases):
-            columns[i].markdown(
-                f"{score_markdown(use_colors[0], match_score[phase])}"
-                f"{score_markdown('#ffffff', ' / ')}"
-                f"{score_markdown(use_colors[1], team_averages[phase])}",
-                unsafe_allow_html=True,
-            )
+        try:
+            for i, phase in enumerate(phases):
+                delta = match_score[phase] - team_averages[phase]
+                columns[i].metric(
+                    label=phase,
+                    value=match_score[phase],
+                    delta=delta,
+                    delta_color="off" if delta == 0 else "normal",
+                    label_visibility="hidden",
+                )
+        except:
+            pass
     else:
         use_colors = default_colors
 
-    df = pd.DataFrame(
-        {
-            "Phase": use_phases,
-            "Average": [team_averages[phase] for phase in use_phases],
-            "Match": [match_score[phase] for phase in use_phases],
-        }
-    )
+    try:
+        df = pd.DataFrame(
+            {
+                "Phase": use_phases,
+                "Average": [team_averages[phase] for phase in use_phases],
+                "Match": [match_score[phase] for phase in use_phases],
+            }
+        )
+    except:
+        df = pd.DataFrame.from_dict(
+            {
+                "Phase": [],
+                "Average": [],
+                "Match": [],
+            }
+        )
+        df["Phase"] = df["Phase"].astype(str)
+        df["Average"] = df["Average"].astype(int)
+        df["Match"] = df["Match"].astype(int)
 
     if show_ungrouped:
         df["Phase"] = df["Phase"].apply(lambda x: x.split("_")[1])
@@ -344,14 +364,42 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     with alt_size[0].container():
         st.altair_chart(chart, use_container_width=True)
 
+    if not_preview:
+        try:
+            match_progress = team_df
+            match_progress["Match Name"] = match_progress["Match Name"].apply(
+                lambda x: f"{x} ⭐" if x == match_name else x
+            )
+
+            column_config = {}
+            for phase in ["AUTO", "TELE", "END", "INFO"]:
+                column_config[phase] = st.column_config.ProgressColumn(
+                    phase.title(),
+                    format=f"%f/{max(match_progress[phase])}",
+                    min_value=min(match_progress[phase]),
+                    max_value=max(match_progress[phase]),
+                )
+
+            st.divider()
+
+            st.dataframe(
+                match_progress.drop(columns=["COMMENT"]),
+                column_config=column_config,
+                column_order=("Match Name", "AUTO", "TELE", "END", "INFO"),
+                hide_index=True,
+                use_container_width=True,
+            )
+        except:
+            pass
+
 
 def gen_bar(
     df=st.session_state.df,
     key=0,
     use_presets=True,
     use_group_filters=True,
-    use_hide_picked=True,
-    use_hide_nums=True,
+    use_show_available=True,
+    use_show_nums=True,
     use_inline_legend=True,
     use_features=True,
     use_agg_type=True,
@@ -367,8 +415,8 @@ def gen_bar(
     variables = [
         "group_filters" if use_group_filters else None,
         "inline_legend" if use_inline_legend else None,
-        "hide_picked" if use_hide_picked else None,
-        "hide_nums" if use_hide_nums else None,
+        "show_available" if use_show_available else None,
+        "show_nums" if use_show_nums else None,
         "features" if use_features else None,
     ]
 
@@ -392,10 +440,10 @@ def gen_bar(
 
     var_count = 0
 
-    def gen_toggle(var_name, var_count, box_name, default, key):
+    def gen_toggle(var_name, var_count, box_name, default, key, disabled):
         if var_name in variables:
             variable = columns[var_count].toggle(
-                box_name, default, key=f"{var_name}_{key}"
+                box_name, default, key=f"{var_name}_{key}", disabled=disabled
             )
             var_count += 1
         else:
@@ -405,22 +453,29 @@ def gen_bar(
 
     if preset_choice == "None":
         group_filters, var_count = gen_toggle(
-            "group_filters", var_count, "Group Filters", True, key
+            "group_filters", var_count, "Group Filters", True, key, False
         )
 
         inline_legend, var_count = gen_toggle(
-            "inline_legend", var_count, "Inline Legend", True, key
+            "inline_legend",
+            var_count,
+            "Inline Legend",
+            not group_filters,
+            key,
+            group_filters,
         )
 
-        hide_picked, var_count = gen_toggle(
-            "hide_picked", var_count, "Hide Picked Teams", False, key
+        show_available, var_count = gen_toggle(
+            "show_available", var_count, "Availability", use_show_available, key, False
         )
 
-        hide_nums, var_count = gen_toggle(
-            "hide_nums", var_count, "Hide Team Numbers", False, key
+        show_nums, var_count = gen_toggle(
+            "show_nums", var_count, "Team Numbers", True, key, False
         )
 
-        features, var_count = gen_toggle("features", var_count, "Features", False, key)
+        features, var_count = gen_toggle(
+            "features", var_count, "Features", False, key, False
+        )
 
         if use_agg_type:
             agg_type = st.selectbox(
@@ -453,12 +508,8 @@ def gen_bar(
         if not use_inline_legend:
             inline_legend = False
 
-        if hide_picked:
-            picked = pd.DataFrame(st.session_state.picked)
-            picked = picked[
-                picked["Unavailable"].str.contains("x", case=False, na=False)
-            ]
-            df = df[~df["Team"].isin(picked["Team"])]
+        picked = pd.DataFrame(st.session_state.picked)
+        picked = picked[picked["Unavailable"].str.contains("x", case=False, na=False)]
 
         if displayed_teams:
             df = df[df["Team"].isin(displayed_teams + compared_teams)]
@@ -496,7 +547,7 @@ def gen_bar(
             st.multiselect(
                 "Features:",
                 feature_choices,
-                default=feature_choices,
+                default=dt_types,
                 key=f"selected_features_{key}",
             )
             if use_features and features
@@ -522,9 +573,19 @@ def gen_bar(
         kept_teams = []
 
         def has_features(team):
-            if all(item in selected_features for item in all_team_features[team]):
+            if not features:
                 return True
-            return False
+
+            remaining_features = set(selected_features) - set(dt_types)
+
+            if not remaining_features:
+                return True
+
+            for feature in remaining_features:
+                if feature not in all_team_features[team]:
+                    return False
+
+            return True
 
         for team in comment_df["Team"]:
             comment_df = comment_df.dropna()
@@ -557,7 +618,7 @@ def gen_bar(
         rank_df["rank"] = rank_df.sum(axis=1).rank(ascending=False).astype(int)
         rank_df.reset_index(inplace=True)
 
-        if use_max_size:
+        if use_max_size and features:
             min_size = df[["Frame Size LENGTH", "Frame Size WIDTH"]].min().min()
             max_size = df[["Frame Size LENGTH", "Frame Size WIDTH"]].max().max()
             unscouted_size = max_size + 0.5
@@ -566,13 +627,13 @@ def gen_bar(
                 "Max Size:",
                 min_value=min_size,
                 max_value=unscouted_size,
-                value=max_size,
+                value=unscouted_size,
                 step=0.5,
                 key=f"size_limit_{key}",
             )
 
             if size_limit == unscouted_size:
-                st.warning("WARNING: Viewing unscouted teams")
+                st.toast("Viewing unscouted teams", icon="⚠️")
 
             df["Frame Size LENGTH"] = df["Frame Size LENGTH"].fillna(unscouted_size)
             df["Frame Size WIDTH"] = df["Frame Size WIDTH"].fillna(unscouted_size)
@@ -595,11 +656,15 @@ def gen_bar(
 
         calc_df["Score Sum"] = calc_df[selected_filters].sum(axis=1)
 
-        x_min = (
-            math.floor(calc_df.min().min()) - 2
-            if calc_df.min().min() < 0
-            else math.floor(calc_df.min().min())
-        )
+        try:
+            x_min = (
+                math.floor(calc_df.min().min()) - 2
+                if calc_df.min().min() < 0
+                else math.floor(calc_df.min().min())
+            )
+        except:
+            st.error("No bots found with selected features")
+            st.stop()
 
         x_range = (
             x_range if x_range else [x_min, (round(calc_df["Score Sum"].max()) + 2)]
@@ -610,18 +675,42 @@ def gen_bar(
 
         tba_rankings = st.session_state.tba_ranks
 
+        def format_y(team, show_available, picked):
+            if show_available:
+                picked = (
+                    "💎"
+                    if team == st.secrets["TEAM_NUMBER"]
+                    else "🚫" if team in picked["Team"].values else "🟢"
+                )
+
+            else:
+                picked = ""
+
+            rank = str(tba_rankings.get(str(team), "NA")).zfill(2)
+
+            return f"{picked} {str(team).rjust(4)} [{rank}]"
+
         data["Team"] = data["Team"].apply(
-            lambda team: f"{team} [{str(tba_rankings.get(str(team), 'NA')).zfill(2)}]"
+            lambda team: format_y(team, show_available, picked)
         )
 
     else:
         no_data = False
 
+    def rgba_to_hex(rgba):
+        r, g, b, a = rgba
+        return "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))
+
+    def gen_cmap(length, cmap_name="Blues"):
+        cmap = plt.get_cmap(cmap_name)
+        colors = [rgba_to_hex(cmap(i)) for i in np.linspace(0, 0.8, length)]
+        return colors
+
     if preset_choice != "None":
         preset = presets[preset_choice]
         data = pd.DataFrame(preset["data"])
         x_min, x_max = preset["x_range"]
-        hide_nums = preset["hide_nums"]
+        show_nums = preset["show_nums"]
         selected_filters = preset["selected_filters"]
         inline_legend = preset["inline_legend"]
         group_filters = preset["group_filters"]
@@ -635,12 +724,15 @@ def gen_bar(
                 "Team:N",
                 sort=alt.EncodingSortField(field="rank", order="ascending"),
                 title="",
-                axis=alt.Axis(labels=not hide_nums),
+                axis=alt.Axis(labels=show_nums),
             ),
             color=alt.Color(
                 "variable:N",
                 title=" ",
-                scale=alt.Scale(domain=selected_filters, scheme="darkblue"),
+                scale=alt.Scale(
+                    domain=selected_filters,
+                    range=gen_cmap(len(data["variable"].unique())),
+                ),
                 legend=alt.Legend(
                     title=None,
                     orient=(
@@ -657,6 +749,8 @@ def gen_bar(
                     labelFontSize=(10.5 if inline_legend and not group_filters else 14),
                 ),
             ),
+            stroke=alt.value("#141414"),
+            strokeWidth=alt.value(2),
             tooltip=["value:Q", "variable:N"],
         )
     )
@@ -701,7 +795,7 @@ def gen_bar(
                 presets[preset_name] = {
                     "data": data.to_dict(),
                     "x_range": x_range,
-                    "hide_nums": hide_nums,
+                    "show_nums": show_nums,
                     "selected_filters": selected_filters,
                     "inline_legend": inline_legend,
                     "group_filters": group_filters,

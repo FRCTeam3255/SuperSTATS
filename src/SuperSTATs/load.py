@@ -23,51 +23,18 @@ def download_sheets_raw(gid):
     return df
 
 
-tba = tbapy.TBA(st.secrets["TBA_API"])
 df = download_sheets_raw(st.secrets["GID_RAW"])
+tba = tbapy.TBA(st.secrets["TBA_API"])
 
 
-def get_scouters():
-    try:
-        with open("src\\pickles\\scouts.pickle", "rb") as f:
-            scouts = pickle.load(f)
+def get_tba_ranks():
+    event_rankings = tba.event_rankings(st.secrets["DEFAULT_EVENT_KEY"])["rankings"]
+    tba_ranks = {}
 
-        return {"scouts": scouts[0], "assigned": scouts[1]}
+    for team in event_rankings:
+        tba_ranks[team["team_key"].split("frc")[1]] = team["rank"]
 
-    except:
-        scouts_df = download_sheets_raw(st.secrets["GID_SCOUTS"]).sort_values(by="Name")
-
-        return {
-            "scouts": scouts_df["Name"].tolist(),
-            "assigned": scouts_df.loc[scouts_df["Assigned"] == "x", "Name"].tolist(),
-        }
-
-
-def get_phases(df):
-    filtered_columns = []
-    for column in df.columns:
-        if any(c.isdigit() for c in column.split("_")[-1]):
-            filtered_columns.append(column)
-
-    phases = []
-    for column in filtered_columns:
-        column = column.split("_")[0]
-        phases.append(column)
-
-    return sorted(list(set(phases)))
-
-
-def point_values():
-    points = {
-        f"{value[0]}_{value[1]}_{value[2]}": int(value[3])
-        for value in df.columns.str.split("_")
-        if len(value) > 1
-    }
-
-    for col, point in points.items():
-        df[f"{col}_{point}"] *= point
-
-    return points
+    return tba_ranks
 
 
 @st.cache_data(show_spinner=False, persist=True)
@@ -94,11 +61,18 @@ def get_team_colors():
             recorded = pickle.load(f)
 
         for team in team_info.keys():
-            colors = recorded[team]
-            if colors == None or colors == ["003255", "003255"]:
+            try:
+                colors = recorded[str(team)]
+
+                if colors == None or colors == ["003255", "003255"]:
+                    unrecorded.append(team)
+
+                else:
+                    team_colors[str(team)] = colors
+
+            except:
                 unrecorded.append(team)
-            else:
-                team_colors[team] = colors
+
     except:
         unrecorded.extend(team for team in team_info.keys())
 
@@ -107,35 +81,31 @@ def get_team_colors():
         teams_url += f"team={team}&"
 
     api = f"https://frc-colors.com/api/v1/team"
+    response = requests.get(f"{api}/3255", timeout=5)
 
-    try:
-        requests.get(f"{api}/3255", timeout=5)
-
+    if response.status_code == 200:
         response = requests.get(f"{api}?{teams_url}")
         raw_data = response.json()
 
-        for team, colors in raw_data["colors"].items():
+        for team, colors in raw_data["teams"].items():
+            colors = colors["colors"]
+
             if colors != None:
                 primary_color = colors["primaryHex"]
                 secondary_color = colors["secondaryHex"]
-                team_colors[int(team)] = [primary_color, secondary_color]
+                team_colors[str(team)] = [primary_color, secondary_color]
+
             else:
-                team_colors[int(team)] = ["003255", "003255"]
+                team_colors[str(team)] = ["003255", "003255"]
 
         with open("src\\pickles\\colors.pickle", "wb") as f:
             pickle.dump(team_colors, f, pickle.HIGHEST_PROTOCOL)
-    except:
+
+    else:
         for team in unrecorded:
             team_colors[team] = ["003255", "003255"]
 
     return team_colors
-
-
-def check_team_colors():
-    stuff = st.session_state.team_colors
-    values = list(stuff.values())
-    if len(set(map(str, values))) == 1:
-        get_team_colors.clear()
 
 
 def get_match_data():
@@ -163,7 +133,7 @@ def get_match_data():
 
         return df
     except:
-        st.error(f"ERROR: Nonexistent Match Data...")
+        st.error(f"Error getting match data. Please refresh...")
         st.stop()
 
 
@@ -220,18 +190,52 @@ def get_unplayed(df, matches):
     return unplayed_matches
 
 
-def get_tba_ranks():
-    event_rankings = tba.event_rankings(st.secrets["DEFAULT_EVENT_KEY"])["rankings"]
-    tba_ranks = {}
+def get_scouters():
+    try:
+        with open("src\\pickles\\scouts.pickle", "rb") as f:
+            scouts = pickle.load(f)
 
-    for team in event_rankings:
-        tba_ranks[team["team_key"].split("frc")[1]] = team["rank"]
+        return {"scouts": scouts[0], "assigned": scouts[1]}
 
-    return tba_ranks
+    except:
+        scouts_df = download_sheets_raw(st.secrets["GID_SCOUTS"]).sort_values(by="Name")
+
+        return {
+            "scouts": scouts_df["Name"].tolist(),
+            "assigned": scouts_df.loc[scouts_df["Assigned"] == "x", "Name"].tolist(),
+        }
+
+
+def get_phases(df):
+    filtered_columns = []
+    for column in df.columns:
+        if any(c.isdigit() for c in column.split("_")[-1]):
+            filtered_columns.append(column)
+
+    phases = []
+    for column in filtered_columns:
+        column = column.split("_")[0]
+        phases.append(column)
+
+    return sorted(list(set(phases)))
+
+
+def get_point_values():
+    points = {
+        f"{value[0]}_{value[1]}_{value[2]}": int(value[3])
+        for value in df.columns.str.split("_")
+        if len(value) > 1
+    }
+
+    for col, point in points.items():
+        df[f"{col}_{point}"] *= point
+
+    return points
 
 
 def get_presets():
     presets_path = "src\\pickles\\presets.pickle"
+
     try:
         with open(presets_path, "rb") as f:
             presets = pickle.load(f)
@@ -242,6 +246,27 @@ def get_presets():
         return {}
 
 
+def get_configs():
+    configs_raw = download_sheets_raw(st.secrets["GID_CONFIG"])
+    configs = {}
+
+    for index, row in configs_raw.iterrows():
+        config = row["Config"]
+        value = row["Value"]
+        configs[config] = value.split(", ")
+
+    configs_path = "src\\pickles\\configs.pickle"
+
+    try:
+        with open(configs_path, "rb") as f:
+            configs = pickle.load(f)
+        return configs
+    except:
+        with open(configs_path, "wb") as f:
+            pickle.dump(configs, f, pickle.HIGHEST_PROTOCOL)
+        return configs
+
+
 def app_init():
     try:
         st.set_page_config(
@@ -249,7 +274,11 @@ def app_init():
             page_icon="🤖",
             initial_sidebar_state="expanded",
             layout="wide",
-            menu_items={"About": "Errorz Was Here 🐢"},
+            menu_items={
+                "Get Help": "https://supernurds.com/contact",
+                "Report a bug": "https://github.com/FRCTeam3255/SuperSTATS/issues",
+                "About": "Errorz Was Here 🐢",
+            },
         )
     except:
         pass
@@ -266,66 +295,140 @@ def app_init():
         "Exploding Falcons... 💥",
     ]
 
+    ascii_SN = [
+        "     yyyyyyyyyyyyyyyyyyyyyyyyyy     ",
+        "   yyyrryyyyyyyrrryyyrrrrrryyryyy   ",
+        " yyyrrryyyrrrryyrryyyyrrrrryyrrryyy ",
+        " yyrrrryyyrrrrrrrryyyryyrrryyrrrryy ",
+        "  yyyrrryyyyyyrrrryyyrryyrryyrryyy  ",
+        "    yyrrrryyyyyyrryyyrrryyryyryy    ",
+        "      yyrrrrrryyyryyyrrrryyyyy      ",
+        "        yyyrrrryyryyyrrrryyy        ",
+        "          yyyyyyrryyrrryyy          ",
+        "            yyyrrryyyryy            ",
+        "              yyrryyyy              ",
+        "                yyyy                ",
+        "                                    ",
+    ]
+
+    for line in range(len(ascii_SN)):
+        ascii_SN[line] = (
+            ascii_SN[line]
+            .replace("r", "<font color='C40301'>#</font>")
+            .replace("y", "<font color='ECC412'><b>#</b></font>")
+        )
+
+    states = [
+        "df_raw",
+        "df",
+        "tba",
+        "tba_ranks",
+        "team_info",
+        "team_colors",
+        "match_data",
+        "matches",
+        "unplayed_matches",
+        "picked",
+        "scouting",
+        "scouts",
+        "phases",
+        "points",
+        "presets",
+        "configs",
+        "console",
+    ]
+
+    status_messages = {}
+    displayed_rows = []
+
+    for i, state in enumerate(states):
+        row = round(len(ascii_SN) / len(states) * (i + 1)) - 1
+        if row not in displayed_rows:
+            status_messages[state] = (
+                f"<div style='text-align: center'>{ascii_SN[row]}</div>"
+            )
+        else:
+            status_messages[state] = None
+        displayed_rows.append(row)
+
     init_status = st.empty()
 
     if "init" not in st.session_state:
         with init_status.status(random.choice(load_messages), expanded=True) as status:
             st.divider()
 
-            st.text("Starting initialization...")
-            time.sleep(1)
             start_time = time.time()
 
-            st.text("✅ Downloading Team Info")
-            st.session_state.team_info = get_team_info()
+            def display_status(state):
+                if status_messages[state] is not None:
+                    st.markdown(status_messages[state], unsafe_allow_html=True)
 
-            st.text("✅ Getting Team Colors")
-            st.session_state.team_colors = get_team_colors()
-
-            st.text("✅ Initializing The Blue Alliance API")
-            st.session_state.tba = tba
-
-            st.text("✅ Downloading Raw Data Sheet")
+            display_status("df_raw")
             df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
 
-            st.text("✅ Organizing Raw Data")
+            display_status("df")
             df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
             df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
             st.session_state.df = df
 
-            st.text("✅ Downloading Picked Team Data")
-            st.session_state.picked = download_sheets_raw(st.secrets["GID_PICKED"])
+            display_status("tba")
+            st.session_state.tba = tba
 
-            st.text("✅ Downloading Scouting Data")
-            st.session_state.scouting = download_sheets_raw(st.secrets["GID_SCOUTING"])
+            display_status("tba_ranks")
+            st.session_state.tba_ranks = get_tba_ranks()
 
-            st.text("✅ Fetching Scouter Info")
-            scouters = get_scouters()
-            st.session_state.scouts = scouters["scouts"]
-            st.session_state.assigned = scouters["assigned"]
+            display_status("team_info")
+            st.session_state.team_info = get_team_info()
 
-            st.text("✅ Identifying Phases")
-            st.session_state.phases = get_phases(st.session_state.df)
+            display_status("team_colors")
+            st.session_state.team_colors = get_team_colors()
 
-            st.text("✅ Calculating Point Values")
-            st.session_state.points = point_values()
-
-            st.text("✅ Loading Match Data")
+            display_status("match_data")
             st.session_state.match_data = get_match_data()
 
-            st.text("✅ Loading Matchs")
+            display_status("matches")
             st.session_state.matches = get_matches()
 
-            st.text("✅ Updating Played Matches")
+            display_status("unplayed_matches")
             st.session_state.unplayed_matches = get_unplayed(
                 st.session_state.df, st.session_state.matches
             )
 
-            st.text("✅ Loading TBA Rankings")
-            st.session_state.tba_ranks = get_tba_ranks()
+            display_status("picked")
+            st.session_state.picked = download_sheets_raw(st.secrets["GID_PICKED"])
 
-            st.text("✅ Fetching Presets")
+            display_status("scouting")
+            st.session_state.scouting = download_sheets_raw(st.secrets["GID_SCOUTING"])
+
+            display_status("scouts")
+            scouters = get_scouters()
+            st.session_state.scouts = scouters["scouts"]
+            st.session_state.assigned = scouters["assigned"]
+
+            display_status("phases")
+            st.session_state.phases = get_phases(st.session_state.df)
+
+            display_status("points")
+            st.session_state.points = get_point_values()
+
+            display_status("presets")
             st.session_state.presets = get_presets()
+
+            display_status("configs")
+            st.session_state.configs = get_configs()
+
+            display_status("console")
+            st.session_state.console = {}
+            for config in st.session_state.configs["Console"]:
+                config, default_status = config.split("=")
+                st.session_state.console[config] = bool(default_status == "true")
+
+            st.session_state.chat = {
+                "logged_in": False,
+                "user": "",
+                "icon": "",
+                "pass": "",
+            }
 
             elapsed_time = round(time.time() - start_time, 2)
 
@@ -338,3 +441,62 @@ def app_init():
 
             time.sleep(1)
             init_status.empty()
+
+    if st.session_state.console["use_chat"]:
+        try:
+            with st.sidebar:
+                sign_in = st.empty()
+
+                with st.form("chat_login", border=False):
+                    login_cols = st.columns(2)
+
+                    if not st.session_state.chat["logged_in"]:
+                        st.session_state.chat["user"] = login_cols[0].text_input(
+                            "Username:",
+                            max_chars=17,
+                            value=(
+                                st.session_state.chat["user"]
+                                if st.session_state.chat["user"] != ""
+                                else ""
+                            ),
+                            key="login_user",
+                        )
+
+                        st.session_state.chat["icon"] = login_cols[1].text_input(
+                            "Icon:",
+                            value=(
+                                st.session_state.chat["icon"]
+                                if st.session_state.chat["icon"] != ""
+                                else ""
+                            ),
+                            key="login_icon",
+                        )
+
+                        if st.session_state.chat["user"] in st.secrets["MODERATORS"]:
+                            st.session_state.chat["pass"] = st.text_input(
+                                "Password:",
+                                type="password",
+                                key="login_pass",
+                            )
+                        else:
+                            st.session_state.chat["pass"] = "."
+                    else:
+                        pass
+
+                    login = st.form_submit_button(
+                        "Login",
+                        use_container_width=True,
+                        disabled=st.session_state.chat["logged_in"],
+                    )
+
+                    if login or st.session_state.chat["logged_in"]:
+                        creds = st.session_state.chat
+                        if not any(value is "" for value in creds.values()):
+                            st.session_state.chat["logged_in"] = True
+                            sign_in.empty()
+                            st.markdown(
+                                f'<iframe src="https://ezchat.streamlit.app/?user={creds["user"]}&icon={creds["icon"]}&pass={creds["pass"]}&embed=true" height="450" style="width: 100%; border: none;"></iframe>',
+                                unsafe_allow_html=True,
+                            )
+        except:
+            pass

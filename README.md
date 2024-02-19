@@ -47,7 +47,8 @@
 
 Or launch it manually with Streamlit:
 
-> ⚠️ Make sure you have enabled your venv environment using `source .venv/Scripts/activate`, otherwise this method will not work.
+> [!WARNING]
+> Make sure you have enabled your venv environment using `source .venv/Scripts/activate`, otherwise this method will not work.
 
 ```
 streamlit run src/SuperSTATs/Main.py
