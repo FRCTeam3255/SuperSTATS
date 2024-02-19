@@ -88,9 +88,8 @@ def display_team(
         else:
             team_averages.append((team, -1))
 
-    alliance_pieces = sum(
-        average for _, average in team_averages if average != -1
-    ) / sum(1 for _, average in team_averages if average != -1)
+    alliance_pieces = sum(average for _, average in team_averages if average != -1)
+
     column.divider()
 
     column.markdown(
