@@ -51,7 +51,7 @@ def main():
 
     default_threshold = 25
     min_threshold = 0
-    max_threshold = 50
+    max_threshold = 100
 
     if filters[2] in selected_filters:
         with st.form("Threshold Slider", clear_on_submit=False):

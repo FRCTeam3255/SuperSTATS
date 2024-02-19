@@ -219,29 +219,34 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     alt_size = st.columns(len(use_phases) + 1)
     team_averages = {}
 
-    for phase, score in team_scores.items():
-        team_averages[phase] = round(score / match_count)
+    try:
+        for phase, score in team_scores.items():
+            team_averages[phase] = round(score / match_count)
 
-    if not_preview:
+        if not_preview:
+            match_scores = team_df.loc[team_df["Match Name"] == match_name]
+        else:
+            team_df = team_df.sort_index()
+
+            match_scores = (
+                team_df.reset_index(drop=True).loc[len(team_df) - 1].to_frame().T
+            )
+            match_name = match_scores["Match Name"].to_list()[0]
+
+            query_url = f"Tracker/?team_num={team_num}&match_name={match_name}"
+
+            button_style = (
+                "background-color: #141414; border: 1px solid #424242; border-radius: 8px;"
+                "color: #ffffff; text-align: center; text-decoration: none;"
+                "display: block; width: 100%; padding: 8px 0;"
+            )
+
+            st.markdown(
+                f"<a href='{query_url}' target='_self' style='{button_style}'>Send To Team Tracker</a>",
+                unsafe_allow_html=True,
+            )
+    except:
         match_scores = team_df.loc[team_df["Match Name"] == match_name]
-    else:
-        team_df = team_df.sort_index()
-
-        match_scores = team_df.reset_index(drop=True).loc[len(team_df) - 1].to_frame().T
-        match_name = match_scores["Match Name"].to_list()[0]
-
-        query_url = f"Tracker/?team_num={team_num}&match_name={match_name}"
-
-        button_style = (
-            "background-color: #141414; border: 1px solid #424242; border-radius: 8px;"
-            "color: #ffffff; text-align: center; text-decoration: none;"
-            "display: block; width: 100%; padding: 8px 0;"
-        )
-
-        st.markdown(
-            f"<a href='{query_url}' target='_self' style='{button_style}'>Send To Team Tracker</a>",
-            unsafe_allow_html=True,
-        )
 
     team_scores = match_scores.drop(columns=["Match Name"])
 
@@ -279,25 +284,40 @@ def gen_match_comp(team_num, match_name, not_preview=True):
             config_columns[2].toggle("Swap Colors", disabled=True)
             use_colors = default_colors
 
-        for i, phase in enumerate(phases):
-            delta = match_score[phase] - team_averages[phase]
-            columns[i].metric(
-                label=phase,
-                value=match_score[phase],
-                delta=delta,
-                delta_color="off" if delta == 0 else "normal",
-                label_visibility="hidden",
-            )
+        try:
+            for i, phase in enumerate(phases):
+                delta = match_score[phase] - team_averages[phase]
+                columns[i].metric(
+                    label=phase,
+                    value=match_score[phase],
+                    delta=delta,
+                    delta_color="off" if delta == 0 else "normal",
+                    label_visibility="hidden",
+                )
+        except:
+            pass
     else:
         use_colors = default_colors
 
-    df = pd.DataFrame(
-        {
-            "Phase": use_phases,
-            "Average": [team_averages[phase] for phase in use_phases],
-            "Match": [match_score[phase] for phase in use_phases],
-        }
-    )
+    try:
+        df = pd.DataFrame(
+            {
+                "Phase": use_phases,
+                "Average": [team_averages[phase] for phase in use_phases],
+                "Match": [match_score[phase] for phase in use_phases],
+            }
+        )
+    except:
+        df = pd.DataFrame.from_dict(
+            {
+                "Phase": [],
+                "Average": [],
+                "Match": [],
+            }
+        )
+        df["Phase"] = df["Phase"].astype(str)
+        df["Average"] = df["Average"].astype(int)
+        df["Match"] = df["Match"].astype(int)
 
     if show_ungrouped:
         df["Phase"] = df["Phase"].apply(lambda x: x.split("_")[1])
@@ -338,30 +358,33 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     with alt_size[0].container():
         st.altair_chart(chart, use_container_width=True)
 
-    if not_preview and not show_ungrouped:
-        st.divider()
-
-        match_progress = team_df
-        match_progress["Match Name"] = match_progress["Match Name"].apply(
-            lambda x: f"{x} ⭐" if x == match_name else x
-        )
-
-        column_config = {}
-        for phase in ["AUTO", "TELE", "END", "INFO"]:
-            column_config[phase] = st.column_config.ProgressColumn(
-                phase.title(),
-                format=f"%f/{max(match_progress[phase])}",
-                min_value=min(match_progress[phase]),
-                max_value=max(match_progress[phase]),
+    if not_preview:
+        try:
+            match_progress = team_df
+            match_progress["Match Name"] = match_progress["Match Name"].apply(
+                lambda x: f"{x} ⭐" if x == match_name else x
             )
 
-        st.dataframe(
-            match_progress.drop(columns=["COMMENT"]),
-            column_config=column_config,
-            column_order=("Match Name", "AUTO", "TELE", "END", "INFO"),
-            hide_index=True,
-            use_container_width=True,
-        )
+            column_config = {}
+            for phase in ["AUTO", "TELE", "END", "INFO"]:
+                column_config[phase] = st.column_config.ProgressColumn(
+                    phase.title(),
+                    format=f"%f/{max(match_progress[phase])}",
+                    min_value=min(match_progress[phase]),
+                    max_value=max(match_progress[phase]),
+                )
+
+            st.divider()
+
+            st.dataframe(
+                match_progress.drop(columns=["COMMENT"]),
+                column_config=column_config,
+                column_order=("Match Name", "AUTO", "TELE", "END", "INFO"),
+                hide_index=True,
+                use_container_width=True,
+            )
+        except:
+            pass
 
 
 def gen_bar(
