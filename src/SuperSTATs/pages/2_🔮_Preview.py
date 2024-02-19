@@ -44,7 +44,11 @@ def display_team(
     match_df = st.session_state.match_data
     match_df = match_df.loc[match_df["Match Name"] == match_choice]
     match_breakdown = match_df["score_breakdown"].to_list()[0]
-    actual_score = match_breakdown[team_header[1].lower()]["totalPoints"]
+
+    try:
+        actual_score = match_breakdown[team_header[1].lower()]["totalPoints"]
+    except:
+        actual_score = -1
 
     match_key = match_df["key"].to_list()[0]
     match_url = f"https://www.thebluealliance.com/match/{match_key}"
@@ -56,9 +60,48 @@ def display_team(
     )
 
     column.markdown(
-        f"<h6><a href='{match_url}' style='color: #808080; text-decoration: none;'>Actual Score: {actual_score} ({percent_error}%)</a></h6>",
+        f"<h6><a href='{match_url}' style='color: #808080; text-decoration: none;'>Actual Score: {'Unplayed' if actual_score == -1 else actual_score} {'' if actual_score == -1 else f'({percent_error}%)'}</a></h6>",
         unsafe_allow_html=True,
     )
+
+    df_raw = st.session_state.df
+    alliance_pieces = 0
+
+    game_piece_cols = [
+        col
+        for col in df_raw.columns
+        if any(
+            piece.upper() in col
+            for piece in st.session_state.configs["Game Piece Columns"]
+        )
+    ]
+
+    team_averages = []
+
+    for team in team_df:
+        team_raw = df_raw[df_raw["Team"] == team]
+        if len(team_raw) > 0:
+            team_pieces = team_raw[list(set(game_piece_cols))].sum().sum() / len(
+                team_raw
+            )
+            team_averages.append((team, round(team_pieces, 2)))
+        else:
+            team_averages.append((team, -1))
+
+    alliance_pieces = sum(
+        average for _, average in team_averages if average != -1
+    ) / sum(1 for _, average in team_averages if average != -1)
+    column.divider()
+
+    column.markdown(
+        f"<h5>Projected Pieces: {round(alliance_pieces, 2)}</h5>",
+        unsafe_allow_html=True,
+    )
+
+    for team, average in team_averages:
+        column.write(
+            f"- Team {team}: {'Not enough data' if str(average) == -1 else f'{average} pieces'}"
+        )
 
     column.markdown("""---""")
 

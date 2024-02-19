@@ -69,10 +69,13 @@ def scouting_expander(
                 if len(rank_info) == 2:
                     st.text(f"SN Rank: {rank_info[0]} | TBA Rank: {rank_info[1]}")
 
-                team_data = df.loc[
-                    df["Team #"] == st.secrets["TEAM_NUMBER"],
-                    ["Frame Size LENGTH", "Frame Size WIDTH"],
-                ].iloc[0]
+                if st.secrets["TEAM_NUMBER"] not in df["Team #"].values:
+                    team_data = {"Frame Size LENGTH": 0, "Frame Size WIDTH": 0}
+                else:
+                    team_data = df.loc[
+                        df["Team #"] == st.secrets["TEAM_NUMBER"],
+                        ["Frame Size LENGTH", "Frame Size WIDTH"],
+                    ].iloc[0]
 
                 added_length = team_data["Frame Size LENGTH"]
                 added_width = team_data["Frame Size WIDTH"]
@@ -154,6 +157,8 @@ def calc_projected(team_df, show_ungrouped=False, return_row=False):
 
         match_count += len(team_score)
         team_score = team_score[phases].sum().to_frame().T
+        alliance_score = alliance_score.dropna(axis=1, how="all")
+        team_score = team_score.dropna(axis=1, how="all")
         alliance_score = pd.concat([alliance_score, team_score], ignore_index=True)
 
     alliance_score = alliance_score.sum().sum()
