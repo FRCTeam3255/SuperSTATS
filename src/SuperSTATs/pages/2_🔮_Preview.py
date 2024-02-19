@@ -100,7 +100,7 @@ def display_team(
 
     for team, average in team_averages:
         column.write(
-            f"- Team {team}: {'Not enough data' if str(average) == -1 else f'{average} pieces'}"
+            f"- Team {team}: {'⚠️ Not enough data' if average == -1 else f'{average} pieces'}"
         )
 
     column.markdown("""---""")
