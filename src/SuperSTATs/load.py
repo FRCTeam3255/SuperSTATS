@@ -23,51 +23,18 @@ def download_sheets_raw(gid):
     return df
 
 
-tba = tbapy.TBA(st.secrets["TBA_API"])
 df = download_sheets_raw(st.secrets["GID_RAW"])
+tba = tbapy.TBA(st.secrets["TBA_API"])
 
 
-def get_scouters():
-    try:
-        with open("src\\pickles\\scouts.pickle", "rb") as f:
-            scouts = pickle.load(f)
+def get_tba_ranks():
+    event_rankings = tba.event_rankings(st.secrets["DEFAULT_EVENT_KEY"])["rankings"]
+    tba_ranks = {}
 
-        return {"scouts": scouts[0], "assigned": scouts[1]}
+    for team in event_rankings:
+        tba_ranks[team["team_key"].split("frc")[1]] = team["rank"]
 
-    except:
-        scouts_df = download_sheets_raw(st.secrets["GID_SCOUTS"]).sort_values(by="Name")
-
-        return {
-            "scouts": scouts_df["Name"].tolist(),
-            "assigned": scouts_df.loc[scouts_df["Assigned"] == "x", "Name"].tolist(),
-        }
-
-
-def get_phases(df):
-    filtered_columns = []
-    for column in df.columns:
-        if any(c.isdigit() for c in column.split("_")[-1]):
-            filtered_columns.append(column)
-
-    phases = []
-    for column in filtered_columns:
-        column = column.split("_")[0]
-        phases.append(column)
-
-    return sorted(list(set(phases)))
-
-
-def get_point_values():
-    points = {
-        f"{value[0]}_{value[1]}_{value[2]}": int(value[3])
-        for value in df.columns.str.split("_")
-        if len(value) > 1
-    }
-
-    for col, point in points.items():
-        df[f"{col}_{point}"] *= point
-
-    return points
+    return tba_ranks
 
 
 @st.cache_data(show_spinner=False, persist=True)
@@ -223,14 +190,47 @@ def get_unplayed(df, matches):
     return unplayed_matches
 
 
-def get_tba_ranks():
-    event_rankings = tba.event_rankings(st.secrets["DEFAULT_EVENT_KEY"])["rankings"]
-    tba_ranks = {}
+def get_scouters():
+    try:
+        with open("src\\pickles\\scouts.pickle", "rb") as f:
+            scouts = pickle.load(f)
 
-    for team in event_rankings:
-        tba_ranks[team["team_key"].split("frc")[1]] = team["rank"]
+        return {"scouts": scouts[0], "assigned": scouts[1]}
 
-    return tba_ranks
+    except:
+        scouts_df = download_sheets_raw(st.secrets["GID_SCOUTS"]).sort_values(by="Name")
+
+        return {
+            "scouts": scouts_df["Name"].tolist(),
+            "assigned": scouts_df.loc[scouts_df["Assigned"] == "x", "Name"].tolist(),
+        }
+
+
+def get_phases(df):
+    filtered_columns = []
+    for column in df.columns:
+        if any(c.isdigit() for c in column.split("_")[-1]):
+            filtered_columns.append(column)
+
+    phases = []
+    for column in filtered_columns:
+        column = column.split("_")[0]
+        phases.append(column)
+
+    return sorted(list(set(phases)))
+
+
+def get_point_values():
+    points = {
+        f"{value[0]}_{value[1]}_{value[2]}": int(value[3])
+        for value in df.columns.str.split("_")
+        if len(value) > 1
+    }
+
+    for col, point in points.items():
+        df[f"{col}_{point}"] *= point
+
+    return points
 
 
 def get_presets():
@@ -312,20 +312,20 @@ def app_init():
         )
 
     states = [
-        "team_info",
-        "team_colors",
-        "tba",
         "df_raw",
         "df",
+        "tba",
+        "tba_ranks",
+        "team_info",
+        "team_colors",
+        "match_data",
+        "matches",
+        "unplayed_matches",
         "picked",
         "scouting",
         "scouts",
         "phases",
         "points",
-        "match_data",
-        "matches",
-        "unplayed_matches",
-        "tba_ranks",
         "presets",
         "configs",
     ]
@@ -355,15 +355,6 @@ def app_init():
                 if status_messages[state] is not None:
                     st.markdown(status_messages[state], unsafe_allow_html=True)
 
-            display_status("team_info")
-            st.session_state.team_info = get_team_info()
-
-            display_status("team_colors")
-            st.session_state.team_colors = get_team_colors()
-
-            display_status("tba")
-            st.session_state.tba = tba
-
             display_status("df_raw")
             df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
 
@@ -371,6 +362,29 @@ def app_init():
             df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
             df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
             st.session_state.df = df
+
+            display_status("tba")
+            st.session_state.tba = tba
+
+            display_status("tba_ranks")
+            st.session_state.tba_ranks = get_tba_ranks()
+
+            display_status("team_info")
+            st.session_state.team_info = get_team_info()
+
+            display_status("team_colors")
+            st.session_state.team_colors = get_team_colors()
+
+            display_status("match_data")
+            st.session_state.match_data = get_match_data()
+
+            display_status("matches")
+            st.session_state.matches = get_matches()
+
+            display_status("unplayed_matches")
+            st.session_state.unplayed_matches = get_unplayed(
+                st.session_state.df, st.session_state.matches
+            )
 
             display_status("picked")
             st.session_state.picked = download_sheets_raw(st.secrets["GID_PICKED"])
@@ -388,20 +402,6 @@ def app_init():
 
             display_status("points")
             st.session_state.points = get_point_values()
-
-            display_status("match_data")
-            st.session_state.match_data = get_match_data()
-
-            display_status("matches")
-            st.session_state.matches = get_matches()
-
-            display_status("unplayed_matches")
-            st.session_state.unplayed_matches = get_unplayed(
-                st.session_state.df, st.session_state.matches
-            )
-
-            display_status("tba_ranks")
-            st.session_state.tba_ranks = get_tba_ranks()
 
             display_status("presets")
             st.session_state.presets = get_presets()
