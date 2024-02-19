@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import SuperSTATs.load as load
 import streamlit as st
 import altair as alt
@@ -691,6 +692,15 @@ def gen_bar(
     else:
         no_data = False
 
+    def rgba_to_hex(rgba):
+        r, g, b, a = rgba
+        return "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))
+
+    def gen_cmap(length, cmap_name="Blues"):
+        cmap = plt.get_cmap(cmap_name)
+        colors = [rgba_to_hex(cmap(i)) for i in np.linspace(0, 0.8, length)]
+        return colors
+
     if preset_choice != "None":
         preset = presets[preset_choice]
         data = pd.DataFrame(preset["data"])
@@ -714,7 +724,10 @@ def gen_bar(
             color=alt.Color(
                 "variable:N",
                 title=" ",
-                scale=alt.Scale(domain=selected_filters, scheme="darkblue"),
+                scale=alt.Scale(
+                    domain=selected_filters,
+                    range=gen_cmap(len(data["variable"].unique())),
+                ),
                 legend=alt.Legend(
                     title=None,
                     orient=(
@@ -731,6 +744,8 @@ def gen_bar(
                     labelFontSize=(10.5 if inline_legend and not group_filters else 14),
                 ),
             ),
+            stroke=alt.value("#141414"),
+            strokeWidth=alt.value(2),
             tooltip=["value:Q", "variable:N"],
         )
     )

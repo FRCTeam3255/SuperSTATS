@@ -469,8 +469,13 @@ def app_init():
                     else:
                         pass
 
-                    login = st.form_submit_button("Login", use_container_width=True)
-                    if login:
+                    login = st.form_submit_button(
+                        "Login",
+                        use_container_width=True,
+                        disabled=st.session_state.chat["logged_in"],
+                    )
+
+                    if login or st.session_state.chat["logged_in"]:
                         creds = st.session_state.chat
                         if not any(value is "" for value in creds.values()):
                             st.session_state.chat["logged_in"] = True
