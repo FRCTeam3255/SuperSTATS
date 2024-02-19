@@ -462,11 +462,6 @@ def app_init():
                             st.session_state.chat["pass"] = st.text_input(
                                 "Password:",
                                 type="password",
-                                value=(
-                                    st.session_state.chat["pass"]
-                                    if st.session_state.chat["pass"] != ""
-                                    else ""
-                                ),
                                 key="login_pass",
                             )
                         else:

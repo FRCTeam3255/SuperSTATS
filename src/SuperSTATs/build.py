@@ -338,7 +338,7 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     with alt_size[0].container():
         st.altair_chart(chart, use_container_width=True)
 
-    if not_preview:
+    if not_preview and not show_ungrouped:
         st.divider()
 
         match_progress = team_df
@@ -355,13 +355,12 @@ def gen_match_comp(team_num, match_name, not_preview=True):
                 max_value=max(match_progress[phase]),
             )
 
-        st.data_editor(
+        st.dataframe(
             match_progress.drop(columns=["COMMENT"]),
             column_config=column_config,
             column_order=("Match Name", "AUTO", "TELE", "END", "INFO"),
             hide_index=True,
             use_container_width=True,
-            disabled=True,
         )
 
 

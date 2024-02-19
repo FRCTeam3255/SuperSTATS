@@ -139,26 +139,18 @@ def main():
                 red_data = data[0]["red"]
                 blue_data = data[0]["blue"]
 
-                red_tba_score = (
-                    red_data["totalPoints"]
-                    - red_data["linkPoints"]
-                    - red_data["foulPoints"]
-                )
-                blue_tba_score = (
-                    blue_data["totalPoints"]
-                    - blue_data["linkPoints"]
-                    - blue_data["foulPoints"]
-                )
+                red_tba_score = red_data["totalPoints"] - red_data["foulPoints"]
+                blue_tba_score = blue_data["totalPoints"] - blue_data["foulPoints"]
 
                 def get_variance(color, tba_score):
                     team_df = match_info[match_info["Team Color"] == color[0]]
                     team_score = int(team_df["Score Sum"].sum())
-                    team_variance = abs(tba_score - team_score)
+                    team_variance = tba_score - team_score
                     text_color = "#f8312f" if color[0] == "R" else "#0074ba"
 
-                    if team_variance >= variance_threshold:
+                    if abs(team_variance) >= variance_threshold:
                         colored_header = f"<span style='color: {text_color}; font-size: 2em;'>[{color}]</span>"
-                        default_header = f"<span style='color: white; font-size: 2em;'> Point Variance: {team_variance} ({team_score}/{tba_score})</span>"
+                        default_header = f"<span style='color: white; font-size: 2em;'> Point Variance: {-team_variance} ({team_score}/{tba_score})</span>"
 
                         st.markdown(
                             f"{colored_header}{default_header}",
