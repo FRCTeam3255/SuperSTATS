@@ -458,16 +458,19 @@ def app_init():
                             key="login_icon",
                         )
 
-                        st.session_state.chat["pass"] = st.text_input(
-                            "Password:",
-                            type="password",
-                            value=(
-                                st.session_state.chat["pass"]
-                                if st.session_state.chat["pass"] != ""
-                                else ""
-                            ),
-                            key="login_pass",
-                        )
+                        if st.session_state.chat["user"] in st.secrets["MODERATORS"]:
+                            st.session_state.chat["pass"] = st.text_input(
+                                "Password:",
+                                type="password",
+                                value=(
+                                    st.session_state.chat["pass"]
+                                    if st.session_state.chat["pass"] != ""
+                                    else ""
+                                ),
+                                key="login_pass",
+                            )
+                        else:
+                            st.session_state.chat["pass"] = "."
                     else:
                         pass
 
