@@ -247,8 +247,15 @@ def get_presets():
 
 
 def get_configs():
+    configs_raw = download_sheets_raw(st.secrets["GID_CONFIG"])
+    configs = {}
+
+    for index, row in configs_raw.iterrows():
+        config = row["Config"]
+        value = row["Value"]
+        configs[config] = value.split(", ")
+
     configs_path = "src\\pickles\\configs.pickle"
-    default_configs = {"use_chat": False}
 
     try:
         with open(configs_path, "rb") as f:
@@ -256,8 +263,8 @@ def get_configs():
         return configs
     except:
         with open(configs_path, "wb") as f:
-            pickle.dump(default_configs, f, pickle.HIGHEST_PROTOCOL)
-        return default_configs
+            pickle.dump(configs, f, pickle.HIGHEST_PROTOCOL)
+        return configs
 
 
 def app_init():
@@ -328,6 +335,7 @@ def app_init():
         "points",
         "presets",
         "configs",
+        "console",
     ]
 
     status_messages = {}
@@ -409,6 +417,12 @@ def app_init():
             display_status("configs")
             st.session_state.configs = get_configs()
 
+            display_status("console")
+            st.session_state.console = {}
+            for config in st.session_state.configs["Console"]:
+                config, default_status = config.split("=")
+                st.session_state.console[config] = bool(default_status == "true")
+
             st.session_state.chat = {
                 "logged_in": False,
                 "user": "",
@@ -428,7 +442,7 @@ def app_init():
             time.sleep(1)
             init_status.empty()
 
-    if st.session_state.configs["use_chat"]:
+    if st.session_state.console["use_chat"]:
         try:
             with st.sidebar:
                 sign_in = st.empty()

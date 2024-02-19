@@ -23,16 +23,21 @@ def main():
     with st.expander("Config"):
         updated_configs = {}
 
-        for config, status in st.session_state.configs.items():
+        for config, status in st.session_state.console.items():
             updated_configs[config] = st.toggle(
                 config.title().replace("_", " "), status
             )
 
+        settings_raw = [
+            f"{key}={str(value).lower()}" for key, value in updated_configs.items()
+        ]
+
         if st.button("Update Configs", type="primary", use_container_width=True):
-            st.session_state.configs = updated_configs
+            st.session_state.configs["Console"] = settings_raw
+            st.session_state.console = updated_configs
 
             with open("src\\pickles\\configs.pickle", "wb") as f:
-                pickle.dump(updated_configs, f, pickle.HIGHEST_PROTOCOL)
+                pickle.dump(st.session_state.configs, f, pickle.HIGHEST_PROTOCOL)
 
             st.toast("Successfully updated configs! Please refresh...", icon="✅")
 

@@ -168,9 +168,7 @@ def main():
             entry_parts = entry.split("_")
             entry_name = entry_parts[1].title().replace("Rsl", "RSL")
 
-            feature_list = [
-                "Floor Pickup",
-            ]
+            feature_list = st.session_state.configs["Features"]
 
             if entry_parts[2] == "INT":
                 entry_responses[entry] = st.number_input(
