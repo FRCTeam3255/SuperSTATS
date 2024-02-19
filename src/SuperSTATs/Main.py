@@ -48,14 +48,14 @@ def main():
                 blue_data = str(data["blue"]["totalPoints"]).ljust(3)
 
                 if int(red_data) > int(blue_data):
-                    red_data = f"🔴 {str(red_data)} 🏆"
-                    blue_data = f"🔵 {str(blue_data)}"
+                    red_data = f"🔴 {red_data} 🏆"
+                    blue_data = f"🔵 {blue_data}"
                 elif int(red_data) < int(blue_data):
-                    red_data = f"🔴 {str(red_data)}"
-                    blue_data = f"🔵 {str(blue_data)} 🏆"
+                    red_data = f"🔴 {red_data}"
+                    blue_data = f"🔵 {blue_data} 🏆"
                 else:
-                    red_data = f"🔴 {str(red_data)}"
-                    blue_data = f"🔵 {str(blue_data)}"
+                    red_data = f"🔴 {red_data}"
+                    blue_data = f"🔵 {blue_data}"
             except:
                 red_data = blue_data = "🕑 N/A"
 

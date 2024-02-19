@@ -49,18 +49,21 @@ def main():
 
     selected_filters = st.multiselect("Filters:", filters, [filters[0], filters[2]])
 
-    default_threshold = 25
-    min_threshold = 0
-    max_threshold = 100
+    thresholds_raw = st.session_state.configs["Variance Slider Thresholds"]
+    thresholds = {}
+
+    for config in thresholds_raw:
+        config = config.split("=")
+        thresholds[config[0]] = int(config[1])
 
     if filters[2] in selected_filters:
         with st.form("Threshold Slider", clear_on_submit=False):
             variance_threshold = st.slider(
                 "Variance Threshold:",
-                min_threshold,
-                max_threshold,
-                default_threshold,
-                1,
+                value=thresholds["default"],
+                min_value=thresholds["min"],
+                max_value=thresholds["max"],
+                step=1,
             )
             st.form_submit_button(
                 "Set Threshold", type="primary", use_container_width=True
