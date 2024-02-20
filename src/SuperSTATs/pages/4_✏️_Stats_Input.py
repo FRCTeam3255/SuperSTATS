@@ -83,6 +83,8 @@ def main():
         name: id for name, id in entries_dict.items() if name not in gen_entries
     }
 
+    st.write(set_entries)
+
     top_columns = st.columns(2)
 
     matches = st.session_state.matches
@@ -128,6 +130,8 @@ def main():
     color_icon = "🔴" if input_color == "R" else "🔵"
     input_name = f"{input_sub} [⇄]" if input_sub else input_name
 
+    input_key = st.secrets["DEFAULT_EVENT_KEY"]
+
     st.divider()
 
     st.markdown(
@@ -135,7 +139,14 @@ def main():
         unsafe_allow_html=True,
     )
 
-    set_inputs = [input_name, input_match, input_type, input_color, input_team]
+    set_inputs = [
+        input_name,
+        input_match,
+        input_type,
+        input_color,
+        input_team,
+        input_key,
+    ]
     set_combined = {}
 
     def combine_set(entry_name, variable):
@@ -156,7 +167,6 @@ def main():
     entry_responses = {}
 
     def phase_header(phase):
-        st.divider()
         st.markdown(
             f'<div style="text-align: center; font-size: 32px;">{phase}</div>',
             unsafe_allow_html=True,
@@ -186,19 +196,25 @@ def main():
 
     submitted = False
 
+    st.divider()
+
     with st.form("Stats Input", clear_on_submit=False, border=False):
-        phase_header("Autonomous")
-        gen_phase_input("AUTO")
+        with st.expander("Autonomous", True):
+            phase_header("Autonomous")
+            gen_phase_input("AUTO")
 
-        phase_header("Teleop")
-        gen_phase_input("TELE")
+        with st.expander("Teleop", True):
+            phase_header("Teleop")
+            gen_phase_input("TELE")
 
-        phase_header("Endgame")
-        gen_phase_input("END")
+        with st.expander("Endgame", True):
+            phase_header("Endgame")
+            gen_phase_input("END")
 
-        phase_header("Info & Comments")
-        gen_phase_input("INFO")
-        gen_phase_input("COMMENT")
+        with st.expander("Info & Comments", True):
+            phase_header("Info & Comments")
+            gen_phase_input("INFO")
+            gen_phase_input("COMMENT")
 
         st.divider()
 

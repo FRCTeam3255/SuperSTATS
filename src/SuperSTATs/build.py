@@ -465,12 +465,12 @@ def gen_bar(
             group_filters,
         )
 
-        show_available, var_count = gen_toggle(
-            "show_available", var_count, "Availability", use_show_available, key, False
-        )
-
         show_nums, var_count = gen_toggle(
             "show_nums", var_count, "Team Numbers", True, key, False
+        )
+
+        show_available, var_count = gen_toggle(
+            "show_available", var_count, "Availability", show_nums, key, not show_nums
         )
 
         features, var_count = gen_toggle(
@@ -547,7 +547,7 @@ def gen_bar(
             st.multiselect(
                 "Features:",
                 feature_choices,
-                default=dt_types,
+                default="Swerve",
                 key=f"selected_features_{key}",
             )
             if use_features and features
@@ -576,13 +576,10 @@ def gen_bar(
             if not features:
                 return True
 
-            remaining_features = set(selected_features) - set(dt_types)
-
-            if not remaining_features:
-                return True
+            remaining_features = set(selected_features)
 
             for feature in remaining_features:
-                if feature not in all_team_features[team]:
+                if feature not in all_team_features[team] + dt_types:
                     return False
 
             return True
@@ -599,6 +596,7 @@ def gen_bar(
             )
 
             all_team_features[team] = team_features
+
             if has_features(team):
                 kept_teams.append(team)
 
