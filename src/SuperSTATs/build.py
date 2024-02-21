@@ -547,7 +547,7 @@ def gen_bar(
             st.multiselect(
                 "Features:",
                 feature_choices,
-                default="Swerve",
+                default=[],
                 key=f"selected_features_{key}",
             )
             if use_features and features
@@ -564,7 +564,9 @@ def gen_bar(
         ).drop(columns=["Team #"])
 
         df["Drivetrain Type"] = df["Drivetrain Type"].fillna("Unknown Drivetrain")
-        df = df[(df["Drivetrain Type"].isin(selected_features))]
+
+        if any(dt in selected_features for dt in dt_types):
+            df = df[(df["Drivetrain Type"].isin(selected_features))]
 
         def get_features(comment):
             return comment.split(", ")
@@ -576,9 +578,7 @@ def gen_bar(
             if not features:
                 return True
 
-            remaining_features = set(selected_features)
-
-            for feature in remaining_features:
+            for feature in selected_features:
                 if feature not in all_team_features[team] + dt_types:
                     return False
 
