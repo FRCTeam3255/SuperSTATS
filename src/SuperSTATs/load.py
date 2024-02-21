@@ -448,10 +448,10 @@ def app_init():
                 sign_in = st.empty()
 
                 with st.form("chat_login", border=False):
-                    login_cols = st.columns(2)
+                    login_columns = st.columns(2)
 
                     if not st.session_state.chat["logged_in"]:
-                        st.session_state.chat["user"] = login_cols[0].text_input(
+                        st.session_state.chat["user"] = login_columns[0].text_input(
                             "Username:",
                             max_chars=17,
                             value=(
@@ -462,7 +462,7 @@ def app_init():
                             key="login_user",
                         )
 
-                        st.session_state.chat["icon"] = login_cols[1].text_input(
+                        st.session_state.chat["icon"] = login_columns[1].text_input(
                             "Icon:",
                             value=(
                                 st.session_state.chat["icon"]
