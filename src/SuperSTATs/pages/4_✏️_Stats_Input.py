@@ -83,8 +83,6 @@ def main():
         name: id for name, id in entries_dict.items() if name not in gen_entries
     }
 
-    st.write(set_entries)
-
     top_columns = st.columns(2)
 
     matches = st.session_state.matches

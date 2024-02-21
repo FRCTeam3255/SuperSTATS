@@ -755,8 +755,8 @@ def gen_bar(
 
     if selected_filters:
         if not no_data:
+            st.divider()
             st.altair_chart(chart, use_container_width=True)
-
         else:
             st.error("Not enough data")
     else:
