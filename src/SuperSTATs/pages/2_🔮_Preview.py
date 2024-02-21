@@ -17,7 +17,7 @@ def display_team(
     df = st.session_state.scouting
 
     column.markdown(
-        f"<center style='font-size: 2.5em;'>{team_header[0]} {team_header[1]} Alliance {team_header[0]}</center>",
+        f"<center style='font-size: 2em;'>{team_header[0]} {team_header[1]} Alliance {team_header[0]}</center>",
         unsafe_allow_html=True,
     )
 
