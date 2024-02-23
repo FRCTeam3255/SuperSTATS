@@ -369,6 +369,7 @@ def app_init():
             display_status("df")
             df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
             df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
+            df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
             st.session_state.df = df
 
             display_status("tba")
