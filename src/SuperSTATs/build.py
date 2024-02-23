@@ -762,6 +762,24 @@ def gen_bar(
     else:
         st.error("Please select at least one filter")
 
+    if use_presets == True and preset_choice == "None":
+        preset_name = st.text_input("New Preset Name:")
+
+        if preset_name.replace(" ", ""):
+            if st.button("Add Preset", use_container_width=True):
+                presets[preset_name] = {
+                    "data": data.to_dict(),
+                    "x_range": x_range,
+                    "show_nums": show_nums,
+                    "selected_filters": selected_filters,
+                    "inline_legend": inline_legend,
+                    "group_filters": group_filters,
+                }
+
+                with open("src\\pickles\\presets.pickle", "wb") as f:
+                    pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
+                st.toast("Successfully added preset!", icon="✅")
+
     if expanders and preset_choice == "None":
         if st.toggle("Ranked Expanders"):
             with st.container(border=True):
@@ -784,21 +802,3 @@ def gen_bar(
                     f"<span style='font-size: small; color: #808080;'>Loaded in {round(time.time() - start_time, 2)} seconds...</span>",
                     unsafe_allow_html=True,
                 )
-
-    if use_presets == True and preset_choice == "None":
-        preset_name = st.text_input("New Preset Name:")
-
-        if preset_name.replace(" ", ""):
-            if st.button("Add Preset", use_container_width=True):
-                presets[preset_name] = {
-                    "data": data.to_dict(),
-                    "x_range": x_range,
-                    "show_nums": show_nums,
-                    "selected_filters": selected_filters,
-                    "inline_legend": inline_legend,
-                    "group_filters": group_filters,
-                }
-
-                with open("src\\pickles\\presets.pickle", "wb") as f:
-                    pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
-                st.toast("Successfully added preset!", icon="✅")
