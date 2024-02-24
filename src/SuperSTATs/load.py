@@ -492,7 +492,7 @@ def app_init():
 
                     if login or st.session_state.chat["logged_in"]:
                         creds = st.session_state.chat
-                        if not any(value is "" for value in creds.values()):
+                        if creds["pass"] != "":
                             st.session_state.chat["logged_in"] = True
                             sign_in.empty()
                             st.markdown(
