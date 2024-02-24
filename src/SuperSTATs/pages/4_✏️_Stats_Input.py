@@ -131,6 +131,8 @@ def main():
             "Match [OTHER]:", st.session_state.matches
         )
 
+    match_scouts = all_match_scouts[input_match]
+
     input_color = name_check(input_name, match_scouts)
     input_type = input_match.split()[0]
 
@@ -139,6 +141,7 @@ def main():
     input_match = input_match.split()[1]
 
     match_scouts = match_scouts[0:3] if input_color == "R" else match_scouts[3:6]
+
     input_team = teams[match_scouts.index(input_name)]
     color_icon = "🔴" if input_color == "R" else "🔵"
     input_name = (

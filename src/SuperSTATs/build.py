@@ -376,7 +376,7 @@ def gen_match_comp(team_num, match_name, not_preview=True):
                 column_config[phase] = st.column_config.ProgressColumn(
                     phase.title(),
                     format=f"%f/{max(match_progress[phase])}",
-                    min_value=min(match_progress[phase]),
+                    min_value=min(match_progress[phase]) - 1,
                     max_value=max(match_progress[phase]),
                 )
 
