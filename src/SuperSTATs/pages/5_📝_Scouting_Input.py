@@ -37,12 +37,15 @@ def main():
 
         columns = st.columns(2)
 
-        length = columns[0].number_input(
-            "Frame Size LENGTH [NO BUMPERS]:", step=0.5, min_value=0.0
-        )
-        width = columns[1].number_input(
-            "Frame Size WIDTH [NO BUMPERS]:", step=0.5, min_value=0.0
-        )
+        with st.container(border=False):
+            length = columns[0].number_input(
+                "Frame Size LENGTH [NO BUMPERS]:", step=0.5, min_value=0.0
+            )
+
+            width = columns[1].number_input(
+                "Frame Size WIDTH [NO BUMPERS]:", step=0.5, min_value=0.0
+            )
+
         weight = columns[0].number_input(
             "Weight [NO BATTERY]:", step=1.0, min_value=0.0
         )

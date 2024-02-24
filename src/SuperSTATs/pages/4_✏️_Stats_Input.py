@@ -1,14 +1,13 @@
 import SuperSTATs.load as load
 from bs4 import BeautifulSoup
 import streamlit as st
-import pandas as pd
 import requests
 
 
 def get_match_scouts(team):
+    rotation = int(st.session_state.configs["Scouting Rotations"][0])
     match_list = st.session_state.matches["Match"].to_list()
     scouts = {}
-    rotation = 3
 
     processed = 0
     count = 0
@@ -83,33 +82,56 @@ def main():
         name: id for name, id in entries_dict.items() if name not in gen_entries
     }
 
-    top_columns = st.columns(2)
-
     matches = st.session_state.matches
     unplayed_matches = st.session_state.unplayed_matches
+    scouters = st.session_state.assigned
+
+    df_teams = {}
+    all_match_scouts = {}
+    scout_matches = []
+
+    top_columns = st.columns(2)
+
+    name_selection = top_columns[0].empty()
+
+    input_name = name_selection.selectbox(
+        "Name:", st.session_state.assigned + ["Sub"]
+    ).upper()
+
+    if input_name == "SUB":
+        bot_columns = st.columns(2)
+        input_name = name_selection.selectbox(
+            "Original:", st.session_state.assigned
+        ).upper()
+        input_sub = (
+            bot_columns[0].selectbox("Substitute:", st.session_state.scouts).upper()
+        )
+    else:
+        input_sub = None
+
+    for match in unplayed_matches:
+        teams = matches[matches["Match"] == match].set_index("Match").transpose()
+        df_teams.update(teams.to_dict())
+
+        red_scouts = get_match_scouts(scouters[::2])[match]
+        blue_scouts = get_match_scouts(scouters[1::2])[match]
+        match_scouts = red_scouts + blue_scouts
+        all_match_scouts[match] = match_scouts
+
+    for match in all_match_scouts:
+        if input_name in all_match_scouts[match]:
+            scout_matches.append(match)
 
     match_selection = top_columns[1].empty()
-    input_match = match_selection.selectbox("Match:", unplayed_matches + ["Other"])
+
+    input_match = match_selection.selectbox("Match:", scout_matches + ["Other"])
+
     if input_match == "Other":
         input_match = match_selection.selectbox(
             "Match [OTHER]:", st.session_state.matches
         )
 
-    scouter_list = st.session_state.assigned
-
-    red_scouts = get_match_scouts(scouter_list[::2])[input_match]
-    blue_scouts = get_match_scouts(scouter_list[1::2])[input_match]
-    match_scouts = red_scouts + blue_scouts
-
-    name_selection = top_columns[0].empty()
-    input_name = name_selection.selectbox("Name:", match_scouts + ["Sub"]).upper()
-
-    if input_name == "SUB":
-        bot_columns = st.columns(2)
-        input_name = name_selection.selectbox("Original:", match_scouts).upper()
-        input_sub = bot_columns[0].selectbox("Sub:", st.session_state.scouts).upper()
-    else:
-        input_sub = None
+    match_scouts = all_match_scouts[input_match]
 
     input_color = name_check(input_name, match_scouts)
     input_type = input_match.split()[0]
@@ -118,15 +140,17 @@ def main():
     teams = df_teams.filter(like=input_color, axis=0)[input_match].to_list()
     input_match = input_match.split()[1]
 
-    name_index = (
-        red_scouts.index(input_name)
-        if input_color == "R"
-        else blue_scouts.index(input_name)
+    match_scouts = match_scouts[0:3] if input_color == "R" else match_scouts[3:6]
+
+    input_team = teams[match_scouts.index(input_name)]
+    color_icon = "🔴" if input_color == "R" else "🔵"
+    input_name = (
+        f"{input_sub} [⇄] {input_name}"
+        if input_sub and input_sub != input_name
+        else input_name
     )
 
-    input_team = teams[name_index]
-    color_icon = "🔴" if input_color == "R" else "🔵"
-    input_name = f"{input_sub} [⇄]" if input_sub else input_name
+    input_key = st.secrets["DEFAULT_EVENT_KEY"]
 
     st.divider()
 
@@ -135,7 +159,14 @@ def main():
         unsafe_allow_html=True,
     )
 
-    set_inputs = [input_name, input_match, input_type, input_color, input_team]
+    set_inputs = [
+        input_name,
+        input_match,
+        input_type,
+        input_color,
+        input_team,
+        input_key,
+    ]
     set_combined = {}
 
     def combine_set(entry_name, variable):
@@ -156,7 +187,6 @@ def main():
     entry_responses = {}
 
     def phase_header(phase):
-        st.divider()
         st.markdown(
             f'<div style="text-align: center; font-size: 32px;">{phase}</div>',
             unsafe_allow_html=True,
@@ -186,19 +216,25 @@ def main():
 
     submitted = False
 
+    st.divider()
+
     with st.form("Stats Input", clear_on_submit=False, border=False):
-        phase_header("Autonomous")
-        gen_phase_input("AUTO")
+        with st.expander("Autonomous", True):
+            phase_header("Autonomous")
+            gen_phase_input("AUTO")
 
-        phase_header("Teleop")
-        gen_phase_input("TELE")
+        with st.expander("Teleop", True):
+            phase_header("Teleop")
+            gen_phase_input("TELE")
 
-        phase_header("Endgame")
-        gen_phase_input("END")
+        with st.expander("Endgame", True):
+            phase_header("Endgame")
+            gen_phase_input("END")
 
-        phase_header("Info & Comments")
-        gen_phase_input("INFO")
-        gen_phase_input("COMMENT")
+        with st.expander("Info & Comments", True):
+            phase_header("Info & Comments")
+            gen_phase_input("INFO")
+            gen_phase_input("COMMENT")
 
         st.divider()
 

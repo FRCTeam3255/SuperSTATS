@@ -369,6 +369,7 @@ def app_init():
             display_status("df")
             df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
             df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
+            df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
             st.session_state.df = df
 
             display_status("tba")
@@ -448,10 +449,10 @@ def app_init():
                 sign_in = st.empty()
 
                 with st.form("chat_login", border=False):
-                    login_cols = st.columns(2)
+                    login_columns = st.columns(2)
 
                     if not st.session_state.chat["logged_in"]:
-                        st.session_state.chat["user"] = login_cols[0].text_input(
+                        st.session_state.chat["user"] = login_columns[0].text_input(
                             "Username:",
                             max_chars=17,
                             value=(
@@ -462,7 +463,7 @@ def app_init():
                             key="login_user",
                         )
 
-                        st.session_state.chat["icon"] = login_cols[1].text_input(
+                        st.session_state.chat["icon"] = login_columns[1].text_input(
                             "Icon:",
                             value=(
                                 st.session_state.chat["icon"]
@@ -491,7 +492,7 @@ def app_init():
 
                     if login or st.session_state.chat["logged_in"]:
                         creds = st.session_state.chat
-                        if not any(value is "" for value in creds.values()):
+                        if creds["pass"] != "":
                             st.session_state.chat["logged_in"] = True
                             sign_in.empty()
                             st.markdown(

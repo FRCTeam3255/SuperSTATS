@@ -17,6 +17,12 @@ def rainbow():
             75% { color: #e74c3c; }
             100% { color: #f39c12; }
         }
+
+        @media screen and (max-width: 480px) {
+            .rainbow {
+                font-size: 2.5em;
+            }
+        }
         </style>
     """
 
@@ -39,6 +45,12 @@ def shimmer(color):
             50% {{ color: {color}; }}
             75% {{ color: #ffffff; }}
             100% {{ color: #ffffff; }}
+        }}
+
+        @media screen and (max-width: 600px) {{
+            .shimmer {{
+                font-size: 2em;
+            }}
         }}
         </style>
     """

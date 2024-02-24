@@ -13,7 +13,7 @@ def main():
     st.markdown("<div class='rainbow'>🤖 SuperSTATs 🤖</div>", unsafe_allow_html=True)
 
     st.markdown(
-        f"<div style='font-weight: bold; text-align: center; font-size: 2.5em;'>Current Dataframe: {st.secrets['DEFAULT_EVENT_KEY']}</div>",
+        f"<div style='text-align: center; font-size: 1.5em;'>Current Dataframe: {st.secrets['DEFAULT_EVENT_KEY']}</div>",
         unsafe_allow_html=True,
     )
 

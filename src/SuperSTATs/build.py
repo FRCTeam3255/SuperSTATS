@@ -376,7 +376,7 @@ def gen_match_comp(team_num, match_name, not_preview=True):
                 column_config[phase] = st.column_config.ProgressColumn(
                     phase.title(),
                     format=f"%f/{max(match_progress[phase])}",
-                    min_value=min(match_progress[phase]),
+                    min_value=min(match_progress[phase]) - 1,
                     max_value=max(match_progress[phase]),
                 )
 
@@ -465,12 +465,12 @@ def gen_bar(
             group_filters,
         )
 
-        show_available, var_count = gen_toggle(
-            "show_available", var_count, "Availability", use_show_available, key, False
-        )
-
         show_nums, var_count = gen_toggle(
             "show_nums", var_count, "Team Numbers", True, key, False
+        )
+
+        show_available, var_count = gen_toggle(
+            "show_available", var_count, "Availability", show_nums, key, not show_nums
         )
 
         features, var_count = gen_toggle(
@@ -547,7 +547,7 @@ def gen_bar(
             st.multiselect(
                 "Features:",
                 feature_choices,
-                default=dt_types,
+                default=[],
                 key=f"selected_features_{key}",
             )
             if use_features and features
@@ -564,7 +564,9 @@ def gen_bar(
         ).drop(columns=["Team #"])
 
         df["Drivetrain Type"] = df["Drivetrain Type"].fillna("Unknown Drivetrain")
-        df = df[(df["Drivetrain Type"].isin(selected_features))]
+
+        if any(dt in selected_features for dt in dt_types):
+            df = df[(df["Drivetrain Type"].isin(selected_features))]
 
         def get_features(comment):
             return comment.split(", ")
@@ -576,13 +578,8 @@ def gen_bar(
             if not features:
                 return True
 
-            remaining_features = set(selected_features) - set(dt_types)
-
-            if not remaining_features:
-                return True
-
-            for feature in remaining_features:
-                if feature not in all_team_features[team]:
+            for feature in selected_features:
+                if feature not in all_team_features[team] + dt_types:
                     return False
 
             return True
@@ -599,6 +596,7 @@ def gen_bar(
             )
 
             all_team_features[team] = team_features
+
             if has_features(team):
                 kept_teams.append(team)
 
@@ -757,12 +755,30 @@ def gen_bar(
 
     if selected_filters:
         if not no_data:
+            st.divider()
             st.altair_chart(chart, use_container_width=True)
-
         else:
             st.error("Not enough data")
     else:
         st.error("Please select at least one filter")
+
+    if use_presets == True and preset_choice == "None":
+        preset_name = st.text_input("New Preset Name:")
+
+        if preset_name.replace(" ", ""):
+            if st.button("Add Preset", use_container_width=True):
+                presets[preset_name] = {
+                    "data": data.to_dict(),
+                    "x_range": x_range,
+                    "show_nums": show_nums,
+                    "selected_filters": selected_filters,
+                    "inline_legend": inline_legend,
+                    "group_filters": group_filters,
+                }
+
+                with open("src\\pickles\\presets.pickle", "wb") as f:
+                    pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
+                st.toast("Successfully added preset!", icon="✅")
 
     if expanders and preset_choice == "None":
         if st.toggle("Ranked Expanders"):
@@ -786,21 +802,3 @@ def gen_bar(
                     f"<span style='font-size: small; color: #808080;'>Loaded in {round(time.time() - start_time, 2)} seconds...</span>",
                     unsafe_allow_html=True,
                 )
-
-    if use_presets == True and preset_choice == "None":
-        preset_name = st.text_input("New Preset Name:")
-
-        if preset_name.replace(" ", ""):
-            if st.button("Add Preset", use_container_width=True):
-                presets[preset_name] = {
-                    "data": data.to_dict(),
-                    "x_range": x_range,
-                    "show_nums": show_nums,
-                    "selected_filters": selected_filters,
-                    "inline_legend": inline_legend,
-                    "group_filters": group_filters,
-                }
-
-                with open("src\\pickles\\presets.pickle", "wb") as f:
-                    pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
-                st.toast("Successfully added preset!", icon="✅")
