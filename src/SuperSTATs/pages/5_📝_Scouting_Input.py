@@ -47,7 +47,7 @@ def main():
             )
 
         weight = columns[0].number_input(
-            "Weight [NO BATTERY]:", step=1.0, min_value=0.0
+            "Weight [NO BATTERY]:", step=0.5, min_value=0.0
         )
 
         dt_type = columns[1].radio(
