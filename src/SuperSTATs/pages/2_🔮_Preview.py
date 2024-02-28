@@ -182,6 +182,8 @@ def main():
     combined_chart = columns[1].toggle("Show Combined Chart", False)
     calc_bumpers = columns[2].toggle("Calculate Bumpers", True)
 
+    st.divider()
+
     columns = st.columns(2)
 
     display_team(
