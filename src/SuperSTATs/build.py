@@ -696,7 +696,14 @@ def gen_bar(
         r, g, b, a = rgba
         return "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))
 
-    def gen_cmap(length, cmap_name="Blues"):
+    def gen_cmap(
+        length,
+        cmap_name=(
+            "Blues"
+            if not st.session_state.console["colorblind_mode"]
+            else "OrRd" if group_filters else "hot"
+        ),
+    ):
         cmap = plt.get_cmap(cmap_name)
         colors = [rgba_to_hex(cmap(i)) for i in np.linspace(0, 0.8, length)]
         return colors
