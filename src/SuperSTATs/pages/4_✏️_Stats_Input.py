@@ -131,7 +131,11 @@ def main():
             "Match [OTHER]:", st.session_state.matches
         )
 
-    match_scouts = all_match_scouts[input_match]
+    try:
+        match_scouts = all_match_scouts[input_match]
+    except:
+        st.error(f"You are not a scouter for {input_match}")
+        st.stop()
 
     input_color = name_check(input_name, match_scouts)
     input_type = input_match.split()[0]
@@ -142,7 +146,12 @@ def main():
 
     match_scouts = match_scouts[0:3] if input_color == "R" else match_scouts[3:6]
 
-    input_team = teams[match_scouts.index(input_name)]
+    try:
+        input_team = teams[match_scouts.index(input_name)]
+    except:
+        st.error(f"You are not a scouter for {input_match}")
+        st.stop()
+
     color_icon = "🔴" if input_color == "R" else "🔵"
     input_name = (
         f"{input_sub} [⇄] {input_name}"
@@ -223,11 +232,11 @@ def main():
             phase_header("Autonomous")
             gen_phase_input("AUTO")
 
-        with st.expander("Teleop", True):
+        with st.expander("Teleop", False):
             phase_header("Teleop")
             gen_phase_input("TELE")
 
-        with st.expander("Endgame", True):
+        with st.expander("Endgame", False):
             phase_header("Endgame")
             gen_phase_input("END")
 

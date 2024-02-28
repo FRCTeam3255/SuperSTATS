@@ -198,10 +198,7 @@ def gen_match_comp(team_num, match_name, not_preview=True):
                     phase for phase in phases if phase.startswith(f"{selected_phase}_")
                 ]
 
-    team_scores = team_df.drop(columns=["Match Name"])
-
-    team_scores = team_scores.sum()
-    team_scores["TOTAL"] = team_scores.sum()
+    team_scores = team_df.drop(columns=["Match Name"]).sum()
 
     if not_preview:
         st.divider()
@@ -220,7 +217,7 @@ def gen_match_comp(team_num, match_name, not_preview=True):
 
         st.divider()
     else:
-        use_phases = ["AUTO", "TELE", "END", "TOTAL"]
+        use_phases = ["AUTO", "TELE", "END"]
 
     alt_size = st.columns(len(use_phases) + 1)
     team_averages = {}
