@@ -217,7 +217,13 @@ def main():
 
             for i, team in enumerate(match_teams):
                 toggled_state = columns[i].toggle(
-                    str(team), True, key=f"{team}_toggle_state"
+                    (
+                        f":red[{str(team)}]"
+                        if team in red_alliance
+                        else f":blue[{str(team)}]"
+                    ),
+                    True,
+                    key=f"{team}_toggle_state",
                 )
 
                 if toggled_state:
