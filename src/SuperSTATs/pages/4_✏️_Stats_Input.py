@@ -94,15 +94,11 @@ def main():
 
     name_selection = top_columns[0].empty()
 
-    input_name = name_selection.selectbox(
-        "Name:", st.session_state.assigned + ["Sub"]
-    ).upper()
+    input_name = name_selection.selectbox("Name:", st.session_state.assigned + ["Sub"])
 
     if input_name == "SUB":
         bot_columns = st.columns(2)
-        input_name = name_selection.selectbox(
-            "Original:", st.session_state.assigned
-        ).upper()
+        input_name = name_selection.selectbox("Original:", st.session_state.assigned)
         input_sub = (
             bot_columns[0].selectbox("Substitute:", st.session_state.scouts).upper()
         )
@@ -134,7 +130,7 @@ def main():
     try:
         match_scouts = all_match_scouts[input_match]
     except:
-        st.error(f"You are not a scouter for {input_match}")
+        st.error(f"You are not a scouter for match {input_match}")
         st.stop()
 
     input_color = name_check(input_name, match_scouts)
