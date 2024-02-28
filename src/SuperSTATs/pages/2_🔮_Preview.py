@@ -212,7 +212,7 @@ def main():
         match_teams = red_alliance + blue_alliance
         toggled_teams = []
 
-        with st.expander("Toggle Teams", False):
+        with st.expander("Toggle Teams", True):
             columns = st.columns(len(match_teams))
 
             for i, team in enumerate(match_teams):
