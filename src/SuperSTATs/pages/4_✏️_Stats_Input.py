@@ -134,6 +134,8 @@ def main():
 
     input_match = match_selection.selectbox("Match:", scout_matches + ["Other"])
 
+    # st.write(st.session_state.team_info)
+
     if input_match == "Other":
         input_match = match_selection.selectbox("Match [OTHER]:", matches)
 

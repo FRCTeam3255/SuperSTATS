@@ -109,8 +109,9 @@ def get_team_colors():
 
 
 def get_match_data():
-    try:
-        df = pd.DataFrame(tba.event_matches(st.secrets["DEFAULT_EVENT_KEY"]))
+    df = pd.DataFrame(tba.event_matches(st.secrets["DEFAULT_EVENT_KEY"]))
+
+    if not df.empty:
         df = pd.concat([df, pd.json_normalize(df["alliances"])], axis=1).drop(
             columns="alliances"
         )
@@ -131,10 +132,43 @@ def get_match_data():
 
         df["Match Name"] = df.apply(set_match_name, axis=1)
 
-        return df
-    except:
-        st.error(f"Error getting match data. Please refresh...")
+        st.write(df.drop(columns="score_breakdown").head(1).to_dict())
         st.stop()
+
+        return df
+
+    else:
+        matches = download_sheets_raw(st.secrets["GID_MATCHES"])
+
+        custom_data = {}
+
+        for index, row in matches.iterrows():
+            match_name = row["Match"]
+            match_level = match_name.split()[0]
+            match_num = int(match_name.split()[1])
+
+            red_team = [row["Red 1"], row["Red 2"], row["Red 3"]]
+            blue_team = [row["Blue 1"], row["Blue 2"], row["Blue 3"]]
+
+            data = {
+                "comp_level": match_level,
+                "match_number": match_num,
+                "set_number": {f"{index}": 1},
+                "score_breakdown": {f"{index}": "im having a breakdown"},
+                "winning_alliance": {f"{index}": "blue"},
+                "blue.score": {f"{index}": 1},
+                "blue.team_keys": blue_team,
+                "red.score": {f"{index}": 0},
+                "red.team_keys": red_team,
+                "Match Name": {f"{index}": match_name},
+            }
+
+            custom_data[index] = data
+
+        df = pd.DataFrame(custom_data).T
+        st.error("TBA Event Data Nonexistent...")
+
+        return df
 
 
 def get_matches():
