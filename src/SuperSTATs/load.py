@@ -132,9 +132,6 @@ def get_match_data():
 
         df["Match Name"] = df.apply(set_match_name, axis=1)
 
-        st.write(df.drop(columns="score_breakdown").head(1).to_dict())
-        st.stop()
-
         return df
 
     else:
@@ -166,7 +163,6 @@ def get_match_data():
             custom_data[index] = data
 
         df = pd.DataFrame(custom_data).T
-        st.error("TBA Event Data Nonexistent...")
 
         return df
 
