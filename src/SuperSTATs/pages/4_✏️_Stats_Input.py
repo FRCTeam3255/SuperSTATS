@@ -54,7 +54,19 @@ def main():
 
     st.title("")
 
-    st.button("Update Page", type="primary", use_container_width=True)
+    if st.button("Update Page", type="primary", use_container_width=True):
+        df = load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(
+            subset=["Timestamp"]
+        )
+        df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
+        df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
+        df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
+        st.session_state.df = df
+
+        st.session_state.unplayed_matches = load.get_unplayed(
+            st.session_state.df, st.session_state.matches
+        )
+
     st.divider()
 
     url = st.secrets["FORM_URL"]
@@ -94,15 +106,11 @@ def main():
 
     name_selection = top_columns[0].empty()
 
-    input_name = name_selection.selectbox(
-        "Name:", st.session_state.assigned + ["Sub"]
-    ).upper()
+    input_name = name_selection.selectbox("Name:", scouters + ["Sub"])
 
-    if input_name == "SUB":
+    if input_name == "Sub":
         bot_columns = st.columns(2)
-        input_name = name_selection.selectbox(
-            "Original:", st.session_state.assigned
-        ).upper()
+        input_name = name_selection.selectbox("Original:", scouters)
         input_sub = (
             bot_columns[0].selectbox("Substitute:", st.session_state.scouts).upper()
         )
@@ -127,14 +135,12 @@ def main():
     input_match = match_selection.selectbox("Match:", scout_matches + ["Other"])
 
     if input_match == "Other":
-        input_match = match_selection.selectbox(
-            "Match [OTHER]:", st.session_state.matches
-        )
+        input_match = match_selection.selectbox("Match [OTHER]:", matches)
 
     try:
         match_scouts = all_match_scouts[input_match]
     except:
-        st.error(f"You are not a scouter for {input_match}")
+        st.error(f"You are not a scouter for match {input_match}")
         st.stop()
 
     input_color = name_check(input_name, match_scouts)
@@ -227,7 +233,7 @@ def main():
 
     st.divider()
 
-    with st.form("Stats Input", clear_on_submit=False, border=False):
+    with st.form("Stats Input", clear_on_submit=True, border=False):
         with st.expander("Autonomous", True):
             phase_header("Autonomous")
             gen_phase_input("AUTO")

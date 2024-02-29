@@ -62,7 +62,7 @@ def scouting_expander(
         f"{expander_name} {'⚠️' if not has_data else ''}", start_expanded
     ):
         with st.container(border=True):
-            gen_match_comp(team_num, match_name, False)
+            gen_match_comp(st.session_state.df, team_num, match_name, False)
 
         if has_data:
             with st.container(border=True):
@@ -119,7 +119,7 @@ def scouting_expander(
 
 def calc_projected(team_df, show_ungrouped=False, return_row=False):
     score_df = st.session_state.df
-    phases = st.session_state.phases
+    phases = [phase for phase in st.session_state.phases if phase != "COMMENT"]
 
     phase_count = len(
         [
@@ -169,9 +169,7 @@ def calc_projected(team_df, show_ungrouped=False, return_row=False):
     return projected_score
 
 
-def gen_match_comp(team_num, match_name, not_preview=True):
-    df = st.session_state.df
-
+def gen_match_comp(df, team_num, match_name, not_preview=True):
     team_df = df[df["Team"] == team_num]
     match_count = len(team_df)
 
@@ -187,10 +185,10 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     phases = team_df["phases"]
     team_df = team_df["score"]
 
-    skip_phases = ["INFO", "COMMENT"]
-
     if not_preview and show_ungrouped:
-        selected_phase = st.selectbox("Phase:", ["AUTO", "TELE", "END"], index=1)
+        selected_phase = st.selectbox(
+            "Phase:", ["AUTO", "TELE", "END", "INFO"], index=1
+        )
 
         if selected_phase:
             if any("_" in phase for phase in phases):
@@ -209,9 +207,7 @@ def gen_match_comp(team_num, match_name, not_preview=True):
     if not_preview:
         for i, phase in enumerate(phases):
             phase_name = phase.split("_")[1] if show_ungrouped else phase
-            use = columns[i].toggle(
-                phase_name.title(), False if phase in skip_phases else True
-            )
+            use = columns[i].toggle(phase_name.title(), True)
             if use:
                 use_phases.append(phase)
 
@@ -696,7 +692,14 @@ def gen_bar(
         r, g, b, a = rgba
         return "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))
 
-    def gen_cmap(length, cmap_name="Blues"):
+    def gen_cmap(
+        length,
+        cmap_name=(
+            "Blues"
+            if not st.session_state.console["colorblind_mode"]
+            else "OrRd" if group_filters else "hot"
+        ),
+    ):
         cmap = plt.get_cmap(cmap_name)
         colors = [rgba_to_hex(cmap(i)) for i in np.linspace(0, 0.8, length)]
         return colors
