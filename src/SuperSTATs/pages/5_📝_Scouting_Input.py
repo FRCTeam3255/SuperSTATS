@@ -13,6 +13,13 @@ def main():
         "<div class='shimmer'>📝 Scouting Input 📝</div>", unsafe_allow_html=True
     )
 
+    st.title("")
+
+    if st.button("Update Page", type="primary", use_container_width=True):
+        st.session_state.scouting = load.download_sheets_raw(st.secrets["GID_SCOUTING"])
+
+    st.divider()
+
     df = st.session_state.scouting
 
     scouted_teams = df["Team #"].unique()

@@ -62,7 +62,7 @@ def scouting_expander(
         f"{expander_name} {'⚠️' if not has_data else ''}", start_expanded
     ):
         with st.container(border=True):
-            gen_match_comp(team_num, match_name, False)
+            gen_match_comp(st.session_state.df, team_num, match_name, False)
 
         if has_data:
             with st.container(border=True):
@@ -169,9 +169,7 @@ def calc_projected(team_df, show_ungrouped=False, return_row=False):
     return projected_score
 
 
-def gen_match_comp(team_num, match_name, not_preview=True):
-    df = st.session_state.df
-
+def gen_match_comp(df, team_num, match_name, not_preview=True):
     team_df = df[df["Team"] == team_num]
     match_count = len(team_df)
 

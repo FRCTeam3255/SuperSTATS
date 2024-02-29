@@ -107,6 +107,7 @@ def display_team(
     if not combined_chart:
         with column.container():
             build.gen_bar(
+                df=st.session_state.df,
                 key=column,
                 use_presets=False,
                 use_group_filters=False,
@@ -133,7 +134,15 @@ def main():
     )
     st.title("")
 
-    st.button("Update Page", type="primary", use_container_width=True)
+    if st.button("Update Page", type="primary", use_container_width=True):
+        df = load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(
+            subset=["Timestamp"]
+        )
+        df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
+        df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
+        df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
+        st.session_state.df = df
+
     st.divider()
 
     df = st.session_state.matches
