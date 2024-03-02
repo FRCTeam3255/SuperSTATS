@@ -164,7 +164,11 @@ def main():
         ]
         df = df[df[team_cols].isin([team_number]).any(axis=1)]
 
-    last_match = int(st.session_state.df["Match"].max())
+    try:
+        last_match = int(st.session_state.df["Match"].max())
+    except:
+        st.error("No Played Matches")
+        st.stop()
 
     if team == show_all:
         while True:
