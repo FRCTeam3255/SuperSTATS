@@ -107,10 +107,6 @@ def main():
 
     st.session_state.unplayed_matches = unplayed_matches
 
-    # with st.expander("[DEBUG] Unplayed"):
-    #     for match in unplayed_matches:
-    #         st.write(match)
-
     scouters = st.session_state.assigned
 
     df_teams = {}
