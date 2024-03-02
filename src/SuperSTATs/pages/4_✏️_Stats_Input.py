@@ -2,7 +2,6 @@ import SuperSTATs.load as load
 from bs4 import BeautifulSoup
 import streamlit as st
 import requests
-import random
 
 
 def get_match_scouts(team):
