@@ -2,7 +2,7 @@ import SuperSTATs.load as load
 from bs4 import BeautifulSoup
 import streamlit as st
 import requests
-import random
+import re
 
 
 def get_match_scouts(team):
@@ -97,6 +97,20 @@ def main():
 
     matches = st.session_state.matches
     unplayed_matches = st.session_state.unplayed_matches
+
+    float_pattern = re.compile(r"\d+\.\d+")
+    unplayed_matches = [
+        match
+        for match in unplayed_matches
+        if not re.match(float_pattern, match.split()[1])
+    ]
+
+    st.session_state.unplayed_matches = unplayed_matches
+
+    # with st.expander("[DEBUG] Unplayed"):
+    #     for match in unplayed_matches:
+    #         st.write(match)
+
     scouters = st.session_state.assigned
 
     df_teams = {}
