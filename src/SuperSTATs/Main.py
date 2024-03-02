@@ -12,8 +12,10 @@ def main():
     st.markdown(style.rainbow(), unsafe_allow_html=True)
     st.markdown("<div class='rainbow'>🤖 SuperSTATs 🤖</div>", unsafe_allow_html=True)
 
+    event_key = st.secrets["DEFAULT_EVENT_KEY"]
+
     st.markdown(
-        f"<div style='text-align: center; font-size: 1.5em;'>Current Dataframe: {st.secrets['DEFAULT_EVENT_KEY']}</div>",
+        f"<div style='text-align: center; font-size: 1.5em;'><a href='https://www.thebluealliance.com/event/{event_key}' style='color: #ffffff; text-decoration: none;'>Current Dataframe: {event_key}</a></div>",
         unsafe_allow_html=True,
     )
 
@@ -107,7 +109,7 @@ def main():
                 use_container_width=True,
             )
 
-    with st.expander("Event Keys", True):
+    with st.expander("Event Keys", False):
         columns = st.columns(2)
 
         year = columns[0].number_input(

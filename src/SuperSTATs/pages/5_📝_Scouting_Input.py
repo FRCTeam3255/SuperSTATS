@@ -42,22 +42,22 @@ def main():
         team_num = st.selectbox("Team:", unscouted_teams)
         team_num = team_num.split(" | ")[0]
 
-        columns = st.columns(2)
+        top_columns = st.columns(2)
+        bot_columns = st.columns(2)
 
-        with st.container(border=False):
-            length = columns[0].number_input(
-                "Frame Size LENGTH [NO BUMPERS]:", step=0.5, min_value=0.0
-            )
+        length = top_columns[0].number_input(
+            "Frame Size LENGTH [NO BUMPERS]:", step=0.5, min_value=0.0
+        )
 
-            width = columns[1].number_input(
-                "Frame Size WIDTH [NO BUMPERS]:", step=0.5, min_value=0.0
-            )
+        width = top_columns[1].number_input(
+            "Frame Size WIDTH [NO BUMPERS]:", step=0.5, min_value=0.0
+        )
 
-        weight = columns[0].number_input(
+        weight = bot_columns[0].number_input(
             "Weight [NO BATTERY]:", step=0.5, min_value=0.0
         )
 
-        dt_type = columns[1].radio(
+        dt_type = bot_columns[1].radio(
             "Drivetrain Type:",
             ["Swerve", "Westcoast", "Mecanum", "Other"],
             horizontal=True,
