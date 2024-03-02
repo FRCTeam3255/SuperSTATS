@@ -162,11 +162,12 @@ def calc_projected(team_df, show_ungrouped=False, return_row=False):
         alliance_score = pd.concat([alliance_score, team_score], ignore_index=True)
 
     alliance_score = alliance_score.sum().sum()
-    projected_score = round(
-        (alliance_score / phase_count) * round(match_count / len(team_df))
-    )
 
-    return projected_score
+    # projected_score = round(
+    #     (alliance_score / phase_count) * round(match_count / len(team_df))
+    # )
+
+    return alliance_score
 
 
 def gen_match_comp(df, team_num, match_name, not_preview=True):
