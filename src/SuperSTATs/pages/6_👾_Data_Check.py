@@ -140,41 +140,46 @@ def main():
                     data_variance = True
 
             if filters[2] in selected_filters:
-                score_breakdown = match_data[match_data["Match Name"] == match_name][
-                    "score_breakdown"
-                ]
+                try:
+                    score_breakdown = match_data[
+                        match_data["Match Name"] == match_name
+                    ]["score_breakdown"]
 
-                score_breakdown = score_breakdown.to_json(orient="records")
-                data = json.loads(score_breakdown)
+                    score_breakdown = score_breakdown.to_json(orient="records")
+                    data = json.loads(score_breakdown)
 
-                red_data = data[0]["red"]
-                blue_data = data[0]["blue"]
+                    red_data = data[0]["red"]
+                    blue_data = data[0]["blue"]
 
-                red_tba_score = red_data["totalPoints"] - red_data["foulPoints"]
-                blue_tba_score = blue_data["totalPoints"] - blue_data["foulPoints"]
+                    red_tba_score = red_data["totalPoints"] - red_data["foulPoints"]
+                    blue_tba_score = blue_data["totalPoints"] - blue_data["foulPoints"]
 
-                def get_variance(color, tba_score):
-                    team_df = match_info[match_info["Team Color"] == color[0]]
-                    team_score = int(team_df["Score Sum"].sum())
-                    team_variance = tba_score - team_score
-                    text_color = "#f8312f" if color[0] == "R" else "#0074ba"
+                    def get_variance(color, tba_score):
+                        team_df = match_info[match_info["Team Color"] == color[0]]
+                        team_score = int(team_df["Score Sum"].sum())
+                        team_variance = tba_score - team_score
+                        text_color = "#f8312f" if color[0] == "R" else "#0074ba"
 
-                    if abs(team_variance) >= variance_threshold:
-                        colored_header = f"<span style='color: {text_color}; font-size: 2em;'>[{color}]</span>"
-                        default_header = f"<span style='color: white; font-size: 2em;'> Point Variance: {-team_variance} ({team_score}/{tba_score})</span>"
+                        if abs(team_variance) >= variance_threshold:
+                            colored_header = f"<span style='color: {text_color}; font-size: 2em;'>[{color}]</span>"
+                            default_header = f"<span style='color: white; font-size: 2em;'> Point Variance: {-team_variance} ({team_score}/{tba_score})</span>"
 
-                        st.markdown(
-                            f"{colored_header}{default_header}",
-                            unsafe_allow_html=True,
-                        )
+                            st.markdown(
+                                f"{colored_header}{default_header}",
+                                unsafe_allow_html=True,
+                            )
 
-                        st.write(team_df[["Team", "AUTO", "TELE", "END", "Score Sum"]])
+                            st.write(
+                                team_df[["Team", "AUTO", "TELE", "END", "Score Sum"]]
+                            )
 
-                        nonlocal data_variance
-                        data_variance = True
+                            nonlocal data_variance
+                            data_variance = True
 
-                get_variance("RED", red_tba_score)
-                get_variance("BLUE", blue_tba_score)
+                    get_variance("RED", red_tba_score)
+                    get_variance("BLUE", blue_tba_score)
+                except:
+                    st.error("Invalid TBA Match Data")
 
             if data_variance:
                 show_raw(match_name, match_info, match_keys[match_name])

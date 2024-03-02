@@ -2,6 +2,7 @@ import SuperSTATs.load as load
 from bs4 import BeautifulSoup
 import streamlit as st
 import requests
+import random
 
 
 def get_match_scouts(team):
@@ -133,8 +134,6 @@ def main():
     match_selection = top_columns[1].empty()
 
     input_match = match_selection.selectbox("Match:", scout_matches + ["Other"])
-
-    # st.write(st.session_state.team_info)
 
     if input_match == "Other":
         input_match = match_selection.selectbox("Match [OTHER]:", matches)
