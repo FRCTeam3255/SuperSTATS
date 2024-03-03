@@ -22,6 +22,8 @@ def main():
         df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
         st.session_state.df = df
 
+        st.session_state.picked = load.download_sheets_raw(st.secrets["GID_PICKED"])
+
     st.divider()
 
     build.gen_bar(st.session_state.df)

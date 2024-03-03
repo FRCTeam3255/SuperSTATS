@@ -163,11 +163,9 @@ def calc_projected(team_df, show_ungrouped=False, return_row=False):
 
     alliance_score = alliance_score.sum().sum()
 
-    # projected_score = round(
-    #     (alliance_score / phase_count) * round(match_count / len(team_df))
-    # )
+    projected_score = round((alliance_score / phase_count) * round(match_count))
 
-    return alliance_score
+    return projected_score
 
 
 def gen_match_comp(df, team_num, match_name, not_preview=True):
@@ -696,9 +694,7 @@ def gen_bar(
     def gen_cmap(
         length,
         cmap_name=(
-            "Blues"
-            if not st.session_state.console["colorblind_mode"]
-            else "OrRd" if group_filters else "hot"
+            "Blues" if not st.session_state.console["colorblind_mode"] else "OrRd"
         ),
     ):
         cmap = plt.get_cmap(cmap_name)

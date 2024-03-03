@@ -122,9 +122,7 @@ def main():
     if input_name == "Sub":
         bot_columns = st.columns(2)
         input_name = name_selection.selectbox("Original:", scouters)
-        input_sub = (
-            bot_columns[0].selectbox("Substitute:", st.session_state.scouts).upper()
-        )
+        input_sub = bot_columns[0].selectbox("Substitute:", st.session_state.scouts)
     else:
         input_sub = None
 
@@ -147,12 +145,12 @@ def main():
 
     if input_match == "Other":
         input_match = match_selection.selectbox("Match [OTHER]:", matches)
-
-    try:
-        match_scouts = all_match_scouts[input_match]
-    except:
-        st.error(f"You are not a scouter for match {input_match}")
-        st.stop()
+    else:
+        try:
+            match_scouts = all_match_scouts[input_match]
+        except:
+            st.error(f"You are not a scouter for match {input_match}")
+            st.stop()
 
     input_color = name_check(input_name, match_scouts)
     input_type = input_match.split()[0]
