@@ -110,16 +110,26 @@ def main():
             data_variance = False
 
             if filters[0] in selected_filters:
-                if sorted(team_nums) != sorted(tba_values):
+                sorted_team_nums = sorted(team_nums)
+                sorted_tba_values = sorted(tba_values)
+
+                if sorted_team_nums != sorted_tba_values:
                     st.subheader(f"Team Count: {len(team_nums)}/6", False)
 
-                    columns = st.columns(2)
+                    columns = st.columns(3)
 
                     columns[0].subheader("SN Data", False)
-                    columns[0].write(team_nums)
+                    columns[0].write(sorted_team_nums)
 
                     columns[1].subheader("TBA Data", False)
-                    columns[1].write(tba_values)
+                    columns[1].write(sorted_tba_values)
+
+                    columns[2].subheader("Missing Teams", False)
+                    columns[2].write(
+                        sorted(
+                            list(set(sorted_tba_values).difference(sorted_team_nums))
+                        )
+                    )
 
                     data_variance = True
 

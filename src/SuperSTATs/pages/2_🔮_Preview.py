@@ -175,7 +175,7 @@ def main():
             occurrences = len(
                 st.session_state.df.loc[st.session_state.df["Match"] == last_match]
             )
-            if occurrences >= 3:
+            if occurrences >= 6:
                 break
             else:
                 last_match -= 1
