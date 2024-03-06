@@ -444,6 +444,18 @@ def gen_bar(
         return [variable, var_count]
 
     if preset_choice == "None":
+        show_nums, var_count = gen_toggle(
+            "show_nums", var_count, "Team Numbers", True, key, False
+        )
+
+        show_available, var_count = gen_toggle(
+            "show_available", var_count, "Availability", show_nums, key, not show_nums
+        )
+
+        features, var_count = gen_toggle(
+            "features", var_count, "Features", False, key, False
+        )
+
         group_filters, var_count = gen_toggle(
             "group_filters", var_count, "Group Filters", True, key, False
         )
@@ -455,18 +467,6 @@ def gen_bar(
             not group_filters,
             key,
             group_filters,
-        )
-
-        show_nums, var_count = gen_toggle(
-            "show_nums", var_count, "Team Numbers", True, key, False
-        )
-
-        show_available, var_count = gen_toggle(
-            "show_available", var_count, "Availability", show_nums, key, not show_nums
-        )
-
-        features, var_count = gen_toggle(
-            "features", var_count, "Features", False, key, False
         )
 
         if use_agg_type:

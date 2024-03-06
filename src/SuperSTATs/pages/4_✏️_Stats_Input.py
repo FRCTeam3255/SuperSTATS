@@ -116,13 +116,13 @@ def main():
     scout_matches = []
 
     top_columns = st.columns(2)
+    bot_columns = st.columns(2)
 
     name_selection = top_columns[0].empty()
 
     input_name = name_selection.selectbox("Name:", scouters + ["Sub"])
 
     if input_name == "Sub":
-        bot_columns = st.columns(2)
         input_name = name_selection.selectbox("Original:", scouters)
         input_sub = bot_columns[0].selectbox("Substitute:", st.session_state.scouts)
     else:
@@ -147,27 +147,29 @@ def main():
 
     if input_match == "Other":
         input_match = match_selection.selectbox("Match [OTHER]:", matches)
+        input_type = input_match.split()[0]
+
+        df_teams = (
+            matches[matches["Match"] == input_match].set_index("Match").transpose()
+        )
+
+        teams = list(df_teams.to_dict()[input_match].values())
+        match_scouts = [input_name for i in range(6)]
+
+        input_team = bot_columns[1].selectbox("Team:", teams)
+        input_color = name_check(input_team, teams)
     else:
-        try:
-            match_scouts = all_match_scouts[input_match]
-        except:
-            st.error(f"You are not a scouter for match {input_match}")
-            st.stop()
-
-    input_color = name_check(input_name, match_scouts)
-    input_type = input_match.split()[0]
-
-    df_teams = matches[matches["Match"] == input_match].set_index("Match").transpose()
-    teams = df_teams.filter(like=input_color, axis=0)[input_match].to_list()
-    input_match = input_match.split()[1]
-
-    match_scouts = match_scouts[0:3] if input_color == "R" else match_scouts[3:6]
-
-    try:
+        input_type = input_match.split()[0]
+        df_teams = (
+            matches[matches["Match"] == input_match].set_index("Match").transpose()
+        )
+        match_scouts = all_match_scouts[input_match]
+        input_color = name_check(input_name, match_scouts)
+        teams = df_teams.filter(like=input_color, axis=0)[input_match].to_list()
+        match_scouts = match_scouts[0:3] if input_color == "R" else match_scouts[3:6]
         input_team = teams[match_scouts.index(input_name)]
-    except:
-        st.error(f"You are not a scouter for {input_match}")
-        st.stop()
+
+    input_match = input_match.split()[1]
 
     color_icon = "🔴" if input_color == "R" else "🔵"
     input_name = (

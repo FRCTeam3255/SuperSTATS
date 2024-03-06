@@ -206,6 +206,12 @@ def get_unplayed(df, matches):
 
     df["Completed"] = df["Completed"].apply(lambda x: x if df_counts[x] >= 3 else None)
 
+    tba_played_matches = []
+
+    for index, row in st.session_state.match_data.iterrows():
+        if str(row["actual_time"]) != "nan":
+            tba_played_matches.append(row["Match Name"])
+
     df_unique = df["Completed"].dropna().unique()
     matches_unique = matches["Match"].unique()
 
@@ -216,6 +222,12 @@ def get_unplayed(df, matches):
     unplayed_matches = [
         match for sublist in unplayed_matches.values.tolist() for match in sublist
     ]
+
+    unplayed_copy = unplayed_matches.copy()
+
+    for match in unplayed_copy:
+        if match in tba_played_matches:
+            unplayed_matches.remove(match)
 
     return unplayed_matches
 
