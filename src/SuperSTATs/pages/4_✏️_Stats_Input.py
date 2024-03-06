@@ -128,7 +128,7 @@ def main():
     else:
         input_sub = None
 
-    for match in unplayed_matches:
+    for match in st.session_state.matches["Match"]:
         teams = matches[matches["Match"] == match].set_index("Match").transpose()
         df_teams.update(teams.to_dict())
 
@@ -168,6 +168,36 @@ def main():
         teams = df_teams.filter(like=input_color, axis=0)[input_match].to_list()
         match_scouts = match_scouts[0:3] if input_color == "R" else match_scouts[3:6]
         input_team = teams[match_scouts.index(input_name)]
+
+    with st.expander("Master Scout List"):
+        st.divider()
+
+        match_search = st.text_input("Match:", f"{input_match} ").lower()
+
+        for match in all_match_scouts:
+            if match_search in f"{match.lower()} ":
+                scouts = all_match_scouts[match]
+
+                df_teams = (
+                    matches[matches["Match"] == match].set_index("Match").transpose()
+                )
+                teams = list(df_teams.to_dict()[match].values())
+
+                st.divider()
+
+                st.markdown(
+                    f"<span style='font-size: 1.5em;'><b>{match}</b></span>",
+                    unsafe_allow_html=True,
+                )
+
+                scout_columns = st.columns(3)
+
+                for i, (scout, team) in enumerate(zip(scouts, teams)):
+                    color = "#f8312f" if i < 3 else "#0074ba"
+                    scout_columns[i % 3].markdown(
+                        f"<span style='color:{color}'>{scout}</span> - {team}",
+                        unsafe_allow_html=True,
+                    )
 
     input_match = input_match.split()[1]
 
