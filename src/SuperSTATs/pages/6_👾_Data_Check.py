@@ -104,16 +104,17 @@ def main():
         team_nums = current_match["Team"].tolist()
         match_teams = matches.loc[matches["Match"] == match_name]
         match_teams = match_teams.drop(columns=["Match"])
-        tba_values = match_teams.values.tolist()[0]
+        tba_teams = match_teams.values.tolist()[0]
 
         with st.expander(match_name):
             data_variance = False
 
             if filters[0] in selected_filters:
                 sorted_team_nums = sorted(team_nums)
-                sorted_tba_values = sorted(tba_values)
+                sorted_tba_teams = sorted(tba_teams)
+                missing_teams = list(set(sorted_tba_teams).difference(sorted_team_nums))
 
-                if sorted_team_nums != sorted_tba_values:
+                if sorted_team_nums != sorted_tba_teams:
                     st.subheader(f"Team Count: {len(team_nums)}/6", False)
 
                     columns = st.columns(3)
@@ -122,14 +123,10 @@ def main():
                     columns[0].write(sorted_team_nums)
 
                     columns[1].subheader("TBA Data", False)
-                    columns[1].write(sorted_tba_values)
+                    columns[1].write(sorted_tba_teams)
 
                     columns[2].subheader("Missing Teams", False)
-                    columns[2].write(
-                        sorted(
-                            list(set(sorted_tba_values).difference(sorted_team_nums))
-                        )
-                    )
+                    columns[2].write(sorted(missing_teams))
 
                     data_variance = True
 
