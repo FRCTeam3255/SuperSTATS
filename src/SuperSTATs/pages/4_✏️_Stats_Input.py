@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 import streamlit as st
 import requests
 import qrcode
-import re
 import io
 
 
@@ -97,19 +96,9 @@ def main():
         name: id for name, id in entries_dict.items() if name not in gen_entries
     }
 
-    matches = st.session_state.matches
     unplayed_matches = st.session_state.unplayed_matches
-
-    float_pattern = re.compile(r"\d+\.\d+")
-    unplayed_matches = [
-        match
-        for match in unplayed_matches
-        if not re.match(float_pattern, match.split()[1])
-    ]
-
-    st.session_state.unplayed_matches = unplayed_matches
-
     scouters = st.session_state.assigned
+    matches = st.session_state.matches
 
     df_teams = {}
     all_match_scouts = {}
@@ -143,7 +132,15 @@ def main():
 
     match_selection = top_columns[1].empty()
 
-    input_match = match_selection.selectbox("Match:", scout_matches + ["Other"])
+    unplayed_scout_matches = []
+
+    for match in scout_matches:
+        if match in unplayed_matches:
+            unplayed_scout_matches.append(match)
+
+    input_match = match_selection.selectbox(
+        "Match:", unplayed_scout_matches + ["Other"]
+    )
 
     if input_match == "Other":
         input_match = match_selection.selectbox("Match [OTHER]:", matches)

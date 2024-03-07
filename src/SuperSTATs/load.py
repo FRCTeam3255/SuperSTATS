@@ -209,8 +209,11 @@ def get_unplayed(df, matches):
     tba_played_matches = []
 
     for index, row in st.session_state.match_data.iterrows():
-        if str(row["actual_time"]) != "nan":
-            tba_played_matches.append(row["Match Name"])
+        try:
+            if str(row["actual_time"]) != "nan":
+                tba_played_matches.append(row["Match Name"])
+        except:
+            pass
 
     df_unique = df["Completed"].dropna().unique()
     matches_unique = matches["Match"].unique()
