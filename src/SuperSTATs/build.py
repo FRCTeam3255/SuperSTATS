@@ -163,7 +163,7 @@ def calc_projected(
 
         if return_row:
             team_score["Match Name"] = (
-                team_score["Match Type"] + " " + team_score["Match"].astype(str)
+                team_score["Match Type"] + " " + team_score["Match"].astype(int).astype(str)
             )
             return {"score": team_score[["Match Name"] + phases], "phases": phases}
 

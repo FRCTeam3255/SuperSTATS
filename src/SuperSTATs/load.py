@@ -187,7 +187,7 @@ def get_matches():
         df["comp_level"] == "Playoffs", "set_number"
     ]
 
-    df["Match"] = df["comp_level"] + " " + df["match_number"].astype(str)
+    df["Match"] = df["comp_level"] + " " + df["match_number"].astype(int).astype(str)
 
     df = df.sort_values(
         by=["comp_level", "match_number"], ascending=[False, True]
@@ -199,7 +199,7 @@ def get_matches():
 
 
 def get_unplayed(df, matches):
-    df["Completed"] = df["Match Type"] + " " + df["Match"].astype(str)
+    df["Completed"] = df["Match Type"] + " " + df["Match"].astype(int).astype(str)
     df_counts = df["Completed"].value_counts()
 
     df["Completed"] = df["Completed"].apply(lambda x: x if df_counts[x] >= 3 else None)
