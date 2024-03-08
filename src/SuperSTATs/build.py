@@ -163,7 +163,9 @@ def calc_projected(
 
         if return_row:
             team_score["Match Name"] = (
-                team_score["Match Type"] + " " + team_score["Match"].astype(int).astype(str)
+                team_score["Match Type"]
+                + " "
+                + team_score["Match"].astype(int).astype(str)
             )
             return {"score": team_score[["Match Name"] + phases], "phases": phases}
 
@@ -388,7 +390,7 @@ def gen_match_comp(df, team_num, match_name, not_preview=True):
             st.divider()
 
             st.dataframe(
-                match_progress.drop(columns=["COMMENT"]),
+                match_progress,
                 column_config=column_config,
                 column_order=("Match Name", "AUTO", "TELE", "END", "INFO"),
                 hide_index=True,
