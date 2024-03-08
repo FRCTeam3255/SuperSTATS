@@ -193,7 +193,7 @@ def main():
 
     start_expanded = columns[0].toggle("Auto Expand", False)
     combined_chart = columns[1].toggle("Show Combined Chart", False)
-    use_weights = columns[2].toggle("Use Weights", False)
+    use_weights = columns[2].toggle("Projection Weight", False)
     calc_bumpers = columns[3].toggle("Calculate Bumpers", True)
 
     if use_weights:
@@ -204,9 +204,9 @@ def main():
             config = config.split("=")
             weights[config[0]] = float(config[1])
 
-        with st.form("Threshold Slider", clear_on_submit=False):
+        with st.form("Weight Slider", clear_on_submit=False):
             prediction_weight = st.slider(
-                "Variance Threshold:",
+                "Projection Weight:",
                 value=weights["default"],
                 min_value=weights["min"],
                 max_value=weights["max"],
