@@ -38,6 +38,7 @@ def add_cols(org_df, filter):
 def scouting_expander(
     df,
     team_num,
+    team_features=[],
     match_name=None,
     rank_info=[],
     start_expanded=False,
@@ -112,9 +113,18 @@ def scouting_expander(
                     f"<span style='font-size: small; color: #808080;'>Time Logged: {time_logged}</span>",
                     unsafe_allow_html=True,
                 )
-
         else:
             st.error("⚠️ No scouting data")
+
+        if team_features != []:
+            with st.container(border=True):
+                for feature in team_features:
+                    st.markdown(
+                        f"<span style='font-size: small;'>- {feature}</span>",
+                        unsafe_allow_html=True,
+                    )
+        else:
+            st.error("⚠️ No features")
 
 
 def calc_projected(
@@ -792,6 +802,7 @@ def gen_bar(
                     scouting_expander(
                         df=df_scouting,
                         team_num=team_num,
+                        team_features=all_team_features[team_num],
                         rank_info=[
                             ranked.loc[ranked["Team"] == team_num, "rank"].to_list()[0],
                             st.session_state.tba_ranks[str(team_num)],
