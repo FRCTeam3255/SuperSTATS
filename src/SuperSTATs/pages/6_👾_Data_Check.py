@@ -79,7 +79,7 @@ def main():
 
     matches = st.session_state.matches
 
-    df["Match Name"] = df["Match Type"] + " " + df["Match"].astype(str)
+    df["Match Name"] = df["Match Type"] + " " + df["Match"].astype(int).astype(str)
 
     grouped = df.groupby("Match Name")
     df_matches = {match: group for match, group in grouped}

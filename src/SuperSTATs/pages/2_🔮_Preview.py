@@ -1,7 +1,6 @@
 import SuperSTATs.build as build
 import SuperSTATs.load as load
 import streamlit as st
-import pandas as pd
 
 
 def display_team(

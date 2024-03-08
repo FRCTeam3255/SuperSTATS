@@ -3,9 +3,7 @@ import pandas as pd
 import requests
 import random
 import pickle
-import base64
 import tbapy
-import json
 import time
 
 
@@ -127,8 +125,8 @@ def get_match_data():
 
         def set_match_name(row):
             if row["comp_level"] == "Playoffs":
-                return row["comp_level"] + " " + str(row["set_number"])
-            return row["comp_level"] + " " + str(row["match_number"])
+                return row["comp_level"] + " " + str(int(row["set_number"]))
+            return row["comp_level"] + " " + str(int(row["match_number"]))
 
         df["Match Name"] = df.apply(set_match_name, axis=1)
 
