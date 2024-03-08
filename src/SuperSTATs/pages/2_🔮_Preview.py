@@ -9,6 +9,7 @@ def display_team(
     column,
     team_df,
     opposing_df,
+    prediction_weight,
     start_expanded,
     calc_bumpers,
     combined_chart,
@@ -33,7 +34,7 @@ def display_team(
 
     column.markdown("""---""")
 
-    projected_score = build.calc_projected(team_df)
+    projected_score = build.calc_projected(team_df, prediction_weight)
 
     text_color = "#f8312f" if team_header[0] == "🔴" else "#0074ba"
     column.markdown(
@@ -189,11 +190,35 @@ def main():
     red_alliance = df_sort.filter(like="Red", axis=0).to_list()
     blue_alliance = df_sort.filter(like="Blue", axis=0).to_list()
 
-    columns = st.columns(3)
+    columns = st.columns(4)
 
     start_expanded = columns[0].toggle("Auto Expand", False)
     combined_chart = columns[1].toggle("Show Combined Chart", False)
-    calc_bumpers = columns[2].toggle("Calculate Bumpers", True)
+    use_weights = columns[2].toggle("Use Weights", False)
+    calc_bumpers = columns[3].toggle("Calculate Bumpers", True)
+
+    if use_weights:
+        weights_raw = st.session_state.configs["Prediction Slider Weights"]
+        weights = {}
+
+        for config in weights_raw:
+            config = config.split("=")
+            weights[config[0]] = float(config[1])
+
+        with st.form("Threshold Slider", clear_on_submit=False):
+            prediction_weight = st.slider(
+                "Variance Threshold:",
+                value=weights["default"],
+                min_value=weights["min"],
+                max_value=weights["max"],
+                step=weights["step"],
+            )
+            st.form_submit_button(
+                "Set Weights", type="primary", use_container_width=True
+            )
+
+    else:
+        prediction_weight = 1
 
     st.divider()
 
@@ -204,6 +229,7 @@ def main():
         columns[0],
         red_alliance,
         blue_alliance,
+        prediction_weight,
         start_expanded,
         calc_bumpers,
         combined_chart,
@@ -215,6 +241,7 @@ def main():
         columns[1],
         blue_alliance,
         red_alliance,
+        prediction_weight,
         start_expanded,
         calc_bumpers,
         combined_chart,

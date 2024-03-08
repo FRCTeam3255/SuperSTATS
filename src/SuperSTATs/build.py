@@ -117,7 +117,9 @@ def scouting_expander(
             st.error("⚠️ No scouting data")
 
 
-def calc_projected(team_df, show_ungrouped=False, return_row=False):
+def calc_projected(
+    team_df, prediction_weight=1, show_ungrouped=False, return_row=False
+):
     score_df = st.session_state.df
     phases = [phase for phase in st.session_state.phases if phase != "COMMENT"]
 
@@ -156,16 +158,17 @@ def calc_projected(team_df, show_ungrouped=False, return_row=False):
             return {"score": team_score[["Match Name"] + phases], "phases": phases}
 
         match_count += len(team_score)
-        team_score = team_score[phases].sum().to_frame().T
-        alliance_score = alliance_score.dropna(axis=1, how="all")
+
+        team_score = team_score.iloc[-4:][phases].mean().to_frame().T
         team_score = team_score.dropna(axis=1, how="all")
+
+        alliance_score = alliance_score.dropna(axis=1, how="all")
         alliance_score = pd.concat([alliance_score, team_score], ignore_index=True)
 
     alliance_score = alliance_score.sum().sum()
-
     projected_score = round((alliance_score / phase_count) * round(match_count))
 
-    return projected_score
+    return int(projected_score * prediction_weight)
 
 
 def gen_match_comp(df, team_num, match_name, not_preview=True):

@@ -324,7 +324,7 @@ def main():
             st.balloons()
             st.toast("Submission successful!", icon="✅")
         else:
-            st.toast("Submission unsuccessful! Use QR Code...", icon="⚠️")
+            st.toast("Submission unsuccessful! Use QR code...", icon="⚠️")
 
             qr = qrcode.QRCode(
                 version=1,
