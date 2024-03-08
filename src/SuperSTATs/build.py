@@ -679,9 +679,9 @@ def gen_bar(
             else:
                 picked = ""
 
-            rank = str(tba_rankings.get(str(team), "NA")).zfill(2)
+            rank = str(tba_rankings.get(str(int(team)), "NA")).zfill(2)
 
-            return f"{picked} {str(team).rjust(4)} [{rank}]"
+            return f"{picked} {str(int(team)).rjust(4)} [{rank}]"
 
         data["Team"] = data["Team"].apply(
             lambda team: format_y(team, show_available, picked)
