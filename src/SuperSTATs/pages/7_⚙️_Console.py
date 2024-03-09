@@ -64,7 +64,7 @@ def main():
         scout_amount = len(scout_list)
 
         if scout_amount < 6:
-            st.error(f"⚠️ Not enough scouters! ({scout_amount}/6)")
+            st.error(f"⚠️ Not enough scouters ({scout_amount}/6)")
             scout_list.extend([f"N/A {i}" for i in range(6 - scout_amount)])
 
         st.divider()

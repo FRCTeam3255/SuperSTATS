@@ -25,6 +25,14 @@ df = download_sheets_raw(st.secrets["GID_RAW"])
 tba = tbapy.TBA(st.secrets["TBA_API"])
 
 
+def organize_df(df):
+    df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
+    df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
+    df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
+    df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
+    return df
+
+
 def get_tba_ranks():
     event_rankings = tba.event_rankings(st.secrets["DEFAULT_EVENT_KEY"])["rankings"]
     tba_ranks = {}
@@ -410,10 +418,7 @@ def app_init():
             df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
 
             display_status("df")
-            df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
-            df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
-            df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
-            st.session_state.df = df
+            st.session_state.df = organize_df(df)
 
             display_status("tba")
             st.session_state.tba = tba

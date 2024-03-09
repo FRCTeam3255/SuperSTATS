@@ -115,7 +115,7 @@ def main():
                 )
 
         except:
-            st.error("⚠️ Event not started!")
+            st.error("⚠️ Event not started")
 
     with st.expander("Event Keys", st.session_state.console["practice_mode"]):
         columns = st.columns(2)
