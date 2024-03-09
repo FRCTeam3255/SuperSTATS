@@ -134,8 +134,21 @@ def main():
         if match in unplayed_matches:
             unplayed_scout_matches.append(match)
 
+    match_index = 0
+
+    if st.session_state.console["practice_mode"]:
+        unplayed_scout_matches = [f"Prac {i + 1}" for i in range(50)]
+
+        df = st.session_state.df
+        df["Completed"] = df["Match Type"] + " " + df["Match"].astype(int).astype(str)
+
+        match_index = unplayed_scout_matches.index(df["Completed"].iloc[-1]) + 1
+
     input_match = match_selection.selectbox(
-        "Match:", unplayed_scout_matches + ["Other"]
+        "Match:",
+        unplayed_scout_matches
+        + (["Other"] if not st.session_state.console["practice_mode"] else []),
+        index=match_index,
     )
 
     if input_match == "Other":
@@ -156,41 +169,68 @@ def main():
         df_teams = (
             matches[matches["Match"] == input_match].set_index("Match").transpose()
         )
-        match_scouts = all_match_scouts[input_match]
-        input_color = name_check(input_name, match_scouts)
-        teams = df_teams.filter(like=input_color, axis=0)[input_match].to_list()
-        match_scouts = match_scouts[0:3] if input_color == "R" else match_scouts[3:6]
-        input_team = teams[match_scouts.index(input_name)]
 
-    with st.expander("Master Scout List"):
-        st.divider()
+        try:
+            match_scouts = all_match_scouts[input_match]
+            input_color = name_check(input_name, match_scouts)
+            teams = df_teams.filter(like=input_color, axis=0)[input_match].to_list()
+            match_scouts = (
+                match_scouts[0:3] if input_color == "R" else match_scouts[3:6]
+            )
+            input_team = teams[match_scouts.index(input_name)]
 
-        match_search = st.text_input("Match:", f"{input_match} ").lower()
+        except:
+            match_scouts = [input_name for i in range(6)]
 
-        for match in all_match_scouts:
-            if match_search in f"{match.lower()} ":
-                scouts = all_match_scouts[match]
+            prac_columns = st.columns(2)
 
-                df_teams = (
-                    matches[matches["Match"] == match].set_index("Match").transpose()
-                )
-                teams = list(df_teams.to_dict()[match].values())
+            input_team = prac_columns[0].selectbox(
+                "Team:", st.session_state.team_info.keys()
+            )
 
-                st.divider()
+            input_color = prac_columns[1].radio("Color:", ["R", "B"], horizontal=True)
 
-                st.markdown(
-                    f"<span style='font-size: 1.5em;'><b>{match}</b></span>",
-                    unsafe_allow_html=True,
-                )
+    if st.session_state.console["practice_mode"]:
+        st.error("⚠️ Practice mode enabled")
+    else:
+        with st.expander("Master Scout List"):
+            st.divider()
 
-                scout_columns = st.columns(3)
+            match_search = st.text_input("Match:", f"{input_match} ").lower()
 
-                for i, (scout, team) in enumerate(zip(scouts, teams)):
-                    color = "#f8312f" if i < 3 else "#0074ba"
-                    scout_columns[i % 3].markdown(
-                        f"<span style='color:{color}'>{scout}</span> - {team}",
+            for match in all_match_scouts:
+                if match_search in f"{match.lower()} ":
+                    scouts = all_match_scouts[match]
+
+                    df_teams = (
+                        matches[matches["Match"] == match]
+                        .set_index("Match")
+                        .transpose()
+                    )
+                    teams = list(df_teams.to_dict()[match].values())
+
+                    st.divider()
+
+                    st.markdown(
+                        f"<span style='font-size: 1.5em;'><b>{match}</b></span>",
                         unsafe_allow_html=True,
                     )
+
+                    red_scout_columns = st.columns(3)
+                    blue_scout_columns = st.columns(3)
+
+                    for i, (scout, team) in enumerate(zip(scouts, teams)):
+                        color = "#f8312f" if i < 3 else "#0074ba"
+                        if i < 3:
+                            red_scout_columns[i].markdown(
+                                f"<span style='color:{color}'>{scout}</span> - {team}",
+                                unsafe_allow_html=True,
+                            )
+                        else:
+                            blue_scout_columns[i - 3].markdown(
+                                f"<span style='color:{color}'>{scout}</span> - {team}",
+                                unsafe_allow_html=True,
+                            )
 
     input_match = input_match.split()[1]
 
@@ -202,9 +242,6 @@ def main():
     )
 
     input_key = st.secrets["DEFAULT_EVENT_KEY"]
-
-    if st.session_state.console["practice_mode"]:
-        st.error("⚠️ Practice mode enabled")
 
     st.divider()
 
