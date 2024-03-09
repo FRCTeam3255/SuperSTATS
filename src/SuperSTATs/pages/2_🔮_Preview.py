@@ -167,7 +167,7 @@ def main():
     try:
         last_match = int(st.session_state.df["Match"].max())
     except:
-        st.error("No Played Matches")
+        st.error("⚠️ No Played Matches")
         st.stop()
 
     if team == show_all:

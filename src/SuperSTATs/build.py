@@ -264,7 +264,7 @@ def gen_match_comp(df, team_num, match_name, not_preview=True):
     team_scores = match_scores.drop(columns=["Match Name"])
 
     if team_scores.empty:
-        st.error(f"No data collected for team {team_num} in {match_name}")
+        st.error(f"⚠️ No data collected for team {team_num} in {match_name}")
 
     team_scores = team_scores.sum()
     team_scores["TOTAL"] = team_scores.sum()
@@ -379,12 +379,13 @@ def gen_match_comp(df, team_num, match_name, not_preview=True):
             )
 
             column_config = {}
+
             for phase in ["AUTO", "TELE", "END", "INFO"]:
                 column_config[phase] = st.column_config.ProgressColumn(
                     phase.title(),
-                    format=f"%f/{max(match_progress[phase])}",
-                    min_value=min(match_progress[phase]) - 1,
-                    max_value=max(match_progress[phase]),
+                    format=f"%f/{int(max(match_progress[phase]))}",
+                    min_value=math.floor(min(match_progress[phase])) - 0.5,
+                    max_value=math.ceil(max(match_progress[phase])),
                 )
 
             st.divider()
@@ -668,7 +669,7 @@ def gen_bar(
                 else math.floor(calc_df.min().min())
             )
         except:
-            st.error("No bots found with selected features")
+            st.error("⚠️ No bots found with selected features")
             st.stop()
 
         x_range = (
@@ -770,9 +771,9 @@ def gen_bar(
             st.divider()
             st.altair_chart(chart, use_container_width=True)
         else:
-            st.error("Not enough data")
+            st.error("⚠️ Not enough data")
     else:
-        st.error("Please select at least one filter")
+        st.error("⚠️ Please select at least one filter")
 
     if use_presets == True and preset_choice == "None":
         preset_name = st.text_input("New Preset Name:")

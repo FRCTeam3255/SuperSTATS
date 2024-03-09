@@ -85,7 +85,7 @@ def main():
     df_matches = {match: group for match, group in grouped}
 
     if not selected_filters:
-        st.error("No Filters Selected")
+        st.error("⚠️ No Filters Selected")
 
     def sort_key(match):
         parts = match.split(" ")
@@ -97,7 +97,11 @@ def main():
 
     match_keys = {}
     match_data = st.session_state.match_data
-    match_keys = match_data.set_index("Match Name")["key"].to_dict()
+
+    try:
+        match_keys = match_data.set_index("Match Name")["key"].to_dict()
+    except:
+        st.error("⚠️ Event not started")
 
     for match_name, match_info in df_matches.items():
         current_match = df_matches[match_name]
@@ -186,7 +190,7 @@ def main():
                     get_variance("RED", red_tba_score)
                     get_variance("BLUE", blue_tba_score)
                 except:
-                    st.error("Invalid TBA Match Data")
+                    st.error("⚠️ Invalid TBA Match Data")
 
             if data_variance:
                 show_raw(match_name, match_info, match_keys[match_name])
