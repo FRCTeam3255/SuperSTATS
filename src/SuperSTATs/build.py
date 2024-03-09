@@ -13,28 +13,6 @@ load.app_init()
 pd.options.mode.chained_assignment = None
 
 
-def add_cols(org_df, filter):
-    points = {}
-
-    for key, value in st.session_state.points.items():
-        points[f"{key}_{value}"] = value
-
-    relevant_columns = [
-        col
-        for col in org_df.columns
-        if col != "COMMENT_GENERAL_STR_1" and col.startswith(filter)
-    ]
-
-    org_df[filter] = org_df[relevant_columns].apply(
-        lambda row: sum(
-            [points[col] * val for col, val in row.items() if col in points]
-        ),
-        axis=1,
-    )
-
-    return org_df[filter]
-
-
 def scouting_expander(
     df,
     team_num,
@@ -156,7 +134,7 @@ def calc_projected(
             ]
 
         for i in range(len(phases)):
-            team_score.loc[:, phases[i]] = add_cols(
+            team_score.loc[:, phases[i]] = load.add_cols(
                 team_score,
                 phases[i],
             )
@@ -508,7 +486,7 @@ def gen_bar(
         df = df.drop("COMMENT_GENERAL_STR_1", axis=1)
 
         for i in range(len(phases)):
-            df.loc[:, phases[i]] = add_cols(
+            df.loc[:, phases[i]] = load.add_cols(
                 df,
                 phases[i],
             )

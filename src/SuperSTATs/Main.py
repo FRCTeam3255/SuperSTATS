@@ -30,8 +30,7 @@ def main():
         for num, name in st.session_state.team_info.items():
             teams.append(f"{num} | {name}")
 
-        if not st.session_state.console["practice_mode"]:
-            team = columns[0].selectbox("Team Selection:", [show_all] + teams)
+        team = columns[0].selectbox("Team Selection:", [show_all] + teams)
 
         try:
             matches = pd.merge(

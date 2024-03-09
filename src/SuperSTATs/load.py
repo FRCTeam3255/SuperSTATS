@@ -25,11 +25,68 @@ df = download_sheets_raw(st.secrets["GID_RAW"])
 tba = tbapy.TBA(st.secrets["TBA_API"])
 
 
+def add_cols(org_df, filter):
+    points = {}
+
+    for key, value in st.session_state.points.items():
+        points[f"{key}_{value}"] = value
+
+    relevant_columns = [
+        col
+        for col in org_df.columns
+        if col != "COMMENT_GENERAL_STR_1" and col.startswith(filter)
+    ]
+
+    org_df[filter] = org_df[relevant_columns].apply(
+        lambda row: sum(
+            [points[col] * val for col, val in row.items() if col in points]
+        ),
+        axis=1,
+    )
+
+    return org_df[filter]
+
+
 def organize_df(df):
     df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
     df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
     df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
     df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
+
+    all_non_prac = []
+
+    phases = ["AUTO", "TELE", "END"]
+
+    for team in df["Team"].unique():
+        team_df = df[df["Team"] == team]
+
+        non_prac = team_df[~team_df["Match Type"].str.startswith("Prac")]
+        prac = team_df[team_df["Match Type"].str.startswith("Prac")]
+
+        if non_prac.empty:
+            for index, row in prac.iterrows():
+                for i in range(len(phases)):
+                    df.loc[:, phases[i]] = add_cols(
+                        df,
+                        phases[i],
+                    )
+
+                df["Score"] = df[phases].sum(axis=1)
+
+                max_score_index = df["Score"].idxmax()
+                max_score_row = df.loc[max_score_index]
+
+            non_prac = max_score_row.to_frame().T.drop(phases + ["Score"], axis=1)
+
+        all_non_prac.append(non_prac)
+
+        all_df = pd.concat(all_non_prac, ignore_index=True).sort_values(by="Timestamp")
+
+    try:
+        df = all_df
+    except:
+        pass
+
     return df
 
 

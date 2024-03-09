@@ -38,7 +38,7 @@ def main():
     phases = ["AUTO", "TELE", "END"]
 
     for i in range(len(phases)):
-        df.loc[:, phases[i]] = build.add_cols(
+        df.loc[:, phases[i]] = load.add_cols(
             df,
             phases[i],
         )
@@ -98,6 +98,7 @@ def main():
         match_keys = match_data.set_index("Match Name")["key"].to_dict()
     except:
         st.error("⚠️ Event not started")
+        st.stop()
 
     for match_name, match_info in df_matches.items():
         current_match = df_matches[match_name]
