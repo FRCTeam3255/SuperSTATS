@@ -139,10 +139,22 @@ def main():
     if st.session_state.console["practice_mode"]:
         unplayed_scout_matches = [f"Prac {i + 1}" for i in range(50)]
 
-        df = st.session_state.df
+        df = load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(
+            subset=["Timestamp"]
+        )
+        df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
+        df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
+        df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
+
         df["Completed"] = df["Match Type"] + " " + df["Match"].astype(int).astype(str)
 
-        match_index = unplayed_scout_matches.index(df["Completed"].iloc[-1]) + 1
+        try:
+            prac_matches = df[df["Match Type"] == "Prac"]
+            match_index = (
+                unplayed_scout_matches.index(prac_matches["Completed"].iloc[-1]) + 1
+            )
+        except:
+            match_index = 0
 
     input_match = match_selection.selectbox(
         "Match:",
