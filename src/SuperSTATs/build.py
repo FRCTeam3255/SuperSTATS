@@ -682,8 +682,8 @@ def gen_bar(
         inline_legend = preset["inline_legend"]
         group_filters = preset["group_filters"]
         show_available = preset["show_available"]
-
-    # st.write(data)
+        all_team_features = preset["all_team_features"]
+        rank_df = preset["rank_df"]
 
     def format_y(team, show_available, picked):
         if show_available:
@@ -759,7 +759,7 @@ def gen_bar(
         preset_name = st.text_input("New Preset Name:")
 
         if preset_name.replace(" ", ""):
-            if st.button("Add Preset", use_container_width=True):
+            if preset_name not in presets.keys():
                 presets[preset_name] = {
                     "data": data.to_dict(),
                     "x_range": x_range,
@@ -768,28 +768,33 @@ def gen_bar(
                     "inline_legend": inline_legend,
                     "group_filters": group_filters,
                     "show_available": show_available,
+                    "all_team_features": all_team_features,
+                    "rank_df": rank_df,
                 }
 
                 with open("src\\pickles\\presets.pickle", "wb") as f:
                     pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
                 st.toast("Successfully added preset!", icon="✅")
+            else:
+                st.toast("Preset name already exists!", icon="⚠️")
 
-    if expanders and preset_choice == "None":
+    if expanders:
         if st.toggle("Ranked Expanders"):
             with st.container(border=True):
                 start_time = time.time()
-                ranked = rank_df.sort_values(by="rank").astype(int)
+
+                ranked = rank_df
 
                 for index, row in ranked.iterrows():
                     team_num = row["Team"]
 
                     scouting_expander(
-                        df=df_scouting,
-                        team_num=team_num,
+                        df=st.session_state.scouting,
+                        team_num=int(team_num),
                         team_features=all_team_features[team_num],
                         rank_info=[
                             ranked.loc[ranked["Team"] == team_num, "rank"].to_list()[0],
-                            tba_ranks[str(team_num)],
+                            tba_ranks[str(int(team_num))],
                         ],
                     )
 
