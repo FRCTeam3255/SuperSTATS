@@ -298,6 +298,11 @@ def get_unplayed(df, matches):
     return unplayed_matches
 
 
+def get_picked():
+    picked = download_sheets_raw(st.secrets["GID_PICKED"])
+    return picked[picked["Unavailable"].str.contains("x", case=False, na=False)]
+
+
 def get_scouters():
     try:
         with open("src\\pickles\\scouts.pickle", "rb") as f:
@@ -501,7 +506,7 @@ def app_init():
             )
 
             display_status("picked")
-            st.session_state.picked = download_sheets_raw(st.secrets["GID_PICKED"])
+            st.session_state.picked = get_picked()
 
             display_status("scouting")
             st.session_state.scouting = download_sheets_raw(st.secrets["GID_SCOUTING"])

@@ -136,10 +136,10 @@ def main():
 
                     columns = st.columns(3)
 
-                    columns[0].subheader("SN Data", False)
+                    columns[0].subheader("SN Teams", False)
                     columns[0].write(sorted_team_nums)
 
-                    columns[1].subheader("TBA Data", False)
+                    columns[1].subheader("TBA Teams", False)
                     columns[1].write(sorted_tba_teams)
 
                     columns[2].subheader("Missing Teams", False)
@@ -210,7 +210,7 @@ def main():
                                 "Timestamp": datetime.now().strftime(
                                     "%m/%d/%Y %H:%M:%S"
                                 ),
-                                "Name": "Data",
+                                "Name": "Calc",
                                 "Match Type": match_split[0],
                                 "Match": match_split[1],
                                 "Team Color": team_color[0],
@@ -240,8 +240,13 @@ def main():
                             else:
                                 all_data.append(calc_df)
 
-                        all_calc = pd.concat(all_data, ignore_index=True)
-                        st.data_editor(all_calc.set_index(df.columns[0]).astype(str))
+                        all_calc = (
+                            pd.concat(all_data, ignore_index=True)
+                            .set_index(df.columns[0])
+                            .astype(str)
+                        )
+
+                        st.data_editor(all_calc)
 
                     data_variance = True
 

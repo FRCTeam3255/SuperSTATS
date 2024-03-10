@@ -381,6 +381,8 @@ def gen_match_comp(df, team_num, match_name, not_preview=True):
 
 def gen_bar(
     df=st.session_state.df,
+    picked=st.session_state.picked,
+    tba_ranks=st.session_state.tba_ranks,
     key=0,
     use_presets=True,
     use_group_filters=True,
@@ -493,9 +495,6 @@ def gen_bar(
 
         if not use_inline_legend:
             inline_legend = False
-
-        picked = pd.DataFrame(st.session_state.picked)
-        picked = picked[picked["Unavailable"].str.contains("x", case=False, na=False)]
 
         if displayed_teams:
             df = df[df["Team"].isin(displayed_teams + compared_teams)]
@@ -657,27 +656,6 @@ def gen_bar(
 
         data = data[~data["Team"].isin(compared_teams)]
 
-        tba_rankings = st.session_state.tba_ranks
-
-        def format_y(team, show_available, picked):
-            if show_available:
-                picked = (
-                    "💎"
-                    if team == st.secrets["TEAM_NUMBER"]
-                    else "🚫" if team in picked["Team"].values else "🟢"
-                )
-
-            else:
-                picked = ""
-
-            rank = str(tba_rankings.get(str(int(team)), "NA")).zfill(2)
-
-            return f"{picked} {str(int(team)).rjust(4)} [{rank}]"
-
-        data["Team"] = data["Team"].apply(
-            lambda team: format_y(team, show_available, picked)
-        )
-
     else:
         no_data = False
 
@@ -703,9 +681,33 @@ def gen_bar(
         selected_filters = preset["selected_filters"]
         inline_legend = preset["inline_legend"]
         group_filters = preset["group_filters"]
+        show_available = preset["show_available"]
+
+    # st.write(data)
+
+    def format_y(team, show_available, picked):
+        if show_available:
+            picked = (
+                "💎"
+                if team == st.secrets["TEAM_NUMBER"]
+                else "🚫" if team in picked["Team"].values else "🟢"
+            )
+
+        else:
+            picked = ""
+
+        rank = str(tba_ranks.get(str(int(team)), "NA")).zfill(2)
+
+        return f"{picked} {str(int(team)).rjust(4)} [{rank}]"
+
+    ranked_data = data.copy()
+
+    ranked_data["Team"] = ranked_data["Team"].apply(
+        lambda team: format_y(team, show_available, picked)
+    )
 
     chart = (
-        alt.Chart(data)
+        alt.Chart(ranked_data)
         .mark_bar()
         .encode(
             x=alt.X("value:Q", title=" ", scale=alt.Scale(domain=[x_min, x_max])),
@@ -765,6 +767,7 @@ def gen_bar(
                     "selected_filters": selected_filters,
                     "inline_legend": inline_legend,
                     "group_filters": group_filters,
+                    "show_available": show_available,
                 }
 
                 with open("src\\pickles\\presets.pickle", "wb") as f:
@@ -786,7 +789,7 @@ def gen_bar(
                         team_features=all_team_features[team_num],
                         rank_info=[
                             ranked.loc[ranked["Team"] == team_num, "rank"].to_list()[0],
-                            st.session_state.tba_ranks[str(team_num)],
+                            tba_ranks[str(team_num)],
                         ],
                     )
 

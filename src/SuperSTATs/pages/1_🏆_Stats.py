@@ -18,11 +18,14 @@ def main():
             load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
         )
 
-        st.session_state.picked = load.download_sheets_raw(st.secrets["GID_PICKED"])
+        st.session_state.picked = load.get_picked()
+        st.session_state.tba_ranks = load.get_tba_ranks()
 
     st.divider()
 
-    build.gen_bar(st.session_state.df)
+    build.gen_bar(
+        st.session_state.df, st.session_state.picked, st.session_state.tba_ranks
+    )
 
 
 if __name__ == "__main__":
