@@ -683,7 +683,7 @@ def gen_bar(
         group_filters = preset["group_filters"]
         show_available = preset["show_available"]
         all_team_features = preset["all_team_features"]
-        rank_df = preset["rank_df"]
+        rank_df = pd.DataFrame(preset["rank_df"])
 
     def format_y(team, show_available, picked):
         if show_available:
@@ -769,7 +769,7 @@ def gen_bar(
                     "group_filters": group_filters,
                     "show_available": show_available,
                     "all_team_features": all_team_features,
-                    "rank_df": rank_df,
+                    "rank_df": rank_df.to_dict(),
                 }
 
                 with open("src\\pickles\\presets.pickle", "wb") as f:
@@ -783,9 +783,7 @@ def gen_bar(
             with st.container(border=True):
                 start_time = time.time()
 
-                ranked = rank_df
-
-                for index, row in ranked.iterrows():
+                for index, row in rank_df.iterrows():
                     team_num = row["Team"]
 
                     scouting_expander(
@@ -793,7 +791,9 @@ def gen_bar(
                         team_num=int(team_num),
                         team_features=all_team_features[team_num],
                         rank_info=[
-                            ranked.loc[ranked["Team"] == team_num, "rank"].to_list()[0],
+                            rank_df.loc[rank_df["Team"] == team_num, "rank"].to_list()[
+                                0
+                            ],
                             tba_ranks[str(int(team_num))],
                         ],
                     )
