@@ -13,31 +13,10 @@ load.app_init()
 pd.options.mode.chained_assignment = None
 
 
-def add_cols(org_df, filter):
-    points = {}
-
-    for key, value in st.session_state.points.items():
-        points[f"{key}_{value}"] = value
-
-    relevant_columns = [
-        col
-        for col in org_df.columns
-        if col != "COMMENT_GENERAL_STR_1" and col.startswith(filter)
-    ]
-
-    org_df[filter] = org_df[relevant_columns].apply(
-        lambda row: sum(
-            [points[col] * val for col, val in row.items() if col in points]
-        ),
-        axis=1,
-    )
-
-    return org_df[filter]
-
-
 def scouting_expander(
     df,
     team_num,
+    team_features=[],
     match_name=None,
     rank_info=[],
     start_expanded=False,
@@ -112,12 +91,23 @@ def scouting_expander(
                     f"<span style='font-size: small; color: #808080;'>Time Logged: {time_logged}</span>",
                     unsafe_allow_html=True,
                 )
-
         else:
             st.error("⚠️ No scouting data")
 
+        if team_features != []:
+            with st.container(border=True):
+                for feature in team_features:
+                    st.markdown(
+                        f"<span style='font-size: small;'>- {feature}</span>",
+                        unsafe_allow_html=True,
+                    )
+        else:
+            st.error("⚠️ No features")
 
-def calc_projected(team_df, show_ungrouped=False, return_row=False):
+
+def calc_projected(
+    team_df, prediction_weight=1, show_ungrouped=False, return_row=False
+):
     score_df = st.session_state.df
     phases = [phase for phase in st.session_state.phases if phase != "COMMENT"]
 
@@ -144,28 +134,31 @@ def calc_projected(team_df, show_ungrouped=False, return_row=False):
             ]
 
         for i in range(len(phases)):
-            team_score.loc[:, phases[i]] = add_cols(
+            team_score.loc[:, phases[i]] = load.add_cols(
                 team_score,
                 phases[i],
             )
 
         if return_row:
             team_score["Match Name"] = (
-                team_score["Match Type"] + " " + team_score["Match"].astype(str)
+                team_score["Match Type"]
+                + " "
+                + team_score["Match"].astype(int).astype(str)
             )
             return {"score": team_score[["Match Name"] + phases], "phases": phases}
 
         match_count += len(team_score)
-        team_score = team_score[phases].sum().to_frame().T
-        alliance_score = alliance_score.dropna(axis=1, how="all")
+
+        team_score = team_score.iloc[-4:][phases].mean().to_frame().T
         team_score = team_score.dropna(axis=1, how="all")
+
+        alliance_score = alliance_score.dropna(axis=1, how="all")
         alliance_score = pd.concat([alliance_score, team_score], ignore_index=True)
 
     alliance_score = alliance_score.sum().sum()
-
     projected_score = round((alliance_score / phase_count) * round(match_count))
 
-    return projected_score
+    return int(projected_score * prediction_weight)
 
 
 def gen_match_comp(df, team_num, match_name, not_preview=True):
@@ -249,7 +242,7 @@ def gen_match_comp(df, team_num, match_name, not_preview=True):
     team_scores = match_scores.drop(columns=["Match Name"])
 
     if team_scores.empty:
-        st.error(f"No data collected for team {team_num} in {match_name}")
+        st.error(f"⚠️ No data collected for team {team_num} in {match_name}")
 
     team_scores = team_scores.sum()
     team_scores["TOTAL"] = team_scores.sum()
@@ -364,18 +357,19 @@ def gen_match_comp(df, team_num, match_name, not_preview=True):
             )
 
             column_config = {}
+
             for phase in ["AUTO", "TELE", "END", "INFO"]:
                 column_config[phase] = st.column_config.ProgressColumn(
                     phase.title(),
-                    format=f"%f/{max(match_progress[phase])}",
-                    min_value=min(match_progress[phase]) - 1,
-                    max_value=max(match_progress[phase]),
+                    format=f"%f/{int(max(match_progress[phase]))}",
+                    min_value=math.floor(min(match_progress[phase])) - 0.5,
+                    max_value=math.ceil(max(match_progress[phase])),
                 )
 
             st.divider()
 
             st.dataframe(
-                match_progress.drop(columns=["COMMENT"]),
+                match_progress,
                 column_config=column_config,
                 column_order=("Match Name", "AUTO", "TELE", "END", "INFO"),
                 hide_index=True,
@@ -387,6 +381,8 @@ def gen_match_comp(df, team_num, match_name, not_preview=True):
 
 def gen_bar(
     df=st.session_state.df,
+    picked=st.session_state.picked,
+    tba_ranks=st.session_state.tba_ranks,
     key=0,
     use_presets=True,
     use_group_filters=True,
@@ -444,6 +440,18 @@ def gen_bar(
         return [variable, var_count]
 
     if preset_choice == "None":
+        show_nums, var_count = gen_toggle(
+            "show_nums", var_count, "Team Numbers", True, key, False
+        )
+
+        show_available, var_count = gen_toggle(
+            "show_available", var_count, "Availability", show_nums, key, not show_nums
+        )
+
+        features, var_count = gen_toggle(
+            "features", var_count, "Features", False, key, False
+        )
+
         group_filters, var_count = gen_toggle(
             "group_filters", var_count, "Group Filters", True, key, False
         )
@@ -455,18 +463,6 @@ def gen_bar(
             not group_filters,
             key,
             group_filters,
-        )
-
-        show_nums, var_count = gen_toggle(
-            "show_nums", var_count, "Team Numbers", True, key, False
-        )
-
-        show_available, var_count = gen_toggle(
-            "show_available", var_count, "Availability", show_nums, key, not show_nums
-        )
-
-        features, var_count = gen_toggle(
-            "features", var_count, "Features", False, key, False
         )
 
         if use_agg_type:
@@ -492,16 +488,13 @@ def gen_bar(
         df = df.drop("COMMENT_GENERAL_STR_1", axis=1)
 
         for i in range(len(phases)):
-            df.loc[:, phases[i]] = add_cols(
+            df.loc[:, phases[i]] = load.add_cols(
                 df,
                 phases[i],
             )
 
         if not use_inline_legend:
             inline_legend = False
-
-        picked = pd.DataFrame(st.session_state.picked)
-        picked = picked[picked["Unavailable"].str.contains("x", case=False, na=False)]
 
         if displayed_teams:
             df = df[df["Team"].isin(displayed_teams + compared_teams)]
@@ -653,7 +646,7 @@ def gen_bar(
                 else math.floor(calc_df.min().min())
             )
         except:
-            st.error("No bots found with selected features")
+            st.error("⚠️ No bots found with selected features")
             st.stop()
 
         x_range = (
@@ -662,27 +655,6 @@ def gen_bar(
         x_min, x_max = x_range
 
         data = data[~data["Team"].isin(compared_teams)]
-
-        tba_rankings = st.session_state.tba_ranks
-
-        def format_y(team, show_available, picked):
-            if show_available:
-                picked = (
-                    "💎"
-                    if team == st.secrets["TEAM_NUMBER"]
-                    else "🚫" if team in picked["Team"].values else "🟢"
-                )
-
-            else:
-                picked = ""
-
-            rank = str(tba_rankings.get(str(team), "NA")).zfill(2)
-
-            return f"{picked} {str(team).rjust(4)} [{rank}]"
-
-        data["Team"] = data["Team"].apply(
-            lambda team: format_y(team, show_available, picked)
-        )
 
     else:
         no_data = False
@@ -709,9 +681,33 @@ def gen_bar(
         selected_filters = preset["selected_filters"]
         inline_legend = preset["inline_legend"]
         group_filters = preset["group_filters"]
+        show_available = preset["show_available"]
+        all_team_features = preset["all_team_features"]
+        rank_df = preset["rank_df"]
+
+    def format_y(team, show_available, picked):
+        if show_available:
+            picked = (
+                "💎"
+                if team == st.secrets["TEAM_NUMBER"]
+                else "🚫" if team in picked["Team"].values else "🟢"
+            )
+
+        else:
+            picked = ""
+
+        rank = str(tba_ranks.get(str(int(team)), "NA")).zfill(2)
+
+        return f"{picked} {str(int(team)).rjust(4)} [{rank}]"
+
+    ranked_data = data.copy()
+
+    ranked_data["Team"] = ranked_data["Team"].apply(
+        lambda team: format_y(team, show_available, picked)
+    )
 
     chart = (
-        alt.Chart(data)
+        alt.Chart(ranked_data)
         .mark_bar()
         .encode(
             x=alt.X("value:Q", title=" ", scale=alt.Scale(domain=[x_min, x_max])),
@@ -755,15 +751,15 @@ def gen_bar(
             st.divider()
             st.altair_chart(chart, use_container_width=True)
         else:
-            st.error("Not enough data")
+            st.error("⚠️ Not enough data")
     else:
-        st.error("Please select at least one filter")
+        st.error("⚠️ Please select at least one filter")
 
     if use_presets == True and preset_choice == "None":
         preset_name = st.text_input("New Preset Name:")
 
         if preset_name.replace(" ", ""):
-            if st.button("Add Preset", use_container_width=True):
+            if preset_name not in presets.keys():
                 presets[preset_name] = {
                     "data": data.to_dict(),
                     "x_range": x_range,
@@ -771,27 +767,34 @@ def gen_bar(
                     "selected_filters": selected_filters,
                     "inline_legend": inline_legend,
                     "group_filters": group_filters,
+                    "show_available": show_available,
+                    "all_team_features": all_team_features,
+                    "rank_df": rank_df,
                 }
 
                 with open("src\\pickles\\presets.pickle", "wb") as f:
                     pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
                 st.toast("Successfully added preset!", icon="✅")
+            else:
+                st.toast("Preset name already exists!", icon="⚠️")
 
-    if expanders and preset_choice == "None":
+    if expanders:
         if st.toggle("Ranked Expanders"):
             with st.container(border=True):
                 start_time = time.time()
-                ranked = rank_df.sort_values(by="rank").astype(int)
+
+                ranked = rank_df
 
                 for index, row in ranked.iterrows():
                     team_num = row["Team"]
 
                     scouting_expander(
-                        df=df_scouting,
-                        team_num=team_num,
+                        df=st.session_state.scouting,
+                        team_num=int(team_num),
+                        team_features=all_team_features[team_num],
                         rank_info=[
                             ranked.loc[ranked["Team"] == team_num, "rank"].to_list()[0],
-                            st.session_state.tba_ranks[str(team_num)],
+                            tba_ranks[str(int(team_num))],
                         ],
                     )
 

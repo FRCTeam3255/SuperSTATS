@@ -1,6 +1,8 @@
 import SuperSTATs.load as load
 import requests, pickle
 import streamlit as st
+import qrcode
+import io
 
 
 def main():
@@ -33,7 +35,11 @@ def main():
     if len(unscouted_teams_raw) == 0:
         st.success("All teams have scouting info!")
         st.balloons()
-    else:
+        st.stop()
+
+    submitted = False
+
+    with st.form("Scouting Input", clear_on_submit=True, border=False):
         unscouted_teams = []
         for num, name in teams_raw:
             if num in unscouted_teams_raw:
@@ -63,39 +69,53 @@ def main():
             horizontal=True,
         )
 
-        if dt_type == "Other":
-            dt_input = st.text_input("[OTHER] Drivetrain Type:")
-            dt_type = (
-                f"__other_option__&entry.1374859410.other_option_response={dt_input}"
-            )
-
         comments = st.text_input("Additional Comments:")
 
         prefill_url = f"https://docs.google.com/forms/d/e/1FAIpQLSf0Wm6xqzuUOaYquHo-oIIZHfIXJIAUA9R64M_PnEQibP_jJw/formResponse?usp=pp_url&entry.1329798282={team_num}&entry.2038191838={length}&entry.2133090800={width}&entry.1034225169={weight}&entry.1374859410={dt_type}&entry.820368818={comments.replace(' ', '+')}&submit=Submit"
 
-        if 0.0 not in [length, width, weight]:
-            if st.button("Submit", type="primary", use_container_width=True):
-                requests.get(prefill_url)
-                st.toast("Submission successful! Please Refresh...", icon="✅")
-                st.balloons()
+        submitted = st.form_submit_button(
+            "Submit", type="primary", use_container_width=True
+        )
+
+    if submitted:
+        req = requests.get(prefill_url)
+        if req.status_code == 200:
+            st.balloons()
+            st.toast("Submission successful!", icon="✅")
         else:
-            st.button("Submit", type="primary", use_container_width=True, disabled=True)
-            st.warning("Required Input Missing")
+            st.toast("Submission unsuccessful! Use QR Code...", icon="⚠️")
 
-        st.write("""---""")
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+            )
 
-        with st.expander("Pit Map"):
-            pit_map = st.file_uploader("Upload Map: ", type=["png", "jpg"])
-            if pit_map:
-                with open("src\\pickles\\map.pickle", "wb") as f:
-                    pickle.dump(pit_map, f, pickle.HIGHEST_PROTOCOL)
-            else:
-                try:
-                    with open("src\\pickles\\map.pickle", "rb") as f:
-                        pit_map = pickle.load(f)
-                    st.image(pit_map, use_column_width=True)
-                except:
-                    pass
+            qr.add_data(prefill_url)
+            qr.make(fit=True)
+
+            img = qr.make_image(fill_color="#ffffff", back_color="#141414")
+
+            byte_stream = io.BytesIO()
+
+            img.save(byte_stream, format="JPEG")
+            bytes_image = byte_stream.getvalue()
+
+            st.image(bytes_image, use_column_width=True)
+
+    st.write("""---""")
+
+    with st.expander("Pit Map"):
+        pit_map = st.file_uploader("Upload Map: ", type=["png", "jpg"])
+        if pit_map:
+            with open("src\\pickles\\map.pickle", "wb") as f:
+                pickle.dump(pit_map, f, pickle.HIGHEST_PROTOCOL)
+        else:
+            try:
+                with open("src\\pickles\\map.pickle", "rb") as f:
+                    pit_map = pickle.load(f)
+                st.image(pit_map, use_column_width=True)
+            except:
+                pass
 
 
 if __name__ == "__main__":

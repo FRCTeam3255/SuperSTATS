@@ -3,9 +3,7 @@ import pandas as pd
 import requests
 import random
 import pickle
-import base64
 import tbapy
-import json
 import time
 
 
@@ -25,6 +23,71 @@ def download_sheets_raw(gid):
 
 df = download_sheets_raw(st.secrets["GID_RAW"])
 tba = tbapy.TBA(st.secrets["TBA_API"])
+
+
+def add_cols(org_df, filter):
+    points = {}
+
+    for key, value in st.session_state.points.items():
+        points[f"{key}_{value}"] = value
+
+    relevant_columns = [
+        col
+        for col in org_df.columns
+        if col != "COMMENT_GENERAL_STR_1" and col.startswith(filter)
+    ]
+
+    org_df[filter] = org_df[relevant_columns].apply(
+        lambda row: sum(
+            [points[col] * val for col, val in row.items() if col in points]
+        ),
+        axis=1,
+    )
+
+    return org_df[filter]
+
+
+def organize_df(df):
+    df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
+    df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
+    df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
+    df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
+
+    all_non_prac = []
+
+    phases = ["AUTO", "TELE", "END"]
+
+    for team in df["Team"].unique():
+        team_df = df[df["Team"] == team]
+
+        non_prac = team_df[~team_df["Match Type"].str.startswith("Prac")]
+        prac = team_df[team_df["Match Type"].str.startswith("Prac")]
+
+        if non_prac.empty:
+            for index, row in prac.iterrows():
+                for i in range(len(phases)):
+                    df.loc[:, phases[i]] = add_cols(
+                        df,
+                        phases[i],
+                    )
+
+                df["Score"] = df[phases].sum(axis=1)
+
+                max_score_index = df["Score"].idxmax()
+                max_score_row = df.loc[max_score_index]
+
+            non_prac = max_score_row.to_frame().T.drop(phases + ["Score"], axis=1)
+
+        all_non_prac.append(non_prac)
+
+        all_df = pd.concat(all_non_prac, ignore_index=True).sort_values(by="Timestamp")
+
+    try:
+        df = all_df
+    except:
+        pass
+
+    return df
 
 
 def get_tba_ranks():
@@ -127,8 +190,8 @@ def get_match_data():
 
         def set_match_name(row):
             if row["comp_level"] == "Playoffs":
-                return row["comp_level"] + " " + str(row["set_number"])
-            return row["comp_level"] + " " + str(row["match_number"])
+                return row["comp_level"] + " " + str(int(row["set_number"]))
+            return row["comp_level"] + " " + str(int(row["match_number"]))
 
         df["Match Name"] = df.apply(set_match_name, axis=1)
 
@@ -189,7 +252,7 @@ def get_matches():
         df["comp_level"] == "Playoffs", "set_number"
     ]
 
-    df["Match"] = df["comp_level"] + " " + df["match_number"].astype(str)
+    df["Match"] = df["comp_level"] + " " + df["match_number"].astype(int).astype(str)
 
     df = df.sort_values(
         by=["comp_level", "match_number"], ascending=[False, True]
@@ -201,10 +264,19 @@ def get_matches():
 
 
 def get_unplayed(df, matches):
-    df["Completed"] = df["Match Type"] + " " + df["Match"].astype(str)
+    df["Completed"] = df["Match Type"] + " " + df["Match"].astype(int).astype(str)
     df_counts = df["Completed"].value_counts()
 
     df["Completed"] = df["Completed"].apply(lambda x: x if df_counts[x] >= 3 else None)
+
+    tba_played_matches = []
+
+    for index, row in st.session_state.match_data.iterrows():
+        try:
+            if str(row["actual_time"]) != "nan":
+                tba_played_matches.append(row["Match Name"])
+        except:
+            pass
 
     df_unique = df["Completed"].dropna().unique()
     matches_unique = matches["Match"].unique()
@@ -217,7 +289,18 @@ def get_unplayed(df, matches):
         match for sublist in unplayed_matches.values.tolist() for match in sublist
     ]
 
+    unplayed_copy = unplayed_matches.copy()
+
+    for match in unplayed_copy:
+        if match in tba_played_matches:
+            unplayed_matches.remove(match)
+
     return unplayed_matches
+
+
+def get_picked():
+    picked = download_sheets_raw(st.secrets["GID_PICKED"])
+    return picked[picked["Unavailable"].str.contains("x", case=False, na=False)]
 
 
 def get_scouters():
@@ -397,10 +480,7 @@ def app_init():
             df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
 
             display_status("df")
-            df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
-            df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
-            df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
-            st.session_state.df = df
+            st.session_state.df = organize_df(df)
 
             display_status("tba")
             st.session_state.tba = tba
@@ -426,7 +506,7 @@ def app_init():
             )
 
             display_status("picked")
-            st.session_state.picked = download_sheets_raw(st.secrets["GID_PICKED"])
+            st.session_state.picked = get_picked()
 
             display_status("scouting")
             st.session_state.scouting = download_sheets_raw(st.secrets["GID_SCOUTING"])

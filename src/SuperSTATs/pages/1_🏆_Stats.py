@@ -14,19 +14,18 @@ def main():
     st.title("")
 
     if st.button("Update Page", type="primary", use_container_width=True):
-        df = load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(
-            subset=["Timestamp"]
+        st.session_state.df = load.organize_df(
+            load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
         )
-        df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
-        df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
-        df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
-        st.session_state.df = df
 
-        st.session_state.picked = load.download_sheets_raw(st.secrets["GID_PICKED"])
+        st.session_state.picked = load.get_picked()
+        st.session_state.tba_ranks = load.get_tba_ranks()
 
     st.divider()
 
-    build.gen_bar(st.session_state.df)
+    build.gen_bar(
+        st.session_state.df, st.session_state.picked, st.session_state.tba_ranks
+    )
 
 
 if __name__ == "__main__":

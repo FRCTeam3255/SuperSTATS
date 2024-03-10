@@ -2,7 +2,9 @@ import SuperSTATs.load as load
 from bs4 import BeautifulSoup
 import streamlit as st
 import requests
-import re
+import datetime
+import qrcode
+import io
 
 
 def get_match_scouts(team):
@@ -56,13 +58,9 @@ def main():
     st.title("")
 
     if st.button("Update Page", type="primary", use_container_width=True):
-        df = load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(
-            subset=["Timestamp"]
+        st.session_state.df = load.organize_df(
+            load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
         )
-        df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
-        df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
-        df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
-        st.session_state.df = df
 
         st.session_state.unplayed_matches = load.get_unplayed(
             st.session_state.df, st.session_state.matches
@@ -95,38 +93,28 @@ def main():
         name: id for name, id in entries_dict.items() if name not in gen_entries
     }
 
-    matches = st.session_state.matches
     unplayed_matches = st.session_state.unplayed_matches
-
-    float_pattern = re.compile(r"\d+\.\d+")
-    unplayed_matches = [
-        match
-        for match in unplayed_matches
-        if not re.match(float_pattern, match.split()[1])
-    ]
-
-    st.session_state.unplayed_matches = unplayed_matches
-
     scouters = st.session_state.assigned
+    matches = st.session_state.matches
 
     df_teams = {}
     all_match_scouts = {}
     scout_matches = []
 
     top_columns = st.columns(2)
+    bot_columns = st.columns(2)
 
     name_selection = top_columns[0].empty()
 
     input_name = name_selection.selectbox("Name:", scouters + ["Sub"])
 
     if input_name == "Sub":
-        bot_columns = st.columns(2)
         input_name = name_selection.selectbox("Original:", scouters)
         input_sub = bot_columns[0].selectbox("Substitute:", st.session_state.scouts)
     else:
         input_sub = None
 
-    for match in unplayed_matches:
+    for match in st.session_state.matches["Match"]:
         teams = matches[matches["Match"] == match].set_index("Match").transpose()
         df_teams.update(teams.to_dict())
 
@@ -141,31 +129,158 @@ def main():
 
     match_selection = top_columns[1].empty()
 
-    input_match = match_selection.selectbox("Match:", scout_matches + ["Other"])
+    unplayed_scout_matches = []
+
+    for match in scout_matches:
+        if match in unplayed_matches:
+            unplayed_scout_matches.append(match)
+
+    match_index = 0
+
+    if st.session_state.console["practice_mode"]:
+        unplayed_scout_matches = [f"Prac {i + 1}" for i in range(50)]
+
+        df = load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(
+            subset=["Timestamp"]
+        )
+        df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
+        df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
+        df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
+
+        df["Completed"] = df["Match Type"] + " " + df["Match"].astype(int).astype(str)
+
+        try:
+            prac_matches = df[df["Match Type"] == "Prac"]
+            match_index = (
+                unplayed_scout_matches.index(prac_matches["Completed"].iloc[-1]) + 1
+            )
+        except:
+            match_index = 0
+
+    input_match = match_selection.selectbox(
+        "Match:",
+        unplayed_scout_matches
+        + (["Other"] if not st.session_state.console["practice_mode"] else []),
+        index=match_index,
+    )
 
     if input_match == "Other":
         input_match = match_selection.selectbox("Match [OTHER]:", matches)
+        input_type = input_match.split()[0]
+
+        df_teams = (
+            matches[matches["Match"] == input_match].set_index("Match").transpose()
+        )
+
+        teams = list(df_teams.to_dict()[input_match].values())
+        match_scouts = [input_name for i in range(6)]
+
+        input_team = bot_columns[1].selectbox("Team:", teams)
+        input_color = name_check(input_team, teams)
     else:
+        input_type = input_match.split()[0]
+        df_teams = (
+            matches[matches["Match"] == input_match].set_index("Match").transpose()
+        )
+
         try:
             match_scouts = all_match_scouts[input_match]
+            input_color = name_check(input_name, match_scouts)
+            teams = df_teams.filter(like=input_color, axis=0)[input_match].to_list()
+            match_scouts = (
+                match_scouts[0:3] if input_color == "R" else match_scouts[3:6]
+            )
+            input_team = teams[match_scouts.index(input_name)]
+
         except:
-            st.error(f"You are not a scouter for match {input_match}")
-            st.stop()
+            match_scouts = [input_name for i in range(6)]
 
-    input_color = name_check(input_name, match_scouts)
-    input_type = input_match.split()[0]
+            prac_columns = st.columns(2)
 
-    df_teams = matches[matches["Match"] == input_match].set_index("Match").transpose()
-    teams = df_teams.filter(like=input_color, axis=0)[input_match].to_list()
+            input_team = prac_columns[0].selectbox(
+                "Team:", st.session_state.team_info.keys()
+            )
+
+            input_color = prac_columns[1].radio("Color:", ["R", "B"], horizontal=True)
+
+    if st.session_state.console["practice_mode"]:
+        st.error("⚠️ Practice mode enabled")
+    else:
+        with st.expander("Master Scout List"):
+            st.divider()
+
+            match_search = st.text_input("Match:", f"{input_match} ").lower()
+
+            for match in all_match_scouts:
+                if match_search in f"{match.lower()} ":
+                    scouts = all_match_scouts[match]
+
+                    df_teams = (
+                        matches[matches["Match"] == match]
+                        .set_index("Match")
+                        .transpose()
+                    )
+                    teams = list(df_teams.to_dict()[match].values())
+
+                    st.divider()
+
+                    st.markdown(
+                        f"<span style='font-size: 1.5em;'><b>{match}</b></span>",
+                        unsafe_allow_html=True,
+                    )
+
+                    red_scout_columns = st.columns(3)
+                    blue_scout_columns = st.columns(3)
+
+                    for i, (scout, team) in enumerate(zip(scouts, teams)):
+                        color = "#f8312f" if i < 3 else "#0074ba"
+                        if i < 3:
+                            red_scout_columns[i].markdown(
+                                f"<span style='color:{color}'>{scout}</span> - {team}",
+                                unsafe_allow_html=True,
+                            )
+                        else:
+                            blue_scout_columns[i - 3].markdown(
+                                f"<span style='color:{color}'>{scout}</span> - {team}",
+                                unsafe_allow_html=True,
+                            )
+
+        if not st.session_state.console["practice_mode"]:
+            try:
+                event_url = f"https://www.thebluealliance.com/event/{st.secrets['DEFAULT_EVENT_KEY']}"
+
+                response = requests.get(event_url)
+                soup = BeautifulSoup(response.content, "html.parser")
+                output = str(soup)
+
+                match_data = st.session_state.match_data
+                match_data = match_data[match_data["Match Name"] == input_match]
+                match_key = match_data["key"].to_list()[0]
+
+                index = output.find("Scheduled at ", output.find(match_key))
+                if index != -1:
+                    closing_tag_index = output.find(" UTC", index)
+                    next_instance = output[
+                        index + len("Scheduled at ") + 4 : closing_tag_index
+                    ]
+
+                match_time = datetime.datetime.strptime(
+                    next_instance, "%I:%M%p"
+                ) - datetime.timedelta(hours=8)
+
+                next_match_index = unplayed_matches.index(unplayed_scout_matches[0])
+
+                st.markdown(
+                    f"<div style='text-align: center'>Scheduled {'NOW' if next_match_index == 0 else f'in {next_match_index} matches'}...<br><i>{unplayed_scout_matches[0]} at {match_time.strftime('%I:%M %p')}</i></div>",
+                    unsafe_allow_html=True,
+                )
+            except:
+                st.markdown(
+                    f"<div style='text-align: center'>Error fetching match time...</div>",
+                    unsafe_allow_html=True,
+                )
+
     input_match = input_match.split()[1]
-
-    match_scouts = match_scouts[0:3] if input_color == "R" else match_scouts[3:6]
-
-    try:
-        input_team = teams[match_scouts.index(input_name)]
-    except:
-        st.error(f"You are not a scouter for {input_match}")
-        st.stop()
 
     color_icon = "🔴" if input_color == "R" else "🔵"
     input_name = (
@@ -288,9 +403,29 @@ def main():
             st.warning("Required Input Missing")
 
     if submitted:
-        requests.get(prefill_url)
-        st.balloons()
-        st.toast("Submission successful! Please refresh...", icon="✅")
+        req = requests.get(prefill_url)
+        if req.status_code == 200:
+            st.balloons()
+            st.toast("Submission successful!", icon="✅")
+        else:
+            st.toast("Submission unsuccessful! Use QR code...", icon="⚠️")
+
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+            )
+
+            qr.add_data(prefill_url)
+            qr.make(fit=True)
+
+            img = qr.make_image(fill_color="#ffffff", back_color="#141414")
+
+            byte_stream = io.BytesIO()
+
+            img.save(byte_stream, format="JPEG")
+            bytes_image = byte_stream.getvalue()
+
+            st.image(bytes_image, use_column_width=True)
 
 
 if __name__ == "__main__":
