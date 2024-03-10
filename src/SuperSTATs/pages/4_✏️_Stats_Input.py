@@ -2,6 +2,7 @@ import SuperSTATs.load as load
 from bs4 import BeautifulSoup
 import streamlit as st
 import requests
+import datetime
 import qrcode
 import io
 
@@ -243,6 +244,41 @@ def main():
                                 f"<span style='color:{color}'>{scout}</span> - {team}",
                                 unsafe_allow_html=True,
                             )
+
+        if not st.session_state.console["practice_mode"]:
+            try:
+                event_url = f"https://www.thebluealliance.com/event/{st.secrets['DEFAULT_EVENT_KEY']}"
+
+                response = requests.get(event_url)
+                soup = BeautifulSoup(response.content, "html.parser")
+                output = str(soup)
+
+                match_data = st.session_state.match_data
+                match_data = match_data[match_data["Match Name"] == input_match]
+                match_key = match_data["key"].to_list()[0]
+
+                index = output.find("Scheduled at ", output.find(match_key))
+                if index != -1:
+                    closing_tag_index = output.find(" UTC", index)
+                    next_instance = output[
+                        index + len("Scheduled at ") + 4 : closing_tag_index
+                    ]
+
+                match_time = datetime.datetime.strptime(
+                    next_instance, "%I:%M%p"
+                ) - datetime.timedelta(hours=8)
+
+                next_match_index = unplayed_matches.index(unplayed_scout_matches[0])
+
+                st.markdown(
+                    f"<div style='text-align: center'>Scheduled {'NOW' if next_match_index == 0 else f'in {next_match_index} matches'}...<br><i>{unplayed_scout_matches[0]} at {match_time.strftime('%I:%M %p')}</i></div>",
+                    unsafe_allow_html=True,
+                )
+            except:
+                st.markdown(
+                    f"<div style='text-align: center'>Error fetching match time...</div>",
+                    unsafe_allow_html=True,
+                )
 
     input_match = input_match.split()[1]
 
