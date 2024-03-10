@@ -3,6 +3,7 @@ from datetime import datetime
 import streamlit as st
 import pandas as pd
 import json
+import time
 
 
 def show_raw(match_num, match_info, match_key):
@@ -20,7 +21,6 @@ def show_raw(match_num, match_info, match_key):
 def main():
     load.app_init()
 
-    import SuperSTATs.build as build
     import SuperSTATs.styles as style
 
     st.markdown(style.shimmer("#c18aff"), unsafe_allow_html=True)
@@ -54,6 +54,8 @@ def main():
     ]
 
     selected_filters = st.multiselect("Filters:", filters, [filters[0]])
+
+    start_time = time.time()
 
     thresholds_raw = st.session_state.configs["Variance Slider Thresholds"]
     thresholds = {}
@@ -303,6 +305,11 @@ def main():
 
             if data_variance:
                 show_raw(match_name, match_info, match_keys[match_name])
+
+    st.markdown(
+        f"<span style='font-size: small; color: #808080;'>Loaded in {round(time.time() - start_time, 2)} seconds...</span>",
+        unsafe_allow_html=True,
+    )
 
 
 if __name__ == "__main__":
