@@ -172,8 +172,8 @@ def main():
             matches[matches["Match"] == input_match].set_index("Match").transpose()
         )
 
-        teams = list(df_teams.to_dict()[input_match].values())
         match_scouts = [input_name for i in range(6)]
+        teams = list(df_teams.to_dict()[input_match].values())
 
         input_team = bot_columns[1].selectbox("Team:", teams)
         input_color = name_check(input_team, teams)
@@ -197,8 +197,13 @@ def main():
 
             prac_columns = st.columns(2)
 
-            input_team = prac_columns[0].selectbox(
-                "Team:", st.session_state.team_info.keys()
+            all_teams = [
+                f"{team_num} | {team_name}"
+                for team_num, team_name in st.session_state.team_info.items()
+            ]
+
+            input_team = int(
+                prac_columns[0].selectbox("Team:", all_teams).split(" | ")[0]
             )
 
             input_color = prac_columns[1].radio("Color:", ["R", "B"], horizontal=True)
