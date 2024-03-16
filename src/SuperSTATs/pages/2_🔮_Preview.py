@@ -77,13 +77,18 @@ def display_team(
     ]
 
     team_averages = []
+    team_pieces_df = {}
 
     for team in team_df:
         team_raw = df_raw[df_raw["Team"] == team]
+
         if len(team_raw) > 0:
-            team_pieces = team_raw[list(set(game_piece_cols))].sum().sum() / len(
-                team_raw
-            )
+            match_count = len(team_raw)
+            team_score_df = team_raw[list(set(game_piece_cols))].sum()
+
+            team_pieces_df[team] = team_score_df / match_count
+            team_pieces = team_score_df.sum() / match_count
+
             team_averages.append((team, round(team_pieces, 2)))
         else:
             team_averages.append((team, -1))
@@ -98,9 +103,22 @@ def display_team(
     )
 
     for team, average in team_averages:
-        column.write(
-            f"- Team {team}: {'⚠️ Not enough data' if average == -1 else f'{average} pieces'}"
-        )
+        with column.expander(
+            f"[{team}] {'⚠️ Not enough data' if average == -1 else f'{average} pieces'}",
+            False,
+        ):
+            try:
+                st.write(
+                    "\n\n".join(
+                        [
+                            f"{' '.join(key.split('_')[1:-1]).title()}: {round(value, 2)}"
+                            for key, value in team_pieces_df[team].items()
+                            if key.startswith("TELE")
+                        ]
+                    )
+                )
+            except:
+                st.error(f"⚠️ Not enough data collected for team {team}")
 
     column.markdown("""---""")
 
