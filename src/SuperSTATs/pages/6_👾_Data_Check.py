@@ -199,9 +199,10 @@ def main():
                             for i in range(len(tba_counts.keys())):
                                 tba_count = list(tba_counts.values())[i]
                                 alliance_count = list(alliance_counts.values())[i]
+                                count_diff = tba_count - alliance_count
 
                                 calc_values[list(alliance_counts.keys())[i]] = (
-                                    tba_count - alliance_count
+                                    count_diff if count_diff > 0 else 0
                                 )
 
                             match_split = match_name.split()
