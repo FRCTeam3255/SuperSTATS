@@ -21,10 +21,27 @@ def display_team(
         unsafe_allow_html=True,
     )
 
+    def get_features(comment):
+        return comment.split(", ")
+
+    comment_df = st.session_state.df
+
     for team_num in team_df:
+        team_values = (
+            comment_df.loc[comment_df["Team"] == team_num, "COMMENT_GENERAL_STR_1"]
+            .dropna()
+            .tolist()
+        )
+
+        team_features = [get_features(value) for value in team_values]
+        team_features = list(
+            set([feature for sublist in team_features for feature in sublist])
+        )
+
         build.scouting_expander(
             df=df,
             team_num=team_num,
+            team_features=team_features,
             match_name=match_choice,
             start_expanded=start_expanded,
             calc_bumpers=calc_bumpers,
@@ -105,13 +122,13 @@ def display_team(
     for team, average in team_averages:
         with column.expander(
             f"[{team}] {'⚠️ Not enough data' if average == -1 else f'{average} pieces'}",
-            False,
+            start_expanded,
         ):
             try:
                 st.write(
                     "\n\n".join(
                         [
-                            f"{' '.join(key.split('_')[1:-1]).title()}: {round(value, 2)}"
+                            f"{key.split('_')[1].title()}: {round(value, 2)}"
                             for key, value in team_pieces_df[team].items()
                             if key.startswith("TELE")
                         ]
