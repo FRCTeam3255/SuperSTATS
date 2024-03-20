@@ -90,6 +90,27 @@ def organize_df(df):
     return df
 
 
+def get_configs():
+    configs_raw = download_sheets_raw(st.secrets["GID_CONFIG"])
+    configs = {}
+
+    for index, row in configs_raw.iterrows():
+        config = row["Config"]
+        value = row["Value"]
+        configs[config] = value.split(", ")
+
+    configs_path = "src\\pickles\\configs.pickle"
+
+    try:
+        with open(configs_path, "rb") as f:
+            configs = pickle.load(f)
+        return configs
+    except:
+        with open(configs_path, "wb") as f:
+            pickle.dump(configs, f, pickle.HIGHEST_PROTOCOL)
+        return configs
+
+
 def get_tba_ranks():
     event_rankings = tba.event_rankings(st.secrets["DEFAULT_EVENT_KEY"])["rankings"]
     tba_ranks = {}
@@ -291,9 +312,10 @@ def get_unplayed(df, matches):
 
     unplayed_copy = unplayed_matches.copy()
 
-    for match in unplayed_copy:
-        if match in tba_played_matches:
-            unplayed_matches.remove(match)
+    if st.session_state.console["tba_unplayed"]:
+        for match in unplayed_copy:
+            if match in tba_played_matches:
+                unplayed_matches.remove(match)
 
     return unplayed_matches
 
@@ -359,27 +381,6 @@ def get_presets():
         return {}
 
 
-def get_configs():
-    configs_raw = download_sheets_raw(st.secrets["GID_CONFIG"])
-    configs = {}
-
-    for index, row in configs_raw.iterrows():
-        config = row["Config"]
-        value = row["Value"]
-        configs[config] = value.split(", ")
-
-    configs_path = "src\\pickles\\configs.pickle"
-
-    try:
-        with open(configs_path, "rb") as f:
-            configs = pickle.load(f)
-        return configs
-    except:
-        with open(configs_path, "wb") as f:
-            pickle.dump(configs, f, pickle.HIGHEST_PROTOCOL)
-        return configs
-
-
 def app_init():
     try:
         st.set_page_config(
@@ -434,6 +435,8 @@ def app_init():
     states = [
         "df_raw",
         "df",
+        "configs",
+        "console",
         "tba",
         "tba_ranks",
         "team_info",
@@ -447,8 +450,6 @@ def app_init():
         "phases",
         "points",
         "presets",
-        "configs",
-        "console",
     ]
 
     status_messages = {}
@@ -481,6 +482,15 @@ def app_init():
 
             display_status("df")
             st.session_state.df = organize_df(df)
+
+            display_status("configs")
+            st.session_state.configs = get_configs()
+
+            display_status("console")
+            st.session_state.console = {}
+            for config in st.session_state.configs["Console"]:
+                config, default_status = config.split("=")
+                st.session_state.console[config] = bool(default_status == "true")
 
             display_status("tba")
             st.session_state.tba = tba
@@ -524,15 +534,6 @@ def app_init():
 
             display_status("presets")
             st.session_state.presets = get_presets()
-
-            display_status("configs")
-            st.session_state.configs = get_configs()
-
-            display_status("console")
-            st.session_state.console = {}
-            for config in st.session_state.configs["Console"]:
-                config, default_status = config.split("=")
-                st.session_state.console[config] = bool(default_status == "true")
 
             st.session_state.chat = {
                 "logged_in": False,
