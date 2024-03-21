@@ -47,6 +47,19 @@ def add_cols(org_df, filter):
     return org_df[filter]
 
 
+def get_point_values():
+    points = {
+        f"{value[0]}_{value[1]}_{value[2]}": int(value[3])
+        for value in df.columns.str.split("_")
+        if len(value) > 1
+    }
+
+    for col, point in points.items():
+        df[f"{col}_{point}"] *= point
+
+    return points
+
+
 def organize_df(df):
     df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
     df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
@@ -355,19 +368,6 @@ def get_phases(df):
     return sorted(list(set(phases)))
 
 
-def get_point_values():
-    points = {
-        f"{value[0]}_{value[1]}_{value[2]}": int(value[3])
-        for value in df.columns.str.split("_")
-        if len(value) > 1
-    }
-
-    for col, point in points.items():
-        df[f"{col}_{point}"] *= point
-
-    return points
-
-
 def get_presets():
     presets_path = "src\\pickles\\presets.pickle"
 
@@ -434,6 +434,7 @@ def app_init():
 
     states = [
         "df_raw",
+        "points",
         "df",
         "configs",
         "console",
@@ -448,7 +449,6 @@ def app_init():
         "scouting",
         "scouts",
         "phases",
-        "points",
         "presets",
     ]
 
@@ -479,6 +479,9 @@ def app_init():
 
             display_status("df_raw")
             df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
+
+            display_status("points")
+            st.session_state.points = get_point_values()
 
             display_status("df")
             st.session_state.df = organize_df(df)
@@ -528,9 +531,6 @@ def app_init():
 
             display_status("phases")
             st.session_state.phases = get_phases(st.session_state.df)
-
-            display_status("points")
-            st.session_state.points = get_point_values()
 
             display_status("presets")
             st.session_state.presets = get_presets()
