@@ -407,30 +407,36 @@ def main():
             )
             st.warning("Required Input Missing")
 
+    def gen_qr(contents):
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+        )
+
+        qr.add_data(contents)
+        qr.make(fit=True)
+
+        img = qr.make_image(fill_color="#ffffff", back_color="#141414")
+
+        byte_stream = io.BytesIO()
+
+        img.save(byte_stream, format="JPEG")
+        bytes_image = byte_stream.getvalue()
+
+        return bytes_image
+
     if submitted:
         req = requests.get(prefill_url)
+
         if req.status_code == 200:
             st.balloons()
             st.toast("Submission successful!", icon="✅")
+            if st.session_state.console["force_qr"]:
+                with st.expander("QR Code", False):
+                    st.image(gen_qr(prefill_url), use_column_width=True)
         else:
             st.toast("Submission unsuccessful! Use QR code...", icon="⚠️")
-
-            qr = qrcode.QRCode(
-                version=1,
-                error_correction=qrcode.constants.ERROR_CORRECT_L,
-            )
-
-            qr.add_data(prefill_url)
-            qr.make(fit=True)
-
-            img = qr.make_image(fill_color="#ffffff", back_color="#141414")
-
-            byte_stream = io.BytesIO()
-
-            img.save(byte_stream, format="JPEG")
-            bytes_image = byte_stream.getvalue()
-
-            st.image(bytes_image, use_column_width=True)
+            st.image(gen_qr(prefill_url), use_column_width=True)
 
 
 if __name__ == "__main__":
