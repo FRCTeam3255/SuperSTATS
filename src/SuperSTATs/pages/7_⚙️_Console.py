@@ -27,7 +27,7 @@ def main():
 
         for i, (config, status) in enumerate(st.session_state.console.items()):
             updated_configs[config] = columns[i % 4].toggle(
-                config.title().replace("_", " "), status
+                config.title().replace("_", " ").replace("Tba", "TBA"), status
             )
 
         settings_raw = [

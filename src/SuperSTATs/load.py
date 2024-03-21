@@ -407,6 +407,7 @@ def app_init():
         "Brewing tea... 🫖",
         "Downloading more RAM...",
         "Exploding Falcons... 💥",
+        "Crackin' Krackens... 🦑",
     ]
 
     ascii_SN = [
