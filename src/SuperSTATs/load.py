@@ -67,8 +67,8 @@ def organize_df(df):
     df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
 
     phases = ["AUTO", "TELE", "END"]
-    all_non_prac = []
-    all_prac = []
+    all_non_prac_list = []
+    all_prac_list = []
 
     for team in df["Team"].unique():
         team_df = df[df["Team"] == team]
@@ -91,23 +91,28 @@ def organize_df(df):
                 max_score_row = team_df.loc[max_score_index]
 
                 prac_match = max_score_row.to_frame().T.drop(phases + ["Score"], axis=1)
-                all_prac.append(prac_match)
+                all_prac_list.append(prac_match)
 
-            all_df = (
-                pd.concat(all_prac, ignore_index=True)
+            all_prac_df = (
+                pd.concat(all_prac_list, ignore_index=True)
                 .sort_values(by="Timestamp")
                 .drop_duplicates()
             )
         else:
-            all_non_prac.append(non_prac)
+            for index, row in non_prac.iterrows():
+                row = row.to_frame().T
+                all_non_prac_list.append(row)
+
+            all_non_prac_df = (
+                pd.concat(all_non_prac_list, ignore_index=True)
+                .sort_values(by="Timestamp")
+                .drop_duplicates()
+            )
 
     try:
-        df = pd.concat([non_prac, all_df], ignore_index=True)
-        # st.write(df)
+        df = pd.concat([all_non_prac_df, all_prac_df], ignore_index=True)
     except:
-        pass
-
-    # st.stop()
+        df = all_non_prac_df
 
     return df
 
