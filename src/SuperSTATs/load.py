@@ -68,6 +68,7 @@ def organize_df(df):
 
     phases = ["AUTO", "TELE", "END"]
     all_non_prac = []
+    all_prac = []
 
     for team in df["Team"].unique():
         team_df = df[df["Team"] == team]
@@ -89,19 +90,24 @@ def organize_df(df):
                 max_score_index = team_df["Score"].idxmax()
                 max_score_row = team_df.loc[max_score_index]
 
-                non_prac = max_score_row.to_frame().T.drop(phases + ["Score"], axis=1)
-                all_non_prac.append(non_prac)
+                prac_match = max_score_row.to_frame().T.drop(phases + ["Score"], axis=1)
+                all_prac.append(prac_match)
 
             all_df = (
-                pd.concat(all_non_prac, ignore_index=True)
+                pd.concat(all_prac, ignore_index=True)
                 .sort_values(by="Timestamp")
                 .drop_duplicates()
             )
+        else:
+            all_non_prac.append(non_prac)
 
     try:
         df = pd.concat([non_prac, all_df], ignore_index=True)
+        # st.write(df)
     except:
         pass
+
+    # st.stop()
 
     return df
 
@@ -332,6 +338,10 @@ def get_unplayed(df, matches):
         for match in unplayed_copy:
             if match in tba_played_matches:
                 unplayed_matches.remove(match)
+
+    unplayed_matches = [
+        match for match in unplayed_matches if not match.startswith("Prac")
+    ]
 
     return unplayed_matches
 

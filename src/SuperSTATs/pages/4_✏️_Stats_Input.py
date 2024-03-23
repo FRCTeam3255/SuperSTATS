@@ -271,7 +271,9 @@ def main():
 
                 match_time = datetime.datetime.strptime(
                     next_instance, "%I:%M%p"
-                ) - datetime.timedelta(hours=8)
+                ) - datetime.timedelta(
+                    hours=int(st.session_state.configs["UTC Offset"][0])
+                )
 
                 next_match_index = unplayed_matches.index(unplayed_scout_matches[0])
 
