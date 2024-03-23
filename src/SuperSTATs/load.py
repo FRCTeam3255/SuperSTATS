@@ -66,9 +66,8 @@ def organize_df(df):
     df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
     df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
 
-    all_non_prac = []
-
     phases = ["AUTO", "TELE", "END"]
+    all_non_prac = []
 
     for team in df["Team"].unique():
         team_df = df[df["Team"] == team]
@@ -78,25 +77,29 @@ def organize_df(df):
 
         if non_prac.empty:
             for index, row in prac.iterrows():
+                row = row.to_frame().T
                 for i in range(len(phases)):
-                    df.loc[:, phases[i]] = add_cols(
-                        df,
+                    team_df.loc[:, phases[i]] = add_cols(
+                        team_df,
                         phases[i],
                     )
 
-                df["Score"] = df[phases].sum(axis=1)
+                team_df["Score"] = team_df[phases].sum(axis=1)
 
-                max_score_index = df["Score"].idxmax()
-                max_score_row = df.loc[max_score_index]
+                max_score_index = team_df["Score"].idxmax()
+                max_score_row = team_df.loc[max_score_index]
 
-            non_prac = max_score_row.to_frame().T.drop(phases + ["Score"], axis=1)
+                non_prac = max_score_row.to_frame().T.drop(phases + ["Score"], axis=1)
+                all_non_prac.append(non_prac)
 
-        all_non_prac.append(non_prac)
-
-        all_df = pd.concat(all_non_prac, ignore_index=True).sort_values(by="Timestamp")
+            all_df = (
+                pd.concat(all_non_prac, ignore_index=True)
+                .sort_values(by="Timestamp")
+                .drop_duplicates()
+            )
 
     try:
-        df = all_df
+        df = pd.concat([non_prac, all_df], ignore_index=True)
     except:
         pass
 
@@ -307,7 +310,7 @@ def get_unplayed(df, matches):
 
     for index, row in st.session_state.match_data.iterrows():
         try:
-            if str(row["actual_time"]) != "nan":
+            if row["red.score"] != -1 and row["blue.score"] != -1:
                 tba_played_matches.append(row["Match Name"])
         except:
             pass
