@@ -60,26 +60,30 @@ def display_team(
 
     match_df = st.session_state.match_data
     match_df = match_df.loc[match_df["Match Name"] == match_choice]
-    match_breakdown = match_df["score_breakdown"].to_list()[0]
 
-    try:
-        actual_score = match_breakdown[team_header[1].lower()]["totalPoints"]
-    except:
-        actual_score = -1
+    if match_choice == "Custom":
+        pass
+    else:
+        match_breakdown = match_df["score_breakdown"].to_list()[0]
 
-    match_key = match_df["key"].to_list()[0]
-    match_url = f"https://www.thebluealliance.com/match/{match_key}"
+        try:
+            actual_score = match_breakdown[team_header[1].lower()]["totalPoints"]
+        except:
+            actual_score = -1
 
-    percent_error = (
-        round((actual_score - projected_score) / actual_score * 100)
-        if actual_score != 0
-        else "inf"
-    )
+        match_key = match_df["key"].to_list()[0]
+        match_url = f"https://www.thebluealliance.com/match/{match_key}"
 
-    column.markdown(
-        f"<h6><a href='{match_url}' style='color: #808080; text-decoration: none;'>Actual Score: {'Unplayed' if actual_score == -1 else actual_score} {'' if actual_score == -1 else f'({percent_error}%)'}</a></h6>",
-        unsafe_allow_html=True,
-    )
+        percent_error = (
+            round((actual_score - projected_score) / actual_score * 100)
+            if actual_score != 0
+            else "inf"
+        )
+
+        column.markdown(
+            f"<h6><a href='{match_url}' style='color: #808080; text-decoration: none;'>Actual Score: {'Unplayed' if actual_score == -1 else actual_score} {'' if actual_score == -1 else f'({percent_error}%)'}</a></h6>",
+            unsafe_allow_html=True,
+        )
 
     df_raw = st.session_state.df
     alliance_pieces = 0
@@ -213,12 +217,30 @@ def main():
     else:
         last_match = 0
 
-    match_choice = columns[1].selectbox("Match:", df["Match"], last_match)
-    df_sort = df[df["Match"] == match_choice]
-    df_sort = df_sort.set_index("Match").transpose()[match_choice]
+    match_choice = columns[1].selectbox(
+        "Match:", df["Match"].to_list() + ["Custom"], last_match
+    )
 
-    red_alliance = df_sort.filter(like="Red", axis=0).to_list()
-    blue_alliance = df_sort.filter(like="Blue", axis=0).to_list()
+    if match_choice == "Custom":
+
+        alliance_columns = st.columns(2)
+        red_alliance = alliance_columns[0].multiselect(
+            "Red Alliance:", st.session_state.team_info, []
+        )
+        blue_alliance = alliance_columns[1].multiselect(
+            "Blue Alliance:", st.session_state.team_info, []
+        )
+
+        if len(red_alliance) < 3 or len(blue_alliance) < 3:
+            st.error("⚠️ Must select 3 teams for each alliance")
+            st.stop()
+
+    else:
+        df_sort = df[df["Match"] == match_choice]
+        df_sort = df_sort.set_index("Match").transpose()[match_choice]
+
+        red_alliance = df_sort.filter(like="Red", axis=0).to_list()
+        blue_alliance = df_sort.filter(like="Blue", axis=0).to_list()
 
     columns = st.columns(4)
 
