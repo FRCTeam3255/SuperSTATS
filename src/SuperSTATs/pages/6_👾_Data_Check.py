@@ -174,80 +174,83 @@ def main():
                         for color in ["Blue", "Red"]
                     )
 
-                    if blue_missing == 1 or red_missing == 1:
-                        all_data = []
+                    try:
+                        if blue_missing == 1 or red_missing == 1:
+                            all_data = []
 
-                        for team in calc_teams:
-                            alliance_counts = {}
-                            tba_counts = {}
-                            calc_values = {}
+                            for team in calc_teams:
+                                alliance_counts = {}
+                                tba_counts = {}
+                                calc_values = {}
 
-                            for tba, col in tba_columns.items():
-                                tba_counts[tba] = score_breakdown[
-                                    calc_teams[team]["color"].lower()
-                                ][tba]
+                                for tba, col in tba_columns.items():
+                                    tba_counts[tba] = score_breakdown[
+                                        calc_teams[team]["color"].lower()
+                                    ][tba]
 
-                            team_color = calc_teams[team]["color"]
+                                team_color = calc_teams[team]["color"]
 
-                            alliance_df = match_info[
-                                match_info["Team Color"] == team_color[0]
-                            ]
+                                alliance_df = match_info[
+                                    match_info["Team Color"] == team_color[0]
+                                ]
 
-                            for tba, col in tba_columns.items():
-                                alliance_counts[col] = alliance_df[col].sum()
+                                for tba, col in tba_columns.items():
+                                    alliance_counts[col] = alliance_df[col].sum()
 
-                            for i in range(len(tba_counts.keys())):
-                                tba_count = list(tba_counts.values())[i]
-                                alliance_count = list(alliance_counts.values())[i]
-                                count_diff = tba_count - alliance_count
+                                for i in range(len(tba_counts.keys())):
+                                    tba_count = list(tba_counts.values())[i]
+                                    alliance_count = list(alliance_counts.values())[i]
+                                    count_diff = tba_count - alliance_count
 
-                                calc_values[list(alliance_counts.keys())[i]] = (
-                                    count_diff if count_diff > 0 else 0
+                                    calc_values[list(alliance_counts.keys())[i]] = (
+                                        count_diff if count_diff > 0 else 0
+                                    )
+
+                                match_split = match_name.split()
+
+                                custom_fields = {
+                                    "Timestamp": datetime.now().strftime(
+                                        "%m/%d/%Y %H:%M:%S"
+                                    ),
+                                    "Name": "Calc",
+                                    "Match Type": match_split[0],
+                                    "Match": match_split[1],
+                                    "Team Color": team_color[0],
+                                    "Team": team,
+                                    "Event Key": st.secrets["DEFAULT_EVENT_KEY"],
+                                    "COMMENT_GENERAL_STR_1": "",
+                                }
+
+                                calc_df = pd.concat(
+                                    [
+                                        pd.DataFrame(custom_fields, index=[0]),
+                                        pd.DataFrame(calc_values, index=[0]),
+                                    ],
+                                    axis=1,
                                 )
 
-                            match_split = match_name.split()
+                                for col in row_columns:
+                                    if col not in calc_df:
+                                        calc_df[col] = 0
 
-                            custom_fields = {
-                                "Timestamp": datetime.now().strftime(
-                                    "%m/%d/%Y %H:%M:%S"
-                                ),
-                                "Name": "Calc",
-                                "Match Type": match_split[0],
-                                "Match": match_split[1],
-                                "Team Color": team_color[0],
-                                "Team": team,
-                                "Event Key": st.secrets["DEFAULT_EVENT_KEY"],
-                                "COMMENT_GENERAL_STR_1": "",
-                            }
+                                calc_df = calc_df[row_columns]
 
-                            calc_df = pd.concat(
-                                [
-                                    pd.DataFrame(custom_fields, index=[0]),
-                                    pd.DataFrame(calc_values, index=[0]),
-                                ],
-                                axis=1,
+                                if team_color == "Red" and red_missing > 1:
+                                    pass
+                                elif team_color == "Blue" and blue_missing > 1:
+                                    pass
+                                else:
+                                    all_data.append(calc_df)
+
+                            all_calc = (
+                                pd.concat(all_data, ignore_index=True)
+                                .set_index(df.columns[0])
+                                .astype(str)
                             )
 
-                            for col in row_columns:
-                                if col not in calc_df:
-                                    calc_df[col] = 0
-
-                            calc_df = calc_df[row_columns]
-
-                            if team_color == "Red" and red_missing > 1:
-                                pass
-                            elif team_color == "Blue" and blue_missing > 1:
-                                pass
-                            else:
-                                all_data.append(calc_df)
-
-                        all_calc = (
-                            pd.concat(all_data, ignore_index=True)
-                            .set_index(df.columns[0])
-                            .astype(str)
-                        )
-
-                        st.data_editor(all_calc)
+                            st.data_editor(all_calc)
+                    except:
+                        st.error("⚠️ No TBA data")
 
                     data_variance = True
 
