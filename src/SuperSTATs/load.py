@@ -63,8 +63,8 @@ def get_point_values():
 def organize_df(df):
     df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
     df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
-    df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
     df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
+    df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
 
     phases = ["AUTO", "TELE", "END"]
     all_non_prac_list = []
