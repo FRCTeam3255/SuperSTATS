@@ -786,10 +786,15 @@ def gen_bar(
                 for index, row in rank_df.iterrows():
                     team_num = row["Team"]
 
+                    try:
+                        formatted_features = all_team_features[int(team_num)]
+                    except:
+                        formatted_features = all_team_features[str(team_num)]
+
                     scouting_expander(
                         df=st.session_state.scouting,
                         team_num=int(team_num),
-                        team_features=all_team_features[team_num],
+                        team_features=formatted_features,
                         rank_info=[
                             rank_df.loc[rank_df["Team"] == team_num, "rank"].to_list()[
                                 0
