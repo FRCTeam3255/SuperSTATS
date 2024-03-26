@@ -222,8 +222,8 @@ def main():
     )
 
     if match_choice == "Custom":
-
         alliance_columns = st.columns(2)
+
         red_alliance = alliance_columns[0].multiselect(
             "Red Alliance:", st.session_state.team_info, []
         )
@@ -246,31 +246,65 @@ def main():
 
     start_expanded = columns[0].toggle("Auto Expand", False)
     combined_chart = columns[1].toggle("Show Combined Chart", False)
-    use_weights = columns[2].toggle("Projection Weight", False)
+    use_calc_error = columns[2].toggle("Error Weights", True)
     calc_bumpers = columns[3].toggle("Calculate Bumpers", True)
 
-    if use_weights:
-        weights_raw = st.session_state.configs["Prediction Slider Weights"]
-        weights = {}
+    prediction_weight = 1
 
-        for config in weights_raw:
-            config = config.split("=")
-            weights[config[0]] = float(config[1])
+    if use_calc_error:
+        all_match_teams = {}
+        percent_errors = []
 
-        with st.form("Weight Slider", clear_on_submit=False):
-            prediction_weight = st.slider(
-                "Projection Weight:",
-                value=weights["default"],
-                min_value=weights["min"],
-                max_value=weights["max"],
-                step=weights["step"],
-            )
-            st.form_submit_button(
-                "Set Weights", type="primary", use_container_width=True
-            )
+        match_count = int(st.session_state.configs["Error Calc Count"][0])
+        match_list = df["Match"].to_list()
+        match_index = match_list.index(match_choice)
 
-    else:
-        prediction_weight = 1
+        prev_matches = match_list[match_index - match_count : match_index]
+
+        if prev_matches == []:
+            prev_matches = match_list[:match_count]
+
+        for match_name in prev_matches:
+            match_values = df[df["Match"] == match_name]
+
+            red_teams = []
+            blue_teams = []
+
+            for col in match_values.columns:
+                if "Red" in col:
+                    red_teams.append(match_values[col].values[0])
+
+                elif "Blue" in col:
+                    blue_teams.append(match_values[col].values[0])
+
+            all_match_teams[match_name] = {"Red": red_teams, "Blue": blue_teams}
+
+        for match in all_match_teams:
+            for alliance in all_match_teams[match]:
+                team_df = all_match_teams[match][alliance]
+
+                projected_score = build.calc_projected(team_df, prediction_weight)
+
+                match_df = st.session_state.match_data
+                match_df = match_df.loc[match_df["Match Name"] == match]
+
+                match_breakdown = match_df["score_breakdown"].to_list()[0]
+
+                try:
+                    actual_score = match_breakdown[alliance.lower()]["totalPoints"]
+                except:
+                    actual_score = -1
+
+                percent_error = (
+                    round((actual_score - projected_score) / actual_score * 100)
+                    if actual_score != 0
+                    else "inf"
+                )
+
+                percent_errors.append(percent_error)
+
+        avg_error = round(sum(percent_errors) / len(percent_errors), 2)
+        prediction_weight = prediction_weight + prediction_weight * avg_error / 100
 
     st.divider()
 

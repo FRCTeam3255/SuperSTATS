@@ -88,7 +88,7 @@ def main():
         st.error("⚠️ No Filters Selected")
 
     def sort_key(match):
-        parts = match.split(" ")
+        parts = match.split()
         match_order = {"Quals": 1, "Playoffs": 2, "Finals": 3}
         return (match_order.get(parts[0], 4), int(parts[1]))
 
