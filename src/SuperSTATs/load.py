@@ -554,6 +554,7 @@ def app_init():
             display_status("presets")
             st.session_state.presets = get_presets()
 
+            st.session_state.logged_in = False
             st.session_state.chat = {
                 "logged_in": False,
                 "user": "",
@@ -572,6 +573,17 @@ def app_init():
 
             time.sleep(1)
             init_status.empty()
+
+    if st.session_state.console["require_login"] and not st.session_state.logged_in:
+        sign_in = st.empty()
+
+        pass_input = sign_in.text_input("Password:", type="password", key="password")
+
+        if pass_input != st.secrets["APP_PASSWORD"]:
+            st.stop()
+        else:
+            st.session_state.logged_in = True
+            sign_in.empty()
 
     if st.session_state.console["use_chat"]:
         try:
