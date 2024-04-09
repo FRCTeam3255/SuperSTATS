@@ -14,15 +14,29 @@ def display_team(
     combined_chart,
     match_choice,
 ):
+    """
+    Display team information and statistics within an expander.
+
+    Args:
+        team_header (tuple): A tuple containing the team header information.
+        column (object): The column object to display the team information.
+        team_df (list): A list of team numbers.
+        opposing_df (list): A list of opposing team numbers.
+        prediction_weight (float): The weight for calculating the projected score.
+        start_expanded (bool): Whether to start the expanders in an expanded state.
+        calc_bumpers (bool): Whether to calculate bumpers.
+        combined_chart (bool): Whether to display a combined chart.
+        match_choice (str): The match choice.
+
+    Returns:
+        None
+    """
     df = st.session_state.scouting
 
     column.markdown(
         f"<center style='font-size: 2em;'>{team_header[0]} {team_header[1]} Alliance {team_header[0]}</center>",
         unsafe_allow_html=True,
     )
-
-    def get_features(comment):
-        return comment.split(", ")
 
     comment_df = st.session_state.df
 
@@ -33,7 +47,7 @@ def display_team(
             .tolist()
         )
 
-        team_features = [get_features(value) for value in team_values]
+        team_features = [value.split(", ") for value in team_values]
         team_features = list(
             set([feature for sublist in team_features for feature in sublist])
         )

@@ -8,6 +8,15 @@ import time
 
 
 def download_sheets_raw(gid):
+    """
+    Downloads a Google Sheets document as a pandas DataFrame.
+
+    Args:
+        gid (str): The ID of the Google Sheets document.
+
+    Returns:
+        pandas.DataFrame: The downloaded Google Sheets document as a DataFrame.
+    """
     url = f"https://docs.google.com/spreadsheets/d/{st.secrets['GSHEET_DOC_ID']}/edit#gid={gid}"
     doc_id, sheet_id = url.split("/")[5:7]
     sheet_id = sheet_id.split("gid=")[1]
@@ -26,6 +35,16 @@ tba = tbapy.TBA(st.secrets["TBA_API"])
 
 
 def add_cols(org_df, filter):
+    """
+    Add a new column to the given DataFrame based on the specified filter.
+
+    Args:
+        org_df (pandas.DataFrame): The original DataFrame.
+        filter (str): The filter to be applied to select relevant columns.
+
+    Returns:
+        pandas.Series: The newly added column.
+    """
     points = {}
 
     for key, value in st.session_state.points.items():
@@ -48,6 +67,12 @@ def add_cols(org_df, filter):
 
 
 def get_point_values():
+    """
+    Calculates the point values for each column in the dataframe based on the values within the column names.
+
+    Returns:
+        dict: A dictionary containing the calculated point values for each column.
+    """
     points = {
         f"{value[0]}_{value[1]}_{value[2]}": int(value[3])
         for value in df.columns.str.split("_")
@@ -61,6 +86,15 @@ def get_point_values():
 
 
 def organize_df(df):
+    """
+    Organizes the given DataFrame by performing various operations such as filtering, sorting, and concatenating.
+
+    Args:
+        df (pandas.DataFrame): The DataFrame to be organized.
+
+    Returns:
+        pandas.DataFrame: The organized DataFrame.
+    """
     df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
     df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
     df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
@@ -118,6 +152,12 @@ def organize_df(df):
 
 
 def get_configs():
+    """
+    Retrieves the configurations from a Google Sheets document and saves them to a pickle file.
+
+    Returns:
+        dict: A dictionary containing the configurations, where each configuration is a key and its corresponding value is a list of values.
+    """
     configs_raw = download_sheets_raw(st.secrets["GID_CONFIG"])
     configs = {}
 
@@ -139,6 +179,12 @@ def get_configs():
 
 
 def get_tba_ranks():
+    """
+    Retrieves the rankings of teams from TBA for a specific event.
+
+    Returns:
+        dict: A dictionary containing team rankings, where the keys are team numbers (without the "frc" prefix) and the values are the corresponding ranks.
+    """
     event_rankings = tba.event_rankings(st.secrets["DEFAULT_EVENT_KEY"])["rankings"]
     tba_ranks = {}
 
@@ -150,6 +196,14 @@ def get_tba_ranks():
 
 @st.cache_data(show_spinner=False, persist=True)
 def get_team_info():
+    """
+    Retrieves team information from TBA API.
+
+    Returns:
+        dict: A dictionary containing team information, where the keys are team numbers
+              and the values are team nicknames. If the nickname is not available, the
+              value will be set to "Unknown Team".
+    """
     tba_teams = tba.event_teams(st.secrets["DEFAULT_EVENT_KEY"])
     team_info = {
         team["team_number"]: tba.team(team["team_number"]).get(
@@ -162,6 +216,12 @@ def get_team_info():
 
 @st.cache_data(show_spinner=False)
 def get_team_colors():
+    """
+    Retrieves the colors associated with each team from the FRC-Colors API or a picklefile if the colors are already known.
+
+    Returns:
+        dict: A dictionary containing the team colors, where the keys are the team names and the values are lists of primary and secondary colors.
+    """
     team_info = st.session_state.team_info
 
     team_colors = {}
@@ -220,6 +280,12 @@ def get_team_colors():
 
 
 def get_match_data():
+    """
+    Retrieves match data from the TBA API or a custom data source if TBA is down.
+
+    Returns:
+        pandas.DataFrame: A DataFrame containing the match data.
+    """
     df = pd.DataFrame(tba.event_matches(st.secrets["DEFAULT_EVENT_KEY"]))
 
     if not df.empty:
@@ -237,6 +303,15 @@ def get_match_data():
             )
 
         def set_match_name(row):
+            """
+            Sets the name for a match based on the given row.
+
+            Parameters:
+            - row: A dictionary representing a row of match data.
+
+            Returns:
+            - match_name: A string representing the name of the match.
+            """
             if row["comp_level"] == "Playoffs":
                 return row["comp_level"] + " " + str(int(row["set_number"]))
             return row["comp_level"] + " " + str(int(row["match_number"]))
@@ -279,6 +354,12 @@ def get_match_data():
 
 
 def get_matches():
+    """
+    Retrieves and processes match data to create a DataFrame of matches with desired alliances.
+
+    Returns:
+        pandas.DataFrame: DataFrame containing match data with columns for match number and team keys.
+    """
     df = st.session_state.match_data
 
     frames = []
@@ -312,6 +393,17 @@ def get_matches():
 
 
 def get_unplayed(df, matches):
+    """
+    Get a list of unplayed matches based on the given DataFrame and matches.
+
+    Args:
+        df (pandas.DataFrame): The DataFrame containing match data.
+        matches (pandas.DataFrame): The DataFrame containing match information.
+
+    Returns:
+        list: A list of unplayed matches.
+
+    """
     df["Completed"] = df["Match Type"] + " " + df["Match"].astype(int).astype(str)
     df_counts = df["Completed"].value_counts()
 
@@ -352,11 +444,28 @@ def get_unplayed(df, matches):
 
 
 def get_picked():
+    """
+    Retrieves the picked teams data from the downloaded sheet.
+
+    Returns:
+        pandas.DataFrame: The picked data containing rows where the "Unavailable" column contains an "x".
+    """
     picked = download_sheets_raw(st.secrets["GID_PICKED"])
     return picked[picked["Unavailable"].str.contains("x", case=False, na=False)]
 
 
 def get_scouters():
+    """
+    Retrieves the list of team scouts and their assigned status.
+
+    If the pickle file exists, it loads the data from the file and returns a dictionary
+    with two keys: 'scouts' and 'assigned'. Otherwise downloads the data from Sheets document
+    and returns a dictionary with the same keys.
+
+    Returns:
+        dict: A dictionary with two keys: 'scouts' and 'assigned'. The 'scouts' key contains a list of
+        all scout names, and the 'assigned' key contains a list of scout names that are assigned.
+    """
     try:
         with open("src\\pickles\\scouts.pickle", "rb") as f:
             scouts = pickle.load(f)
@@ -373,6 +482,15 @@ def get_scouters():
 
 
 def get_phases(df):
+    """
+    Get a list of unique game phases from the given DataFrame.
+
+    Args:
+        df (pandas.DataFrame): The DataFrame containing the columns.
+
+    Returns:
+        list: A sorted list of unique phases extracted from the column names.
+    """
     filtered_columns = []
     for column in df.columns:
         if any(c.isdigit() for c in column.split("_")[-1]):
@@ -387,6 +505,15 @@ def get_phases(df):
 
 
 def get_presets():
+    """
+    Retrieves the presets from the presets pickle file.
+
+    If the file exists, it loads the presets from the file and returns them otherwise if
+    the file does not exist, it creates an empty presets file and returns an empty dictionary.
+
+    Returns:
+        dict: The presets loaded from the file or an empty dictionary if the file does not exist.
+    """
     presets_path = "src\\pickles\\presets.pickle"
 
     try:
@@ -400,6 +527,15 @@ def get_presets():
 
 
 def app_init():
+    """
+    Initializes the SuperSTATs application and is called on every page.
+
+    This function sets the page configuration, loads functions, initializes
+    session state variables, and performs various data loading and setup tasks.
+
+    Returns:
+        None
+    """
     try:
         st.set_page_config(
             page_title=f"SuperSTATs",
@@ -577,7 +713,7 @@ def app_init():
     if st.session_state.console["require_login"] and not st.session_state.logged_in:
         sign_in = st.empty()
 
-        pass_input = sign_in.text_input("Password:", type="password", key="password")
+        pass_input = sign_in.text_input("Password:", type="password")
 
         if pass_input != st.secrets["APP_PASSWORD"]:
             st.stop()

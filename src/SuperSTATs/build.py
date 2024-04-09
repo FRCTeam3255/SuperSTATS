@@ -23,6 +23,22 @@ def scouting_expander(
     calc_bumpers=False,
     column=st,
 ):
+    """
+    Expands a collapsible section in the app to display scouting information for a specific team.
+
+    Parameters:
+    - df (pandas.DataFrame): The dataframe containing the scouting data.
+    - team_num (int): The team number for which to display the scouting information.
+    - team_features (list): A list of additional features to display for the team (optional).
+    - match_name (str): The name of the match to display (optional).
+    - rank_info (list): A list containing the team's rank information (optional).
+    - start_expanded (bool): Whether to start the collapsible section expanded or collapsed (default is False).
+    - calc_bumpers (bool): Whether to calculate bumper sizes (default is False).
+    - column (streamlit.container.Container): The container in which to display the scouting information (default is st).
+
+    Returns:
+    None
+    """
     team_name = st.session_state.team_info[team_num]
 
     expander_name = f"[{team_num}] {team_name}"
@@ -78,6 +94,17 @@ def scouting_expander(
                 st.text(f"Area: {length * width} in²")
 
                 def check_nan(var_name, var_value, column):
+                    """
+                    Checks if a variable value is NaN and updates the column text accordingly.
+
+                    Parameters:
+                    - var_name (str): The name of the variable.
+                    - var_value (float): The value of the variable.
+                    - column (Column): The column object to update the text.
+
+                    Returns:
+                    None
+                    """
                     try:
                         if np.isnan(var_value):
                             column.text(f"{var_name}: No Data Collected")
@@ -108,6 +135,19 @@ def scouting_expander(
 def calc_projected(
     team_df, prediction_weight=1, show_ungrouped=False, return_row=False
 ):
+    """
+    Calculate the projected score for a team based on the given parameters.
+
+    Parameters:
+        team_df (DataFrame): The team DataFrame containing the team data.
+        prediction_weight (int, optional): The weight to apply to the projected score. Defaults to 1.
+        show_ungrouped (bool, optional): Whether to show ungrouped phases. Defaults to False.
+        return_row (bool, optional): Whether to return the row data. Defaults to False.
+
+    Returns:
+        int: The projected score for the team.
+
+    """
     score_df = st.session_state.df
     phases = [phase for phase in st.session_state.phases if phase != "COMMENT"]
 
@@ -162,6 +202,18 @@ def calc_projected(
 
 
 def gen_match_comp(df, team_num, match_name, not_preview=True):
+    """
+    Generates a match comparison for a specific team in a given match for comparisons.
+
+    Parameters:
+    - df (pandas.DataFrame): The DataFrame containing the match data.
+    - team_num (int): The team number for which the match comparison is generated.
+    - match_name (str): The name of the match for which the comparison is generated.
+    - not_preview (bool, optional): Flag indicating whether the comparison is a preview or not.
+
+    Returns:
+    None
+    """
     team_df = df[df["Team"] == team_num]
     match_count = len(team_df)
 
@@ -398,6 +450,31 @@ def gen_bar(
     x_range=[],
     expanders=True,
 ):
+    """
+    Generates a bar chart based on the given parameters.
+
+    Parameters:
+    - df (DataFrame): The DataFrame containing the data.
+    - picked (str): The picked value.
+    - tba_ranks (str): The TBA ranks value.
+    - key (int): The key value.
+    - use_presets (bool): Whether to use presets or not.
+    - use_group_filters (bool): Whether to use group filters or not.
+    - use_show_available (bool): Whether to show availability or not.
+    - use_show_nums (bool): Whether to show team numbers or not.
+    - use_inline_legend (bool): Whether to use inline legend or not.
+    - use_features (bool): Whether to use features or not.
+    - use_agg_type (bool): Whether to use aggregation type or not.
+    - use_filter_selection (bool): Whether to use filter selection or not.
+    - use_max_size (bool): Whether to use maximum size or not.
+    - displayed_teams (list): The list of displayed teams.
+    - compared_teams (list): The list of compared teams.
+    - x_range (list): The range of x-axis values.
+    - expanders (bool): Whether to use expanders or not.
+
+    Returns:
+    - None
+    """
     phases = st.session_state.phases
 
     variables = [
@@ -429,6 +506,20 @@ def gen_bar(
     var_count = 0
 
     def gen_toggle(var_name, var_count, box_name, default, key, disabled):
+        """
+        Generate a toggle variable based on the given parameters.
+
+        Args:
+            var_name (str): The name of the variable.
+            var_count (int): The current count of variables.
+            box_name (str): The name of the toggle box.
+            default (bool): The default value of the toggle.
+            key (str): The key used to identify the toggle.
+            disabled (bool): Whether the toggle is disabled or not.
+
+        Returns:
+            list: A list containing the generated toggle variable and the updated variable count.
+        """
         if var_name in variables:
             variable = columns[var_count].toggle(
                 box_name, default, key=f"{var_name}_{key}", disabled=disabled
@@ -553,13 +644,19 @@ def gen_bar(
         if any(dt in selected_features for dt in dt_types):
             df = df[(df["Drivetrain Type"].isin(selected_features))]
 
-        def get_features(comment):
-            return comment.split(", ")
-
         all_team_features = {}
         kept_teams = []
 
         def has_features(team):
+            """
+            Check if a team has all the required features.
+
+            Args:
+                team (str): The name of the team.
+
+            Returns:
+                bool: True if the team has all the required features, False otherwise.
+            """
             if not features:
                 return True
 
@@ -575,7 +672,7 @@ def gen_bar(
                 comment_df["Team"] == team, "COMMENT_GENERAL_STR_1"
             ].tolist()
 
-            team_features = [get_features(value) for value in team_values]
+            team_features = [value.split(", ") for value in team_values]
             team_features = list(
                 set([feature for sublist in team_features for feature in sublist])
             )
@@ -660,6 +757,15 @@ def gen_bar(
         no_data = False
 
     def rgba_to_hex(rgba):
+        """
+        Converts an RGBA color value to its corresponding hexadecimal representation.
+
+        Args:
+            rgba (tuple): A tuple containing the red, green, blue, and alpha values of the color.
+
+        Returns:
+            str: The hexadecimal representation of the color.
+        """
         r, g, b, a = rgba
         return "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))
 
@@ -669,6 +775,16 @@ def gen_bar(
             "Blues" if not st.session_state.console["colorblind_mode"] else "OrRd"
         ),
     ):
+        """
+        Generate a color map with the specified length and colormap name.
+
+        Parameters:
+        - length (int): The number of colors to generate in the color map.
+        - cmap_name (str): The name of the colormap to use. Defaults to "Blues" if colorblind mode is disabled, otherwise defaults to "OrRd".
+
+        Returns:
+        - colors (list): A list of colors in hexadecimal format.
+        """
         cmap = plt.get_cmap(cmap_name)
         colors = [rgba_to_hex(cmap(i)) for i in np.linspace(0, 0.8, length)]
         return colors
@@ -686,13 +802,24 @@ def gen_bar(
         rank_df = pd.DataFrame(preset["rank_df"])
 
     def format_y(team, show_available, picked):
+        """
+        Formats the team information based on the given parameters.
+
+        Args:
+            team (int): The team number.
+            show_available (bool): Flag indicating whether to show availability status.
+            picked (dict): A dictionary containing the picked teams.
+
+        Returns:
+            str: The formatted team information.
+
+        """
         if show_available:
             picked = (
                 "💎"
                 if team == st.secrets["TEAM_NUMBER"]
                 else "🚫" if team in picked["Team"].values else "🟢"
             )
-
         else:
             picked = ""
 

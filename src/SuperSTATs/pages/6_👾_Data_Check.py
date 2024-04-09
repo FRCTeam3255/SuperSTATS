@@ -7,6 +7,17 @@ import time
 
 
 def show_raw(match_num, match_info, match_key):
+    """
+    Display the raw data for a given match through a dataframe.
+
+    Parameters:
+    - match_num (int): The match number.
+    - match_info (str): The raw data for the match.
+    - match_key (str): The key of the match.
+
+    Returns:
+    None
+    """
     try:
         if st.toggle("📊 Show RAW Data", key=f"{match_num}_RAW"):
             st.write(match_info)
@@ -88,6 +99,24 @@ def main():
         st.error("⚠️ No Filters Selected")
 
     def sort_key(match):
+        """
+        Returns a key used for sorting matches.
+
+        The key is a tuple containing two elements:
+        - The first element is a numeric value representing the match type order.
+            The order is defined as follows:
+                - "Quals" matches have the lowest order (1).
+                - "Playoffs" matches have a higher order (2).
+                - "Finals" matches have the highest order (3).
+                - Any other match type has the highest order (4).
+        - The second element is the match number as an integer.
+
+        Parameters:
+        match (str): The match string in the format "<match_type> <match_number>".
+
+        Returns:
+        tuple: A tuple containing the match type order and the match number.
+        """
         parts = match.split()
         match_order = {"Quals": 1, "Playoffs": 2, "Finals": 3}
         return (match_order.get(parts[0], 4), int(parts[1]))
@@ -286,6 +315,16 @@ def main():
                     blue_tba_score = blue_data["totalPoints"] - blue_data["foulPoints"]
 
                     def get_variance(color, tba_score):
+                        """
+                        Calculates the variance between the given team's score and the TBA score.
+
+                        Parameters:
+                        - color (str): The color of the team ("R" for red, "B" for blue).
+                        - tba_score (int): The TBA score to compare against.
+
+                        Returns:
+                        None
+                        """
                         team_df = match_info[match_info["Team Color"] == color[0]]
                         team_score = int(team_df["Score Sum"].sum())
                         team_variance = tba_score - team_score

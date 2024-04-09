@@ -1,4 +1,12 @@
 def rainbow():
+    """
+    Returns a CSS style string that creates a rainbow animation effect.
+
+    The returned style string can be used to apply the rainbow animation to HTML elements.
+
+    Returns:
+        str: CSS style string for the rainbow animation.
+    """
     return """
         <style>
         .rainbow {
@@ -28,6 +36,16 @@ def rainbow():
 
 
 def shimmer(color):
+    """
+    Generate CSS code for a shimmer effect.
+
+    Args:
+        color (str): The color to use for the shimmer effect.
+
+    Returns:
+        str: The CSS code for the shimmer effect.
+
+    """
     return f"""
         <style>
         .shimmer {{

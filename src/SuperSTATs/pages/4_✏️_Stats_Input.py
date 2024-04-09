@@ -8,6 +8,15 @@ import io
 
 
 def get_match_scouts(team):
+    """
+    Get the match scouts for a given team.
+
+    Parameters:
+    - team (list): A list of scouts in the team.
+
+    Returns:
+    - scouts (dict): A dictionary mapping match names to a list of scouts for each match.
+    """
     rotation = int(st.session_state.configs["Scouting Rotations"][0])
     match_list = st.session_state.matches["Match"].to_list()
     scouts = {}
@@ -41,6 +50,16 @@ def get_match_scouts(team):
 
 
 def name_check(value, lst):
+    """
+    Check if a value is present in the first half of a given list.
+
+    Parameters:
+    value (any): The value to be checked.
+    lst (list): The list to be searched.
+
+    Returns:
+    str: "R" if the value is present in the first half of the list, "B" otherwise.
+    """
     mid_index = len(lst) // 2
     if value in lst[:mid_index]:
         return "R"
@@ -316,6 +335,16 @@ def main():
     set_combined = {}
 
     def combine_set(entry_name, variable):
+        """
+        Combines the entry number and variable into the set_combined dictionary.
+
+        Parameters:
+        entry_name (str): The name of the entry.
+        variable: The variable to be combined with the entry number.
+
+        Returns:
+        None
+        """
         entry_number = set_entries[entry_name]
         set_combined[entry_name] = [int(entry_number), variable]
 
@@ -333,6 +362,15 @@ def main():
     entry_responses = {}
 
     def phase_header(phase):
+        """
+        Displays a header for the given phase.
+
+        Parameters:
+            phase (str): The phase name to display.
+
+        Returns:
+            None
+        """
         st.markdown(
             f'<div style="text-align: center; font-size: 32px;">{phase}</div>',
             unsafe_allow_html=True,
@@ -340,6 +378,16 @@ def main():
         st.title("")
 
     def gen_phase_input(entries):
+        """
+        Generate input fields for each entry in the given list of entries.
+
+        Parameters:
+        - entries (list): A list of entries for which input fields need to be generated.
+
+        Returns:
+        - entry_responses (dict): A dictionary containing the user responses for each entry.
+
+        """
         for entry in sorted_entries[entries]:
             entry_parts = entry.split("_")
             entry_name = entry_parts[1].title().replace("Rsl", "RSL")
@@ -364,7 +412,7 @@ def main():
 
     st.divider()
 
-    with st.form("Stats Input", clear_on_submit=True, border=False):
+    with st.form("Stats Input", clear_on_submit=False, border=False):
         with st.expander("Autonomous", True):
             phase_header("Autonomous")
             gen_phase_input("AUTO")
@@ -410,6 +458,15 @@ def main():
             st.warning("Required Input Missing")
 
     def gen_qr(contents):
+        """
+        Generate a QR code image from the given contents.
+
+        Parameters:
+        - contents (str): The data to be encoded in the QR code.
+
+        Returns:
+        - bytes: The byte representation of the generated QR code image.
+        """
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
