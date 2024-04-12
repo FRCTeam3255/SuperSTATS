@@ -111,7 +111,7 @@ def organize_df(df):
         prac = team_df[team_df["Match Type"].str.startswith("Prac")]
 
         if non_prac.empty:
-            for index, row in prac.iterrows():
+            for _, row in prac.iterrows():
                 row = row.to_frame().T
                 for i in range(len(phases)):
                     team_df.loc[:, phases[i]] = add_cols(
@@ -133,7 +133,7 @@ def organize_df(df):
                 .drop_duplicates()
             )
         else:
-            for index, row in non_prac.iterrows():
+            for _, row in non_prac.iterrows():
                 row = row.to_frame().T
                 all_non_prac_list.append(row)
 
@@ -161,7 +161,7 @@ def get_configs():
     configs_raw = download_sheets_raw(st.secrets["GID_CONFIG"])
     configs = {}
 
-    for index, row in configs_raw.iterrows():
+    for _, row in configs_raw.iterrows():
         config = row["Config"]
         value = row["Value"]
         configs[config] = value.split(", ")
@@ -411,7 +411,7 @@ def get_unplayed(df, matches):
 
     tba_played_matches = []
 
-    for index, row in st.session_state.match_data.iterrows():
+    for _, row in st.session_state.match_data.iterrows():
         try:
             if row["red.score"] != -1 and row["blue.score"] != -1:
                 tba_played_matches.append(row["Match Name"])

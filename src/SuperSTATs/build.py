@@ -910,13 +910,14 @@ def gen_bar(
             with st.container(border=True):
                 start_time = time.time()
 
-                for index, row in rank_df.iterrows():
+                for _, row in rank_df.iterrows():
                     team_num = row["Team"]
 
-                    try:
-                        formatted_features = all_team_features[int(team_num)]
-                    except:
-                        formatted_features = all_team_features[str(team_num)]
+                    all_team_features = {
+                        str(float(k)): v for k, v in all_team_features.items()
+                    }
+
+                    formatted_features = all_team_features[str(team_num)]
 
                     scouting_expander(
                         df=st.session_state.scouting,
