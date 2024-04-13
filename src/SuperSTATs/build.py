@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import pickle
 import time
+import json
 import math
 
 
@@ -489,7 +490,13 @@ def gen_bar(
 
     if use_presets:
         presets = st.session_state.presets
-        preset_choice = st.selectbox("Preset Choice:", ["None"] + list(presets))
+        preset_columns = st.columns(2)
+
+        preset_choice = preset_columns[0].selectbox(
+            "Preset Choice:", ["None"] + list(presets)
+        )
+
+        preset_json = preset_columns[1].text_input("JSON Preset:", placeholder="{}")
 
         if preset_choice != "None":
             st.header(
@@ -497,6 +504,12 @@ def gen_bar(
                 False,
                 help=str(presets[preset_choice]),
             )
+        elif preset_json:
+            try:
+                preset_choice = "Custom"
+                presets[preset_choice] = json.loads(preset_json)
+            except:
+                st.error("⚠️ Invalid JSON")
     else:
         preset_choice = "None"
 
@@ -885,25 +898,30 @@ def gen_bar(
     if use_presets == True and preset_choice == "None":
         preset_name = st.text_input("New Preset Name:")
 
+        preset_data = {
+            "data": data.to_dict(),
+            "x_range": x_range,
+            "show_nums": show_nums,
+            "selected_filters": selected_filters,
+            "inline_legend": inline_legend,
+            "group_filters": group_filters,
+            "show_available": show_available,
+            "all_team_features": all_team_features,
+            "rank_df": rank_df.to_dict(),
+        }
+
         if preset_name.replace(" ", ""):
             if preset_name not in presets.keys():
-                presets[preset_name] = {
-                    "data": data.to_dict(),
-                    "x_range": x_range,
-                    "show_nums": show_nums,
-                    "selected_filters": selected_filters,
-                    "inline_legend": inline_legend,
-                    "group_filters": group_filters,
-                    "show_available": show_available,
-                    "all_team_features": all_team_features,
-                    "rank_df": rank_df.to_dict(),
-                }
+                presets[preset_name] = preset_data
 
                 with open("src\\pickles\\presets.pickle", "wb") as f:
                     pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
                 st.toast("Successfully added preset!", icon="✅")
             else:
                 st.toast("Preset name already exists!", icon="⚠️")
+
+        if st.button("Generate JSON", use_container_width=True):
+            st.code(json.dumps(preset_data), language="json")
 
     if expanders:
         if st.toggle("Ranked Expanders"):
