@@ -934,12 +934,14 @@ def gen_bar(
             "size_limit": size_limit,
             "show_available": show_available,
             "show_nums": show_nums,
-            "use_features": use_features,
+            "use_features": features,
             "x_range": x_range,
         }
 
         if preset_name.replace(" ", ""):
-            if preset_name not in presets.keys():
+            if preset_name == "Custom":
+                pass
+            elif preset_name not in presets.keys():
                 presets[preset_name] = preset_data
 
                 with open("src\\pickles\\presets.pickle", "wb") as f:
