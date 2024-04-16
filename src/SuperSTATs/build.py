@@ -502,12 +502,19 @@ def gen_bar(
             st.header(
                 f"Selected Preset: {preset_choice}",
                 False,
-                help=str(presets[preset_choice]),
+                help=json.dumps(presets[preset_choice]),
             )
+            preset = presets[preset_choice]
         elif preset_json:
             try:
                 preset_choice = "Custom"
                 presets[preset_choice] = json.loads(preset_json)
+                st.header(
+                    f"Selected Preset: Custom",
+                    False,
+                    help=json.dumps(presets[preset_choice]),
+                )
+                preset = presets[preset_choice]
             except:
                 st.error("⚠️ Invalid JSON")
     else:
@@ -587,51 +594,54 @@ def gen_bar(
             filter_choices = phases
         else:
             filter_choices = phases
+    else:
+        show_nums = preset["show_nums"]
+        show_available = preset["show_available"]
+        features = preset["use_features"]
+        group_filters = preset["group_filters"]
+        filter_choices = preset["selected_filters"]
+        inline_legend = preset["inline_legend"]
+        agg_type = preset["agg_type"]
 
-        comment_df = df
-        df = df.drop("COMMENT_GENERAL_STR_1", axis=1)
+    comment_df = df
+    df = df.drop("COMMENT_GENERAL_STR_1", axis=1)
 
-        for i in range(len(phases)):
-            df.loc[:, phases[i]] = load.add_cols(
-                df,
-                phases[i],
-            )
-
-        if not use_inline_legend:
-            inline_legend = False
-
-        if displayed_teams:
-            df = df[df["Team"].isin(displayed_teams + compared_teams)]
-        else:
-            df = df
-
-        if df.empty:
-            df.loc[0] = 0
-            no_data = True
-        else:
-            no_data = False
-
-        feature_list = list(
-            comment_df["COMMENT_GENERAL_STR_1"]
-            .dropna()
-            .str.split(", ")
-            .explode()
-            .unique()
+    for i in range(len(phases)):
+        df.loc[:, phases[i]] = load.add_cols(
+            df,
+            phases[i],
         )
 
-        df_scouting = st.session_state.scouting
-        dt_types = df_scouting["Drivetrain Type"].unique().tolist() + [
-            "Unknown Drivetrain"
-        ]
+    if not use_inline_legend:
+        inline_legend = False
 
-        feature_choices = []
+    if displayed_teams:
+        df = df[df["Team"].isin(displayed_teams + compared_teams)]
+    else:
+        df = df
 
-        for filter in feature_list + dt_types:
-            if str(filter) == "nan":
-                pass
-            else:
-                feature_choices.append(filter)
+    if df.empty:
+        df.loc[0] = 0
+        no_data = True
+    else:
+        no_data = False
 
+    feature_list = list(
+        comment_df["COMMENT_GENERAL_STR_1"].dropna().str.split(", ").explode().unique()
+    )
+
+    df_scouting = st.session_state.scouting
+    dt_types = df_scouting["Drivetrain Type"].unique().tolist() + ["Unknown Drivetrain"]
+
+    feature_choices = []
+
+    for filter in feature_list + dt_types:
+        if str(filter) == "nan":
+            pass
+        else:
+            feature_choices.append(filter)
+
+    if preset_choice == "None":
         selected_features = (
             st.multiselect(
                 "Features:",
@@ -643,60 +653,65 @@ def gen_bar(
             else feature_choices
         )
 
-        df = df.merge(
-            df_scouting[
-                ["Team #", "Drivetrain Type", "Frame Size LENGTH", "Frame Size WIDTH"]
-            ].fillna("Unknown Drivetrain"),
-            left_on="Team",
-            right_on="Team #",
-            how="left",
-        ).drop(columns=["Team #"])
+    df = df.merge(
+        df_scouting[
+            ["Team #", "Drivetrain Type", "Frame Size LENGTH", "Frame Size WIDTH"]
+        ].fillna("Unknown Drivetrain"),
+        left_on="Team",
+        right_on="Team #",
+        how="left",
+    ).drop(columns=["Team #"])
 
-        df["Drivetrain Type"] = df["Drivetrain Type"].fillna("Unknown Drivetrain")
+    df["Drivetrain Type"] = df["Drivetrain Type"].fillna("Unknown Drivetrain")
 
-        if any(dt in selected_features for dt in dt_types):
-            df = df[(df["Drivetrain Type"].isin(selected_features))]
+    selected_features = (
+        preset["selected_features"] if preset_choice != "None" else selected_features
+    )
 
-        all_team_features = {}
-        kept_teams = []
+    if any(dt in selected_features for dt in dt_types):
+        df = df[(df["Drivetrain Type"].isin(selected_features))]
 
-        def has_features(team):
-            """
-            Check if a team has all the required features.
+    all_team_features = {}
+    kept_teams = []
 
-            Args:
-                team (str): The name of the team.
+    def has_features(team):
+        """
+        Check if a team has all the required features.
 
-            Returns:
-                bool: True if the team has all the required features, False otherwise.
-            """
-            if not features:
-                return True
+        Args:
+            team (str): The name of the team.
 
-            for feature in selected_features:
-                if feature not in all_team_features[team] + dt_types:
-                    return False
-
+        Returns:
+            bool: True if the team has all the required features, False otherwise.
+        """
+        if not features:
             return True
 
-        for team in comment_df["Team"]:
-            comment_df = comment_df.dropna()
-            team_values = comment_df.loc[
-                comment_df["Team"] == team, "COMMENT_GENERAL_STR_1"
-            ].tolist()
+        for feature in selected_features:
+            if feature not in all_team_features[team] + dt_types:
+                return False
 
-            team_features = [value.split(", ") for value in team_values]
-            team_features = list(
-                set([feature for sublist in team_features for feature in sublist])
-            )
+        return True
 
-            all_team_features[team] = team_features
+    for team in comment_df["Team"]:
+        comment_df = comment_df.dropna()
+        team_values = comment_df.loc[
+            comment_df["Team"] == team, "COMMENT_GENERAL_STR_1"
+        ].tolist()
 
-            if has_features(team):
-                kept_teams.append(team)
+        team_features = [value.split(", ") for value in team_values]
+        team_features = list(
+            set([feature for sublist in team_features for feature in sublist])
+        )
 
-        df = df[df["Team"].isin(kept_teams)]
+        all_team_features[team] = team_features
 
+        if has_features(team):
+            kept_teams.append(team)
+
+    df = df[df["Team"].isin(kept_teams)]
+
+    if preset_choice == "None":
         if use_filter_selection:
             selected_filters = st.multiselect(
                 "Filters:",
@@ -706,16 +721,32 @@ def gen_bar(
             )
         else:
             selected_filters = filter_choices
+    else:
+        selected_filters = preset["selected_filters"]
 
-        rank_df = df.groupby("Team")[selected_filters].agg(agg_type)
-        rank_df["rank"] = rank_df.sum(axis=1).rank(ascending=False).astype(int)
-        rank_df.reset_index(inplace=True)
+    selected_filters = (
+        preset["selected_filters"] if preset_choice != "None" else selected_filters
+    )
 
-        if use_max_size and features:
-            min_size = df[["Frame Size LENGTH", "Frame Size WIDTH"]].min().min()
-            max_size = df[["Frame Size LENGTH", "Frame Size WIDTH"]].max().max()
-            unscouted_size = max_size + 0.5
+    if "COMMENT_GENERAL_STR_1" in selected_filters:
+        selected_filters.remove("COMMENT_GENERAL_STR_1")
 
+    rank_df = df.groupby("Team")[
+        [
+            filter_item
+            for filter_item in selected_filters
+            if filter_item != "COMMENT_GENERAL_STR_1"
+        ]
+    ].agg(agg_type)
+    rank_df["rank"] = rank_df.sum(axis=1).rank(ascending=False).astype(int)
+    rank_df.reset_index(inplace=True)
+
+    if use_max_size and features:
+        min_size = df[["Frame Size LENGTH", "Frame Size WIDTH"]].min().min()
+        max_size = df[["Frame Size LENGTH", "Frame Size WIDTH"]].max().max()
+        unscouted_size = max_size + 0.5
+
+        if preset_choice == "None":
             size_limit = st.slider(
                 "Max Size:",
                 min_value=min_size,
@@ -724,31 +755,38 @@ def gen_bar(
                 step=0.5,
                 key=f"size_limit_{key}",
             )
+        else:
+            size_limit = preset["size_limit"]
 
-            if size_limit == unscouted_size:
-                st.toast("Viewing unscouted teams", icon="⚠️")
+        if size_limit == unscouted_size:
+            st.toast("Viewing unscouted teams", icon="⚠️")
 
-            df["Frame Size LENGTH"] = df["Frame Size LENGTH"].fillna(unscouted_size)
-            df["Frame Size WIDTH"] = df["Frame Size WIDTH"].fillna(unscouted_size)
+        df["Frame Size LENGTH"] = df["Frame Size LENGTH"].fillna(unscouted_size)
+        df["Frame Size WIDTH"] = df["Frame Size WIDTH"].fillna(unscouted_size)
 
-            df = df[
-                (df["Frame Size LENGTH"] <= size_limit)
-                & (df["Frame Size WIDTH"] <= size_limit)
-            ]
+        df = df[
+            (df["Frame Size LENGTH"] <= size_limit)
+            & (df["Frame Size WIDTH"] <= size_limit)
+        ]
+    else:
+        size_limit = None
 
-        calc_df = df.groupby("Team")[selected_filters].agg(agg_type)
-        calc_df["rank"] = calc_df.sum(axis=1).rank(ascending=False).astype(int)
-        calc_df.reset_index(inplace=True)
-        data = pd.melt(
-            calc_df,
-            id_vars=["Team", "rank"],
-            value_vars=selected_filters,
-            var_name="variable",
-            value_name="value",
-        )
+    calc_df = df.groupby("Team")[selected_filters].agg(agg_type)
+    calc_df["rank"] = calc_df.sum(axis=1).rank(ascending=False).astype(int)
+    calc_df.reset_index(inplace=True)
+    data = pd.melt(
+        calc_df,
+        id_vars=["Team", "rank"],
+        value_vars=selected_filters,
+        var_name="variable",
+        value_name="value",
+    )
 
-        calc_df["Score Sum"] = calc_df[selected_filters].sum(axis=1)
+    calc_df["Score Sum"] = calc_df[selected_filters].sum(axis=1)
 
+    if preset_choice != "None":
+        x_range = preset["x_range"]
+    else:
         try:
             x_min = (
                 math.floor(calc_df.min().min()) - 2
@@ -762,12 +800,13 @@ def gen_bar(
         x_range = (
             x_range if x_range else [x_min, (round(calc_df["Score Sum"].max()) + 2)]
         )
-        x_min, x_max = x_range
 
-        data = data[~data["Team"].isin(compared_teams)]
+    x_min, x_max = x_range
 
-    else:
-        no_data = False
+    data = data[~data["Team"].isin(compared_teams)]
+
+    # else:
+    #     no_data = False
 
     def rgba_to_hex(rgba):
         """
@@ -801,18 +840,6 @@ def gen_bar(
         cmap = plt.get_cmap(cmap_name)
         colors = [rgba_to_hex(cmap(i)) for i in np.linspace(0, 0.8, length)]
         return colors
-
-    if preset_choice != "None":
-        preset = presets[preset_choice]
-        data = pd.DataFrame(preset["data"])
-        x_min, x_max = preset["x_range"]
-        show_nums = preset["show_nums"]
-        selected_filters = preset["selected_filters"]
-        inline_legend = preset["inline_legend"]
-        group_filters = preset["group_filters"]
-        show_available = preset["show_available"]
-        all_team_features = preset["all_team_features"]
-        rank_df = pd.DataFrame(preset["rank_df"])
 
     def format_y(team, show_available, picked):
         """
@@ -899,15 +926,16 @@ def gen_bar(
         preset_name = st.text_input("New Preset Name:")
 
         preset_data = {
-            "data": data.to_dict(),
-            "x_range": x_range,
-            "show_nums": show_nums,
-            "selected_filters": selected_filters,
-            "inline_legend": inline_legend,
+            "agg_type": agg_type,
             "group_filters": group_filters,
+            "inline_legend": inline_legend,
+            "selected_features": selected_features,
+            "selected_filters": selected_filters,
+            "size_limit": size_limit,
             "show_available": show_available,
-            "all_team_features": all_team_features,
-            "rank_df": rank_df.to_dict(),
+            "show_nums": show_nums,
+            "use_features": use_features,
+            "x_range": x_range,
         }
 
         if preset_name.replace(" ", ""):
@@ -922,6 +950,10 @@ def gen_bar(
 
         if st.button("Generate JSON", use_container_width=True):
             st.code(json.dumps(preset_data), language="json")
+
+    if preset_choice != "None":
+        if st.button("Generate JSON", use_container_width=True):
+            st.code(json.dumps(preset), language="json")
 
     if expanders:
         if st.toggle("Ranked Expanders"):

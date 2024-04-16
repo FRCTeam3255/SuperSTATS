@@ -20,6 +20,7 @@ def main():
 
         st.session_state.picked = load.get_picked()
         st.session_state.tba_ranks = load.get_tba_ranks()
+        st.session_state.presets = load.get_presets()
 
     st.divider()
 
