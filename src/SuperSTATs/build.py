@@ -93,6 +93,7 @@ def scouting_expander(
                 st.text(f"Length: {length} in ({added_length} in)")
                 st.text(f"Width: {width} in ({added_width} in)")
                 st.text(f"Area: {length * width} in²")
+                st.text(f"Weight: {sorted_df['Weight'].max()} lb")
 
                 def check_nan(var_name, var_value, column):
                     """
