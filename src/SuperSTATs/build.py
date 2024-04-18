@@ -602,6 +602,7 @@ def gen_bar(
         filter_choices = preset["selected_filters"]
         inline_legend = preset["inline_legend"]
         agg_type = preset["agg_type"]
+        phases = preset["phases"]
 
     comment_df = df
     df = df.drop("COMMENT_GENERAL_STR_1", axis=1)
@@ -805,9 +806,6 @@ def gen_bar(
 
     data = data[~data["Team"].isin(compared_teams)]
 
-    # else:
-    #     no_data = False
-
     def rgba_to_hex(rgba):
         """
         Converts an RGBA color value to its corresponding hexadecimal representation.
@@ -929,6 +927,7 @@ def gen_bar(
             "agg_type": agg_type,
             "group_filters": group_filters,
             "inline_legend": inline_legend,
+            "phases": phases,
             "selected_features": selected_features,
             "selected_filters": selected_filters,
             "size_limit": size_limit,
