@@ -494,7 +494,8 @@ def gen_bar(
         preset_columns = st.columns(2)
 
         preset_choice = preset_columns[0].selectbox(
-            "Preset Choice:", ["None"] + list(presets)
+            "Preset Choice:",
+            ["None"] + list(preset for preset in presets.keys() if preset != "Custom"),
         )
 
         preset_json = preset_columns[1].text_input("JSON Preset:", placeholder="{}")
@@ -939,7 +940,7 @@ def gen_bar(
         }
 
         if preset_name.replace(" ", ""):
-            if preset_name == "Custom":
+            if preset_name.lower() == "custom":
                 pass
             elif preset_name not in presets.keys():
                 presets[preset_name] = preset_data
@@ -950,12 +951,13 @@ def gen_bar(
             else:
                 st.toast("Preset name already exists!", icon="⚠️")
 
-        if st.button("Generate JSON", use_container_width=True):
-            st.code(json.dumps(preset_data), language="json")
-
-    if preset_choice != "None":
-        if st.button("Generate JSON", use_container_width=True):
-            st.code(json.dumps(preset), language="json")
+    if st.button("Generate JSON", use_container_width=True):
+        if preset_choice != "None":
+            preset_data = preset
+        st.code(
+            json.dumps(preset_data) if preset_data else json.dumps(preset),
+            language="json",
+        )
 
     if expanders:
         if st.toggle("Ranked Expanders"):
