@@ -1,4 +1,3 @@
-import SuperSTATs.load as load
 from bs4 import BeautifulSoup
 import streamlit as st
 import requests

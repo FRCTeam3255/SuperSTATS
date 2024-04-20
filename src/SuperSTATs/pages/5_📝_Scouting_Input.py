@@ -26,8 +26,6 @@ def main():
     url = st.secrets["SCOUTING_FORM"]
     entries = form.get_entries(url)[0]
 
-    st.write(entries)
-
     df = st.session_state.scouting
 
     scouted_teams = df["Team #"].unique()
