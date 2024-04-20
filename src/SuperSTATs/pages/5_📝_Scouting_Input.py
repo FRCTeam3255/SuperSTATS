@@ -1,4 +1,5 @@
 import SuperSTATs.load as load
+import SuperSTATs.form as form
 import requests, pickle
 import streamlit as st
 import qrcode
@@ -21,6 +22,11 @@ def main():
         st.session_state.scouting = load.download_sheets_raw(st.secrets["GID_SCOUTING"])
 
     st.divider()
+
+    url = st.secrets["SCOUTING_FORM"]
+    entries = form.get_entries(url)[0]
+
+    st.write(entries)
 
     df = st.session_state.scouting
 
@@ -71,7 +77,20 @@ def main():
 
         comments = st.text_input("Additional Comments:")
 
-        prefill_url = f"https://docs.google.com/forms/d/e/1FAIpQLSf0Wm6xqzuUOaYquHo-oIIZHfIXJIAUA9R64M_PnEQibP_jJw/formResponse?usp=pp_url&entry.1329798282={team_num}&entry.2038191838={length}&entry.2133090800={width}&entry.1034225169={weight}&entry.1374859410={dt_type}&entry.820368818={comments.replace(' ', '+')}&submit=Submit"
+        gen_combined = {
+            "Team #": team_num,
+            "Frame Size LENGTH": length,
+            "Frame Size WIDTH": width,
+            "Weight": weight,
+            "Drivetrain Type": dt_type,
+            "Comments": comments.replace(" ", "+"),
+        }
+
+        form_entries = [
+            f"&entry.{entries[entry]}={gen_combined[entry]}" for entry in gen_combined
+        ]
+
+        prefill_url = f"https://docs.google.com/forms/d/e/1FAIpQLSf0Wm6xqzuUOaYquHo-oIIZHfIXJIAUA9R64M_PnEQibP_jJw/formResponse?usp=pp_url{''.join(form_entries)}&submit=Submit"
 
         submitted = st.form_submit_button(
             "Submit", type="primary", use_container_width=True

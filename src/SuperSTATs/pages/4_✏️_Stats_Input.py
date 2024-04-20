@@ -1,4 +1,5 @@
 import SuperSTATs.load as load
+import SuperSTATs.form as form
 from bs4 import BeautifulSoup
 import streamlit as st
 import requests
@@ -87,30 +88,8 @@ def main():
 
     st.divider()
 
-    url = st.secrets["FORM_URL"]
-
-    response = requests.get(url)
-    html = BeautifulSoup(response.content, "html.parser")
-
-    found = "FB_PUBLIC_LOAD_DATA_ ="
-
-    split_html = str(html).split(found)[1]
-    split_html = str(split_html).split('",null,0,[[')
-
-    entries_dict = {"Name": split_html[0].split('"Name",null,1,[[')[1].split(",")[0]}
-
-    for i in range(len(split_html) - 1):
-        entries_dict[split_html[i].split('"')[-1]] = split_html[i + 1].split(",")[0]
-
-    gen_entries = {
-        name: id
-        for name, id in entries_dict.items()
-        if any(name.startswith(phase) for phase in st.session_state.phases)
-    }
-
-    set_entries = {
-        name: id for name, id in entries_dict.items() if name not in gen_entries
-    }
+    url = st.secrets["STATS_FORM"]
+    set_entries, gen_entries = form.get_entries(url)
 
     unplayed_matches = st.session_state.unplayed_matches
     scouters = st.session_state.assigned
@@ -332,6 +311,7 @@ def main():
         input_team,
         input_key,
     ]
+
     set_combined = {}
 
     def combine_set(entry_name, variable):
