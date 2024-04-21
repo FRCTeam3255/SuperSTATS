@@ -1,7 +1,9 @@
 import SuperSTATs.load as load
+import SuperSTATs.form as form
 from datetime import datetime
 import streamlit as st
 import pandas as pd
+import requests
 import json
 import time
 
@@ -57,6 +59,57 @@ def main():
         )
 
     df["Score Sum"] = df[phases].sum(axis=1)
+
+    scout = st.selectbox(
+        "Scout:",
+        ["None"]
+        + [scout for scout in st.session_state.scouts if scout in df["Name"].unique()],
+    )
+
+    if scout != "None":
+        df_raw = load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(
+            subset=["Timestamp"]
+        )
+        df_raw = df_raw.sort_values(["Match", "Timestamp"], ascending=[True, True])
+        df_raw = df_raw[df_raw["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
+        df_raw = df_raw.drop_duplicates(subset=["Team", "Match Type", "Match"])
+
+        match_type, match_num = st.selectbox(
+            "Match:", df[df["Name"] == scout]["Match Name"]
+        ).split()
+
+        st.divider()
+
+        scout_match = df_raw[
+            (df_raw["Name"] == scout)
+            & (df_raw["Match Type"] == match_type)
+            & (df_raw["Match"] == float(match_num))
+        ]
+
+        edited_match = st.data_editor(scout_match.T, use_container_width=True)
+        match_dict = list(edited_match.to_dict().values())[0]
+
+        url = st.secrets["STATS_FORM"]
+        set_entries, gen_entries = form.get_entries(url)
+        entries = {**set_entries, **gen_entries}
+
+        for entry, value in match_dict.items():
+            if entry in entries:
+                set_entries[entry] = value
+
+        form_entries = [
+            f"&entry.{entries[entry]}={set_entries[entry]}" for entry in entries
+        ]
+
+        prefill_url = f"{url.split('/viewform')[0]}/formResponse?usp=pp_url{''.join(form_entries)}&submit=Submit"
+
+        if st.button("Submit", type="primary", use_container_width=True):
+            requests.get(prefill_url)
+            st.balloons()
+
+        st.stop()
+
+    st.divider()
 
     filters = [
         "❓ Missing Teams",
