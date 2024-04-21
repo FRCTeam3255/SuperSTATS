@@ -88,7 +88,7 @@ def main():
             f"&entry.{entries[entry]}={gen_combined[entry]}" for entry in gen_combined
         ]
 
-        prefill_url = f"https://docs.google.com/forms/d/e/1FAIpQLSf0Wm6xqzuUOaYquHo-oIIZHfIXJIAUA9R64M_PnEQibP_jJw/formResponse?usp=pp_url{''.join(form_entries)}&submit=Submit"
+        prefill_url = f"{url.split('/viewform')[0]}/formResponse?usp=pp_url{''.join(form_entries)}&submit=Submit"
 
         submitted = st.form_submit_button(
             "Submit", type="primary", use_container_width=True
