@@ -88,8 +88,9 @@ def main():
 
     st.divider()
 
-    url = st.secrets["STATS_FORM"]
-    set_entries, gen_entries = form.get_entries(url)
+    form_ = st.session_state.forms["STATS_FORM"]
+    set_entries = form_["set"]
+    gen_entries = form_["gen"]
 
     unplayed_matches = st.session_state.unplayed_matches
     scouters = st.session_state.assigned
@@ -425,7 +426,7 @@ def main():
         for entry, result in entries_combined.items():
             entry_url += f"&entry.{result[0]}={result[1]}"
 
-        prefill_url = f"{url.split('/viewform')[0]}/formResponse?usp=pp_url{entry_url}&submit=Submit"
+        prefill_url = f"{st.secrets['STATS_FORM'].split('/viewform')[0]}/formResponse?usp=pp_url{entry_url}&submit=Submit"
 
         if input_name != "":
             submitted = st.form_submit_button(

@@ -89,8 +89,10 @@ def main():
         edited_match = st.data_editor(scout_match.T, use_container_width=True)
         match_dict = list(edited_match.to_dict().values())[0]
 
-        url = st.secrets["STATS_FORM"]
-        set_entries, gen_entries = form.get_entries(url)
+        form_ = st.session_state.forms["STATS_FORM"]
+        set_entries = form_["set"]
+        gen_entries = form_["gen"]
+
         entries = {**set_entries, **gen_entries}
 
         for entry, value in match_dict.items():
@@ -101,7 +103,7 @@ def main():
             f"&entry.{entries[entry]}={set_entries[entry]}" for entry in entries
         ]
 
-        prefill_url = f"{url.split('/viewform')[0]}/formResponse?usp=pp_url{''.join(form_entries)}&submit=Submit"
+        prefill_url = f"{st.secrets['STATS_FORM'].split('/viewform')[0]}/formResponse?usp=pp_url{''.join(form_entries)}&submit=Submit"
 
         if st.button("Submit", type="primary", use_container_width=True):
             requests.get(prefill_url)

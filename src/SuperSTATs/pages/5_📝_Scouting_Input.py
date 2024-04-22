@@ -23,8 +23,7 @@ def main():
 
     st.divider()
 
-    url = st.secrets["SCOUTING_FORM"]
-    entries = form.get_entries(url)[0]
+    entries = st.session_state.forms["SCOUTING_FORM"]["set"]
 
     df = st.session_state.scouting
 
@@ -88,7 +87,7 @@ def main():
             f"&entry.{entries[entry]}={gen_combined[entry]}" for entry in gen_combined
         ]
 
-        prefill_url = f"{url.split('/viewform')[0]}/formResponse?usp=pp_url{''.join(form_entries)}&submit=Submit"
+        prefill_url = f"{st.secrets['SCOUTING_FORM'].split('/viewform')[0]}/formResponse?usp=pp_url{''.join(form_entries)}&submit=Submit"
 
         submitted = st.form_submit_button(
             "Submit", type="primary", use_container_width=True

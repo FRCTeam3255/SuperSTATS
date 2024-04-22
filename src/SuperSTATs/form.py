@@ -50,3 +50,14 @@ def get_entries(url):
     }
 
     return set_entries, gen_entries
+
+
+@st.cache_data(show_spinner=False)
+def cache_forms(forms):
+    form_data = {}
+
+    for form in forms:
+        set_entries, gen_entries = get_entries(st.secrets[form])
+        form_data[form] = {"set": set_entries, "gen": gen_entries}
+
+    return form_data

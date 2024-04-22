@@ -1,3 +1,4 @@
+import SuperSTATs.form as form
 import streamlit as st
 import pandas as pd
 import requests
@@ -605,6 +606,7 @@ def app_init():
         "scouts",
         "phases",
         "presets",
+        "forms",
     ]
 
     status_messages = {}
@@ -689,6 +691,9 @@ def app_init():
 
             display_status("presets")
             st.session_state.presets = get_presets()
+
+            display_status("forms")
+            st.session_state.forms = form.cache_forms(["STATS_FORM", "SCOUTING_FORM"])
 
             st.session_state.logged_in = False
             st.session_state.chat = {
