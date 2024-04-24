@@ -922,42 +922,43 @@ def gen_bar(
     else:
         st.error("⚠️ Please select at least one filter")
 
-    if use_presets == True and preset_choice == "None":
-        preset_name = st.text_input("New Preset Name:")
+    if use_presets:
+        if preset_choice == "None":
+            preset_name = st.text_input("New Preset Name:")
 
-        preset_data = {
-            "agg_type": agg_type,
-            "group_filters": group_filters,
-            "inline_legend": inline_legend,
-            "phases": phases,
-            "selected_features": selected_features,
-            "selected_filters": selected_filters,
-            "size_limit": size_limit,
-            "show_available": show_available,
-            "show_nums": show_nums,
-            "use_features": features,
-            "x_range": x_range,
-        }
+            preset_data = {
+                "agg_type": agg_type,
+                "group_filters": group_filters,
+                "inline_legend": inline_legend,
+                "phases": phases,
+                "selected_features": selected_features,
+                "selected_filters": selected_filters,
+                "size_limit": size_limit,
+                "show_available": show_available,
+                "show_nums": show_nums,
+                "use_features": features,
+                "x_range": x_range,
+            }
 
-        if preset_name.replace(" ", ""):
-            if preset_name.lower() == "custom":
-                pass
-            elif preset_name not in presets.keys():
-                presets[preset_name] = preset_data
+            if preset_name.replace(" ", ""):
+                if preset_name.lower() == "custom":
+                    pass
+                elif preset_name not in presets.keys():
+                    presets[preset_name] = preset_data
 
-                with open("src\\pickles\\presets.pickle", "wb") as f:
-                    pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
-                st.toast("Successfully added preset!", icon="✅")
-            else:
-                st.toast("Preset name already exists!", icon="⚠️")
+                    with open("src\\pickles\\presets.pickle", "wb") as f:
+                        pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
+                    st.toast("Successfully added preset!", icon="✅")
+                else:
+                    st.toast("Preset name already exists!", icon="⚠️")
 
-    if st.button("Generate JSON", use_container_width=True):
-        if preset_choice != "None":
-            preset_data = preset
-        st.code(
-            json.dumps(preset_data) if preset_data else json.dumps(preset),
-            language="json",
-        )
+        if st.button("Generate JSON", use_container_width=True):
+            if preset_choice != "None":
+                preset_data = preset
+            st.code(
+                json.dumps(preset_data) if preset_data else json.dumps(preset),
+                language="json",
+            )
 
     if expanders:
         if st.toggle("Ranked Expanders"):
