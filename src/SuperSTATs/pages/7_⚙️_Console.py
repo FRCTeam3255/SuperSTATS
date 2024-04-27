@@ -1,3 +1,4 @@
+import SuperSTATs.analytics as analytics
 import SuperSTATs.load as load
 import streamlit as st
 import pickle
@@ -6,6 +7,7 @@ import json
 
 def main():
     load.app_init()
+    analytics.collect_analytics("page_change", "console")
 
     presets_path = "src\\pickles\\presets.pickle"
     colors_path = "src\\pickles\\colors.pickle"
@@ -177,6 +179,23 @@ def main():
             )
         except:
             pass
+
+    if st.session_state.console["collect_analytics"]:
+        with st.expander("Analytics"):
+            columns = st.columns(4)
+
+            updated_analytics = {}
+
+            for i, analytic in enumerate(st.session_state.analytics_settings):
+                updated_analytics[analytic] = columns[i % 4].toggle(
+                    analytic.title().replace("_", " "),
+                    st.session_state.analytics[analytic],
+                )
+
+            if st.button("Update Analytics", type="primary", use_container_width=True):
+                st.session_state.analytics = updated_analytics
+
+    st.write(st.session_state.analytics)
 
 
 if __name__ == "__main__":

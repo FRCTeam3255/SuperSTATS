@@ -1,5 +1,5 @@
+import SuperSTATs.analytics as analytics
 import SuperSTATs.load as load
-import SuperSTATs.form as form
 from datetime import datetime
 import streamlit as st
 import pandas as pd
@@ -33,6 +33,7 @@ def show_raw(match_num, match_info, match_key):
 
 def main():
     load.app_init()
+    analytics.collect_analytics("page_change", "data_check")
 
     import SuperSTATs.styles as style
 

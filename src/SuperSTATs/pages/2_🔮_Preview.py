@@ -1,3 +1,4 @@
+import SuperSTATs.analytics as analytics
 import SuperSTATs.build as build
 import SuperSTATs.load as load
 import streamlit as st
@@ -178,6 +179,7 @@ def display_team(
 
 def main():
     load.app_init()
+    analytics.collect_analytics("page_change", "preview")
 
     import SuperSTATs.styles as style
 

@@ -607,6 +607,7 @@ def app_init():
         "phases",
         "presets",
         "forms",
+        "analytics",
     ]
 
     status_messages = {}
@@ -694,6 +695,22 @@ def app_init():
 
             display_status("forms")
             st.session_state.forms = form.cache_forms(["STATS_FORM", "SCOUTING_FORM"])
+
+            display_status("analytics")
+            st.session_state.analytics_settings = [
+                "page_change",
+                "page_update",
+                "button_press",
+                "input",
+            ]
+
+            st.session_state.analytics = {}
+
+            for analytic in st.session_state.analytics_settings:
+                st.session_state.analytics[analytic] = False
+
+            st.session_state.uid = str(random.randint(10**7, 10**8 - 1))
+            st.session_state.page = None
 
             st.session_state.logged_in = False
             st.session_state.chat = {

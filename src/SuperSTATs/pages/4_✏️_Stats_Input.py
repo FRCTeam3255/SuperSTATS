@@ -1,3 +1,4 @@
+import SuperSTATs.analytics as analytics
 import SuperSTATs.load as load
 import SuperSTATs.form as form
 from bs4 import BeautifulSoup
@@ -69,6 +70,7 @@ def name_check(value, lst):
 
 def main():
     load.app_init()
+    analytics.collect_analytics("page_change", "stats_input")
 
     import SuperSTATs.styles as style
 
@@ -423,7 +425,7 @@ def main():
         entries_combined.update(gen_combined)
 
         entry_url = ""
-        for entry, result in entries_combined.items():
+        for result in entries_combined.values():
             entry_url += f"&entry.{result[0]}={result[1]}"
 
         prefill_url = f"{st.secrets['STATS_FORM'].split('/viewform')[0]}/formResponse?usp=pp_url{entry_url}&submit=Submit"

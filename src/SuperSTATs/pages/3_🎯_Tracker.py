@@ -1,9 +1,11 @@
+import SuperSTATs.analytics as analytics
 import SuperSTATs.load as load
 import streamlit as st
 
 
 def main():
     load.app_init()
+    analytics.collect_analytics("page_change", "tracker")
 
     import SuperSTATs.styles as style
     import SuperSTATs.build as build

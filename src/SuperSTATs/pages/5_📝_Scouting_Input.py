@@ -1,5 +1,5 @@
+import SuperSTATs.analytics as analytics
 import SuperSTATs.load as load
-import SuperSTATs.form as form
 import requests, pickle
 import streamlit as st
 import qrcode
@@ -8,6 +8,7 @@ import io
 
 def main():
     load.app_init()
+    analytics.collect_analytics("page_change", "scouting_input")
 
     import SuperSTATs.styles as style
 

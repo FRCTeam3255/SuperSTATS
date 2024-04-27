@@ -1,3 +1,4 @@
+import SuperSTATs.analytics as analytics
 import SuperSTATs.build as build
 import SuperSTATs.load as load
 import streamlit as st
@@ -5,6 +6,7 @@ import streamlit as st
 
 def main():
     load.app_init()
+    analytics.collect_analytics("page_change", "stats")
 
     import SuperSTATs.styles as style
 

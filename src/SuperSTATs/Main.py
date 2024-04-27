@@ -1,3 +1,4 @@
+import SuperSTATs.analytics as analytics
 import SuperSTATs.load as load
 import streamlit as st
 import pandas as pd
@@ -6,6 +7,7 @@ import datetime
 
 def main():
     load.app_init()
+    analytics.collect_analytics("page_change", "main")
 
     import SuperSTATs.styles as style
 
