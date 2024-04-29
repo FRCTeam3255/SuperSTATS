@@ -195,8 +195,6 @@ def main():
             if st.button("Update Analytics", type="primary", use_container_width=True):
                 st.session_state.analytics = updated_analytics
 
-    st.write(st.session_state.analytics)
-
 
 if __name__ == "__main__":
     main()

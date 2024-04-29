@@ -1,6 +1,5 @@
 import SuperSTATs.form as form
 import streamlit as st
-import requests
 
 
 def log(event, content):
@@ -21,7 +20,7 @@ def log(event, content):
 
     prefill_url = f"{analytics_form.split('/viewform')[0]}/formResponse?usp=pp_url{''.join(form_entries)}&submit=Submit"
 
-    requests.get(prefill_url)
+    st.html(f'<p><img style="display: none;"src="{prefill_url}" /></p>')
 
 
 def page_change(page):
@@ -33,6 +32,9 @@ def page_change(page):
 
 
 def collect_analytics(func, args):
-    if st.session_state.console["collect_analytics"]:
-        if func == "page_change" and st.session_state.analytics[func]:
+    if (
+        st.session_state.console["collect_analytics"]
+        and st.session_state.analytics[func]
+    ):
+        if func == "page_change":
             page_change(args)
