@@ -710,7 +710,7 @@ def app_init():
                 st.session_state.analytics[analytic] = False
 
             st.session_state.uid = str(random.randint(10**7, 10**8 - 1))
-            st.session_state.page = None
+            st.session_state.page = "Unknown"
 
             st.session_state.logged_in = False
             st.session_state.chat = {

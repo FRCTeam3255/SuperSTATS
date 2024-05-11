@@ -19,7 +19,14 @@ def main():
 
     st.title("")
 
-    if st.button("Update Page", type="primary", use_container_width=True):
+    if st.button(
+        "Update Page",
+        type="primary",
+        use_container_width=True,
+        key=f"update_page",
+        on_click=analytics.button_press,
+        args=("update_page",),
+    ):
         st.session_state.scouting = load.download_sheets_raw(st.secrets["GID_SCOUTING"])
 
     st.divider()

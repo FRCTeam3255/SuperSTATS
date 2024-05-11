@@ -42,7 +42,14 @@ def main():
 
     st.title("")
 
-    if st.button("Update Page", type="primary", use_container_width=True):
+    if st.button(
+        "Update Page",
+        type="primary",
+        use_container_width=True,
+        key=f"update_page",
+        on_click=analytics.button_press,
+        args=("update_page",),
+    ):
         st.session_state.df = load.organize_df(
             load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
         )
@@ -106,7 +113,14 @@ def main():
 
         prefill_url = f"{st.secrets['STATS_FORM'].split('/viewform')[0]}/formResponse?usp=pp_url{''.join(form_entries)}&submit=Submit"
 
-        if st.button("Submit", type="primary", use_container_width=True):
+        if st.button(
+            "Submit",
+            type="primary",
+            use_container_width=True,
+            key=f"submit_data",
+            on_click=analytics.button_press,
+            args=("submit_data",),
+        ):
             requests.get(prefill_url)
             st.balloons()
 

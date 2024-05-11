@@ -1,3 +1,4 @@
+import SuperSTATs.analytics as analytics
 import matplotlib.pyplot as plt
 import SuperSTATs.load as load
 import streamlit as st
@@ -952,7 +953,13 @@ def gen_bar(
                 else:
                     st.toast("Preset name already exists!", icon="⚠️")
 
-        if st.button("Generate JSON", use_container_width=True):
+        if st.button(
+            "Generate JSON",
+            use_container_width=True,
+            key=f"gen_json",
+            on_click=analytics.button_press,
+            args=("gen_json",),
+        ):
             if preset_choice != "None":
                 preset_data = preset
             st.code(

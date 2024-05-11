@@ -31,6 +31,10 @@ def page_change(page):
         log("Page Updated", None)
 
 
+def button_press(key):
+    log("Button Pressed", key)
+
+
 def collect_analytics(func, args):
     if (
         st.session_state.console["collect_analytics"]

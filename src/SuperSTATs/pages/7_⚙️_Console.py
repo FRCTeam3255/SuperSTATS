@@ -19,7 +19,14 @@ def main():
 
     st.title("")
 
-    st.button("Update Page", type="primary", use_container_width=True)
+    st.button(
+        "Update Page",
+        type="primary",
+        use_container_width=True,
+        key=f"update_page",
+        on_click=analytics.button_press,
+        args=("update_page",),
+    )
     st.divider()
 
     with st.expander("Config"):
@@ -38,7 +45,14 @@ def main():
 
         st.divider()
 
-        if st.button("Update Configs", type="primary", use_container_width=True):
+        if st.button(
+            "Update Configs",
+            type="primary",
+            use_container_width=True,
+            key=f"submit_data",
+            on_click=analytics.button_press,
+            args=("submit_data",),
+        ):
             st.session_state.configs["Console"] = settings_raw
             st.session_state.console = updated_configs
 
@@ -71,7 +85,14 @@ def main():
 
         st.divider()
 
-        if st.button("Set Scouters", type="primary", use_container_width=True):
+        if st.button(
+            "Set Scouters",
+            type="primary",
+            use_container_width=True,
+            key=f"submit_data",
+            on_click=analytics.button_press,
+            args=("submit_data",),
+        ):
             st.session_state.assigned = scout_list
 
             with open("src\\pickles\\scouts.pickle", "wb") as f:
@@ -85,7 +106,14 @@ def main():
         if uploaded_file is not None:
             st.divider()
 
-            if st.button("Set Presets", type="primary", use_container_width=True):
+            if st.button(
+                "Set Presets",
+                type="primary",
+                use_container_width=True,
+                key=f"submit_data",
+                on_click=analytics.button_press,
+                args=("submit_data",),
+            ):
                 bytes_data = uploaded_file.getvalue()
                 bytes_formatted = bytes_data.decode("utf-8")
                 data = json.loads(bytes_formatted)
@@ -129,7 +157,12 @@ def main():
                 st.divider()
 
                 if st.button(
-                    "Delete Selected", type="primary", use_container_width=True
+                    "Delete Selected",
+                    type="primary",
+                    use_container_width=True,
+                    key=f"submit_data",
+                    on_click=analytics.button_press,
+                    args=("submit_data",),
                 ):
                     for preset in deleted_presets:
                         presets.pop(preset)
@@ -153,7 +186,14 @@ def main():
         if uploaded_file is not None:
             st.divider()
 
-            if st.button("Set Colors", type="primary", use_container_width=True):
+            if st.button(
+                "Set Colors",
+                type="primary",
+                use_container_width=True,
+                key=f"submit_data",
+                on_click=analytics.button_press,
+                args=("submit_data",),
+            ):
                 bytes_data = uploaded_file.getvalue()
                 bytes_formatted = bytes_data.decode("utf-8")
                 data = json.loads(bytes_formatted)
@@ -192,7 +232,14 @@ def main():
                     st.session_state.analytics[analytic],
                 )
 
-            if st.button("Update Analytics", type="primary", use_container_width=True):
+            if st.button(
+                "Update Analytics",
+                type="primary",
+                use_container_width=True,
+                key=f"submit_data",
+                on_click=analytics.button_press,
+                args=("submit_data",),
+            ):
                 st.session_state.analytics = updated_analytics
 
 

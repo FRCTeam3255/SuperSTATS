@@ -189,7 +189,14 @@ def main():
     )
     st.title("")
 
-    if st.button("Update Page", type="primary", use_container_width=True):
+    if st.button(
+        "Update Page",
+        type="primary",
+        use_container_width=True,
+        key=f"update_page",
+        on_click=analytics.button_press,
+        args=("update_page",),
+    ):
         st.session_state.df = load.organize_df(
             load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
         )
