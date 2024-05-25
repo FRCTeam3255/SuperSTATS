@@ -49,9 +49,9 @@ def main():
             "Update Configs",
             type="primary",
             use_container_width=True,
-            key=f"submit_data",
+            key=f"update_configs",
             on_click=analytics.button_press,
-            args=("submit_data",),
+            args=("update_configs",),
         ):
             st.session_state.configs["Console"] = settings_raw
             st.session_state.console = updated_configs
@@ -89,9 +89,9 @@ def main():
             "Set Scouters",
             type="primary",
             use_container_width=True,
-            key=f"submit_data",
+            key=f"set_scouters",
             on_click=analytics.button_press,
-            args=("submit_data",),
+            args=("set_scouters",),
         ):
             st.session_state.assigned = scout_list
 
@@ -110,9 +110,9 @@ def main():
                 "Set Presets",
                 type="primary",
                 use_container_width=True,
-                key=f"submit_data",
+                key=f"set_presets",
                 on_click=analytics.button_press,
-                args=("submit_data",),
+                args=("set_presets",),
             ):
                 bytes_data = uploaded_file.getvalue()
                 bytes_formatted = bytes_data.decode("utf-8")
@@ -160,9 +160,9 @@ def main():
                     "Delete Selected",
                     type="primary",
                     use_container_width=True,
-                    key=f"submit_data",
+                    key=f"delete_selected",
                     on_click=analytics.button_press,
-                    args=("submit_data",),
+                    args=("delete_selected",),
                 ):
                     for preset in deleted_presets:
                         presets.pop(preset)
@@ -190,9 +190,9 @@ def main():
                 "Set Colors",
                 type="primary",
                 use_container_width=True,
-                key=f"submit_data",
+                key=f"set_colors",
                 on_click=analytics.button_press,
-                args=("submit_data",),
+                args=("set_colors",),
             ):
                 bytes_data = uploaded_file.getvalue()
                 bytes_formatted = bytes_data.decode("utf-8")
@@ -236,9 +236,9 @@ def main():
                 "Update Analytics",
                 type="primary",
                 use_container_width=True,
-                key=f"submit_data",
+                key=f"update_analytics",
                 on_click=analytics.button_press,
-                args=("submit_data",),
+                args=("update_analytics",),
             ):
                 st.session_state.analytics = updated_analytics
 
