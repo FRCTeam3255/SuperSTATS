@@ -873,8 +873,16 @@ def gen_bar(
         lambda team: format_y(team, show_available, picked)
     )
 
+    if displayed_teams:
+        chart_height = 60 * len(displayed_teams)
+    else:
+        chart_height = 30 * len(ranked_data["Team"].unique())
+
     chart = (
-        alt.Chart(ranked_data, height=30 * len(ranked_data["Team"].unique()))
+        alt.Chart(
+            ranked_data,
+            height=chart_height,
+        )
         .mark_bar()
         .encode(
             x=alt.X("value:Q", title=" ", scale=alt.Scale(domain=[x_min, x_max])),
