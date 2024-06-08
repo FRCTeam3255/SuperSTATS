@@ -874,7 +874,7 @@ def gen_bar(
     )
 
     chart = (
-        alt.Chart(ranked_data)
+        alt.Chart(ranked_data, height=30 * len(ranked_data["Team"].unique()))
         .mark_bar()
         .encode(
             x=alt.X("value:Q", title=" ", scale=alt.Scale(domain=[x_min, x_max])),
