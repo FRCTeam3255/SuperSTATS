@@ -401,8 +401,7 @@ def gen_match_comp(df, team_num, match_name, not_preview=True):
         .configure_axis(labelAngle=0)
     )
 
-    with alt_size[0].container():
-        st.altair_chart(chart, use_container_width=True)
+    st.altair_chart(chart, use_container_width=True)
 
     if not_preview:
         try:
