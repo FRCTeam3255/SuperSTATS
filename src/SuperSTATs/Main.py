@@ -35,38 +35,43 @@ def main():
         team = columns[0].selectbox("Team Selection:", [show_all] + teams)
 
         try:
-            matches = pd.merge(
-                matches,
-                st.session_state.match_data[["Match Name", "score_breakdown"]],
-                left_on="Match",
-                right_on="Match Name",
-                how="left",
-            )
-            for match_name in matches["Match"]:
-                data = matches[matches["Match"] == match_name][
-                    "score_breakdown"
-                ].to_list()[0]
+            if st.secrets["DEFAULT_EVENT_KEY"] == "NoTBA":
+                matches = st.session_state.matches
+            else:
+                matches = pd.merge(
+                    matches,
+                    st.session_state.match_data[["Match Name", "score_breakdown"]],
+                    left_on="Match",
+                    right_on="Match Name",
+                    how="left",
+                )
+                for match_name in matches["Match"]:
+                    data = matches[matches["Match"] == match_name][
+                        "score_breakdown"
+                    ].to_list()[0]
 
-                try:
-                    red_data = str(data["red"]["totalPoints"]).ljust(3)
-                    blue_data = str(data["blue"]["totalPoints"]).ljust(3)
+                    try:
+                        red_data = str(data["red"]["totalPoints"]).ljust(3)
+                        blue_data = str(data["blue"]["totalPoints"]).ljust(3)
 
-                    if int(red_data) > int(blue_data):
-                        red_data = f"🔴 {red_data} 🏆"
-                        blue_data = f"🔵 {blue_data}"
-                    elif int(red_data) < int(blue_data):
-                        red_data = f"🔴 {red_data}"
-                        blue_data = f"🔵 {blue_data} 🏆"
-                    else:
-                        red_data = f"🔴 {red_data}"
-                        blue_data = f"🔵 {blue_data}"
-                except:
-                    red_data = blue_data = "🕑 N/A"
+                        if int(red_data) > int(blue_data):
+                            red_data = f"🔴 {red_data} 🏆"
+                            blue_data = f"🔵 {blue_data}"
+                        elif int(red_data) < int(blue_data):
+                            red_data = f"🔴 {red_data}"
+                            blue_data = f"🔵 {blue_data} 🏆"
+                        else:
+                            red_data = f"🔴 {red_data}"
+                            blue_data = f"🔵 {blue_data}"
+                    except:
+                        red_data = blue_data = "🕑 N/A"
 
-                matches.loc[matches["Match"] == match_name, "Red Score"] = red_data
-                matches.loc[matches["Match"] == match_name, "Blue Score"] = blue_data
+                    matches.loc[matches["Match"] == match_name, "Red Score"] = red_data
+                    matches.loc[matches["Match"] == match_name, "Blue Score"] = (
+                        blue_data
+                    )
 
-            matches = matches.drop(columns=["Match Name", "score_breakdown"])
+                matches = matches.drop(columns=["Match Name", "score_breakdown"])
 
             if team != show_all:
                 team = int(str(team).split(" | ")[0])

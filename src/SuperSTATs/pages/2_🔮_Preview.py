@@ -79,15 +79,19 @@ def display_team(
     if match_choice == "Custom":
         pass
     else:
-        match_breakdown = match_df["score_breakdown"].to_list()[0]
-
         try:
-            actual_score = match_breakdown[team_header[1].lower()]["totalPoints"]
+            match_breakdown = match_df["score_breakdown"].to_list()[0]
+
+            try:
+                actual_score = match_breakdown[team_header[1].lower()]["totalPoints"]
+            except:
+                actual_score = -1
+
+            match_key = match_df["key"].to_list()[0]
+            match_url = f"https://www.thebluealliance.com/match/{match_key}"
         except:
             actual_score = -1
-
-        match_key = match_df["key"].to_list()[0]
-        match_url = f"https://www.thebluealliance.com/match/{match_key}"
+            match_url = None
 
         percent_error = (
             round((actual_score - projected_score) / actual_score * 100)
@@ -95,10 +99,11 @@ def display_team(
             else "inf"
         )
 
-        column.markdown(
-            f"<h6><a href='{match_url}' style='color: #808080; text-decoration: none;'>Actual Score: {'Unplayed' if actual_score == -1 else actual_score} {'' if actual_score == -1 else f'({percent_error}%)'}</a></h6>",
-            unsafe_allow_html=True,
-        )
+        if match_url:
+            column.markdown(
+                f"<h6><a href='{match_url}' style='color: #808080; text-decoration: none;'>Actual Score: {'Unplayed' if actual_score == -1 else actual_score} {'' if actual_score == -1 else f'({percent_error}%)'}</a></h6>",
+                unsafe_allow_html=True,
+            )
 
     df_raw = st.session_state.df
     alliance_pieces = 0
@@ -311,10 +316,12 @@ def main():
                 match_df = st.session_state.match_data
                 match_df = match_df.loc[match_df["Match Name"] == match]
 
-                match_breakdown = match_df["score_breakdown"].to_list()[0]
-
                 try:
-                    actual_score = match_breakdown[alliance.lower()]["totalPoints"]
+                    match_breakdown = match_df["score_breakdown"].to_list()[0]
+                    try:
+                        actual_score = match_breakdown[alliance.lower()]["totalPoints"]
+                    except:
+                        actual_score = -1
                 except:
                     actual_score = -1
 

@@ -105,6 +105,9 @@ def organize_df(df):
     all_non_prac_list = []
     all_prac_list = []
 
+    if st.secrets["DEFAULT_EVENT_KEY"] == "NoTBA":
+        return df
+
     for team in df["Team"].unique():
         team_df = df[df["Team"] == team]
 
@@ -186,13 +189,16 @@ def get_tba_ranks():
     Returns:
         dict: A dictionary containing team rankings, where the keys are team numbers (without the "frc" prefix) and the values are the corresponding ranks.
     """
-    event_rankings = tba.event_rankings(st.secrets["DEFAULT_EVENT_KEY"])["rankings"]
-    tba_ranks = {}
+    try:
+        event_rankings = tba.event_rankings(st.secrets["DEFAULT_EVENT_KEY"])["rankings"]
+        tba_ranks = {}
 
-    for team in event_rankings:
-        tba_ranks[team["team_key"].split("frc")[1]] = team["rank"]
+        for team in event_rankings:
+            tba_ranks[team["team_key"].split("frc")[1]] = team["rank"]
 
-    return tba_ranks
+        return tba_ranks
+    except:
+        return {}
 
 
 @st.cache_data(show_spinner=False, persist=True)
@@ -205,7 +211,19 @@ def get_team_info():
               and the values are team nicknames. If the nickname is not available, the
               value will be set to "Unknown Team".
     """
-    tba_teams = tba.event_teams(st.secrets["DEFAULT_EVENT_KEY"])
+
+    if st.secrets["DEFAULT_EVENT_KEY"] == "NoTBA":
+        matches = download_sheets_raw(st.secrets["GID_MATCHES"])
+        custom_teams = matches.loc[:, ~matches.columns.isin(["Match"])]
+        unique_teams = [custom_teams[col].unique().tolist() for col in custom_teams]
+        team_list = [team for sublist in unique_teams for team in sublist]
+
+        tba_teams = []
+        for team in team_list:
+            tba_teams.append(tba.team(f"frc{team}"))
+    else:
+        tba_teams = tba.event_teams(st.secrets["DEFAULT_EVENT_KEY"])
+
     team_info = {
         team["team_number"]: tba.team(team["team_number"]).get(
             "nickname", "Unknown Team"
@@ -287,7 +305,10 @@ def get_match_data():
     Returns:
         pandas.DataFrame: A DataFrame containing the match data.
     """
-    df = pd.DataFrame(tba.event_matches(st.secrets["DEFAULT_EVENT_KEY"]))
+    try:
+        df = pd.DataFrame(tba.event_matches(st.secrets["DEFAULT_EVENT_KEY"]))
+    except:
+        df = pd.DataFrame()
 
     if not df.empty:
         df = pd.concat([df, pd.json_normalize(df["alliances"])], axis=1).drop(
@@ -405,41 +426,46 @@ def get_unplayed(df, matches):
         list: A list of unplayed matches.
 
     """
-    df["Completed"] = df["Match Type"] + " " + df["Match"].astype(int).astype(str)
-    df_counts = df["Completed"].value_counts()
+    try:
+        df["Completed"] = df["Match Type"] + " " + df["Match"].astype(int).astype(str)
+        df_counts = df["Completed"].value_counts()
 
-    df["Completed"] = df["Completed"].apply(lambda x: x if df_counts[x] >= 3 else None)
+        df["Completed"] = df["Completed"].apply(
+            lambda x: x if df_counts[x] >= 3 else None
+        )
 
-    tba_played_matches = []
+        tba_played_matches = []
 
-    for _, row in st.session_state.match_data.iterrows():
-        try:
-            if row["red.score"] != -1 and row["blue.score"] != -1:
-                tba_played_matches.append(row["Match Name"])
-        except:
-            pass
+        for _, row in st.session_state.match_data.iterrows():
+            try:
+                if row["red.score"] != -1 and row["blue.score"] != -1:
+                    tba_played_matches.append(row["Match Name"])
+            except:
+                pass
 
-    df_unique = df["Completed"].dropna().unique()
-    matches_unique = matches["Match"].unique()
+        df_unique = df["Completed"].dropna().unique()
+        matches_unique = matches["Match"].unique()
 
-    unplayed_matches = pd.concat(
-        [pd.DataFrame(df_unique), pd.DataFrame(matches_unique)]
-    ).drop_duplicates(keep=False)
+        unplayed_matches = pd.concat(
+            [pd.DataFrame(df_unique), pd.DataFrame(matches_unique)]
+        ).drop_duplicates(keep=False)
 
-    unplayed_matches = [
-        match for sublist in unplayed_matches.values.tolist() for match in sublist
-    ]
+        unplayed_matches = [
+            match for sublist in unplayed_matches.values.tolist() for match in sublist
+        ]
 
-    unplayed_copy = unplayed_matches.copy()
+        unplayed_copy = unplayed_matches.copy()
 
-    if st.session_state.console["tba_unplayed"]:
-        for match in unplayed_copy:
-            if match in tba_played_matches:
-                unplayed_matches.remove(match)
+        if st.session_state.console["tba_unplayed"]:
+            for match in unplayed_copy:
+                if match in tba_played_matches:
+                    unplayed_matches.remove(match)
 
-    unplayed_matches = [
-        match for match in unplayed_matches if not match.startswith("Prac")
-    ]
+        unplayed_matches = [
+            match for match in unplayed_matches if not match.startswith("Prac")
+        ]
+    except:
+        unplayed_matches = []
 
     return unplayed_matches
 
