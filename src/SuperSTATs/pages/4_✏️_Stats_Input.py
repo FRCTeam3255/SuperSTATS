@@ -339,6 +339,8 @@ def main():
                     return f"https://i.imgur.com/{item['foreign_key']}.jpg"
         return None
 
+    # TODO: Show when photo was last updated
+
     robot_photo_url = get_robot_photo(input_team)
     if robot_photo_url:
         st.markdown(
@@ -442,7 +444,7 @@ def main():
 
     st.divider()
 
-    with st.form("Stats Input", clear_on_submit=False, border=False):
+    with st.form("Stats Input", clear_on_submit=True, border=False):
         with st.expander("Autonomous", True):
             phase_header("Autonomous")
             gen_phase_input("AUTO")
