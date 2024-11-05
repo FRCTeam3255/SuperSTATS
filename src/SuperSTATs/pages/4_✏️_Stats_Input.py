@@ -341,7 +341,15 @@ def main():
 
     robot_photo_url = get_robot_photo(input_team)
     if robot_photo_url:
-        st.image(robot_photo_url, caption=f"Team {input_team} Robot", use_column_width=True)
+        st.markdown(
+            f"""
+            <div style="border: 5px solid #D3D3D3; padding: 5px; display: inline-block;">
+                <img src="{robot_photo_url}" alt="Team {input_team} Robot" style="width: 100%;">
+                <div style="text-align: center;">Team {input_team} Robot</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
     else:
         st.warning("No robot photo available.")
 

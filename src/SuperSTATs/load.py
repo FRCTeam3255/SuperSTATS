@@ -589,7 +589,27 @@ def app_init():
         "Downloading more RAM...",
         "Exploding Falcons... 💥",
         "Crackin' Krackens... 🦑",
+        "Rebooting the matrix...",
+        "Synchronizing watches...",
+        "Summoning the data gods...",
+        "Counting to infinity...",
+        "Polishing the code...",
+        "Tuning the algorithms...",
+        "Untangling the wires...",
+        "Deleting system32...",
+        "Consulting the magic 8-ball...",
+        "Asking the rubber duck for advice...",
+        "Attempting to divide by zero...",
+        "Turning it off and on again...",
+        "Searching for the lost semicolon...",
+        "Finding Waldo...",
+        "Counting grains of sand on a beach...",
+        "Measuring the speed of dark...",
+        "Debugging the debugger...",
+        "Generating Susan lore...",
+        "Sorting the bits and bytes",
     ]
+
 
     ascii_SN = [
         "     yyyyyyyyyyyyyyyyyyyyyyyyyy     ",
