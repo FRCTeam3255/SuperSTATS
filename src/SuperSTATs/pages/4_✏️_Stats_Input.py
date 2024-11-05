@@ -313,6 +313,38 @@ def main():
         unsafe_allow_html=True,
     )
 
+    st.divider()
+
+    def get_robot_photo(team_number):
+        """
+        Fetch the robot photo for a given team from The Blue Alliance API.
+
+        Parameters:
+        - team_number (int): The team number.
+
+        Returns:
+        - str: The URL of the robot photo.
+        """
+        tba_api_key = st.secrets["TBA_API"]
+        competition_year = st.secrets["COMPETITION_YEAR"]
+
+        headers = {"X-TBA-Auth-Key": tba_api_key}
+        url = f"https://www.thebluealliance.com/api/v3/team/frc{team_number}/media/{competition_year}"
+
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            media = response.json()
+            for item in media:
+                if item["type"] == "imgur":
+                    return f"https://i.imgur.com/{item['foreign_key']}.jpg"
+        return None
+
+    robot_photo_url = get_robot_photo(input_team)
+    if robot_photo_url:
+        st.image(robot_photo_url, caption=f"Team {input_team} Robot", use_column_width=True)
+    else:
+        st.warning("No robot photo available.")
+
     set_inputs = [
         input_name,
         input_match,
@@ -407,11 +439,11 @@ def main():
             phase_header("Autonomous")
             gen_phase_input("AUTO")
 
-        with st.expander("Teleop", False):
+        with st.expander("Teleop", True):
             phase_header("Teleop")
             gen_phase_input("TELE")
 
-        with st.expander("Endgame", False):
+        with st.expander("Endgame", True):
             phase_header("Endgame")
             gen_phase_input("END")
 
