@@ -7,6 +7,25 @@ import requests
 import datetime
 import qrcode
 import io
+import random
+
+
+def get_event_year(event_key):
+    """
+    Extracts the year from the event key.
+
+    Args:
+        event_key (str): The event key.
+
+    Returns:
+        int: The year of the event.
+    """
+    try:
+        year = int(event_key[:4])
+        return year
+    except ValueError:
+        st.error("Invalid event key format")
+        return None
 
 
 def get_match_scouts(team):
@@ -76,6 +95,9 @@ def main():
 
     st.markdown(style.shimmer("#ffc1ad"), unsafe_allow_html=True)
     st.markdown("<div class='shimmer'>✏️ Stats Input ✏️</div>", unsafe_allow_html=True)
+
+    if random.random() < 0.1:  # 10% chance
+        st.markdown("<div style='text-align: center; font-size: small; color: #808080;'>Susan was here😸</div>", unsafe_allow_html=True)
 
     st.title("")
 
@@ -326,7 +348,7 @@ def main():
         - str: The URL of the robot photo.
         """
         tba_api_key = st.secrets["TBA_API"]
-        competition_year = st.secrets["COMPETITION_YEAR"]
+        competition_year = get_event_year(st.secrets["DEFAULT_EVENT_KEY"])
 
         headers = {"X-TBA-Auth-Key": tba_api_key}
         url = f"https://www.thebluealliance.com/api/v3/team/frc{team_number}/media/{competition_year}"
