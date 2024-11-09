@@ -1,3 +1,4 @@
+import streamlit.components.v1 as components
 import SuperSTATs.analytics as analytics
 import SuperSTATs.load as load
 import SuperSTATs.form as form
@@ -363,19 +364,20 @@ def main():
 
     # TODO: Show when photo was last updated
 
-    robot_photo_url = get_robot_photo(input_team)
-    if robot_photo_url:
-        st.markdown(
-            f"""
-            <div style="border: 5px solid #D3D3D3; padding: 5px; display: inline-block;">
-                <img src="{robot_photo_url}" alt="Team {input_team} Robot" style="width: 100%;">
-                <div style="text-align: center;">Team {input_team} Robot</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-    else:
-        st.warning("No robot photo available.")
+    with st.expander("Robot Image", False):
+        robot_photo_url = get_robot_photo(input_team)
+        if robot_photo_url:
+            st.markdown(
+                f"""
+                <div style="border: 5px solid #D3D3D3; padding: 5px; display: inline-block;">
+                    <img src="{robot_photo_url}" alt="Team {input_team} Robot" style="width: 100%;">
+                    <div style="text-align: center;">Team {input_team} Robot</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        else:
+            st.warning("No robot photo available.")
 
     set_inputs = [
         input_name,
@@ -464,12 +466,13 @@ def main():
 
     submitted = False
 
-    st.divider()
-
     with st.form("Stats Input", clear_on_submit=True, border=False):
         with st.expander("Autonomous", True):
             phase_header("Autonomous")
             gen_phase_input("AUTO")
+
+            # st.image("src/SuperSTATs/images/blue_field.JPEG", use_column_width=True)
+
 
         with st.expander("Teleop", True):
             phase_header("Teleop")
