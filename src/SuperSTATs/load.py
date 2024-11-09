@@ -608,7 +608,9 @@ def app_init():
         "Debugging the debugger...",
         "Generating Susan lore...",
         "Sorting the bits and bytes",
-        "Calculating PI..."
+        "Calculating PI...",
+        "Ducktaping notes...",
+        "burying the "
     ]
 
 
