@@ -31,6 +31,18 @@ def main():
 
     st.divider()
 
+    # Add css to increase button width
+    st.markdown(
+        """
+        <style>
+        .st-emotion-cache-nnubno {
+            width: 100px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
     entries = st.session_state.forms["SCOUTING_FORM"]["set"]
 
     df = st.session_state.scouting
