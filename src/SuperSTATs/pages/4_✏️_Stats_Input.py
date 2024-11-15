@@ -384,9 +384,23 @@ def main():
 
             feature_list = st.session_state.configs["Features"]
 
+            # TODO: Add bigger buttons for number input
             if entry_parts[2] == "INT":
+
                 entry_responses[entry] = st.number_input(
                     (f"{entry_name}:"), min_value=0, step=1, key=entry
+                )
+                
+                # Add css to make text bigger and increase button width
+                st.markdown(
+                    """
+                    <style>
+                    .st-emotion-cache-nnubno {
+                        width: 100px;
+                    }
+                    </style>
+                    """,
+                    unsafe_allow_html=True,
                 )
 
             elif entry_parts[2] == "STR":
