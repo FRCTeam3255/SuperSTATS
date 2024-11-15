@@ -610,7 +610,7 @@ def app_init():
         "Sorting the bits and bytes",
         "Calculating PI...",
         "Ducktaping notes...",
-        "burying the "
+        "Overclocking the power supply...",
     ]
 
 
