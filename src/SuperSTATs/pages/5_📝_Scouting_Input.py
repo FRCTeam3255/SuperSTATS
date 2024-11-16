@@ -38,6 +38,9 @@ def main():
         .st-emotion-cache-nnubno {
             width: 100px;
         }
+        svg {
+            transform: scale(2);
+        }
         </style>
         """,
         unsafe_allow_html=True,
