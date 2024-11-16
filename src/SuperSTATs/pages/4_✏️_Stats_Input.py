@@ -388,6 +388,21 @@ def main():
                 entry_responses[entry] = st.number_input(
                     (f"{entry_name}:"), min_value=0, step=1, key=entry
                 )
+                
+                # Add css to increase button width
+                st.markdown(
+                    """
+                    <style>
+                    .st-emotion-cache-nnubno {
+                        width: 100px;
+                    }
+                    svg {
+                        transform: scale(2);
+                        }
+                    </style>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
             elif entry_parts[2] == "STR":
                 selected_options = st.multiselect(
