@@ -338,30 +338,16 @@ def main():
 
     st.divider()
 
-    # TODO: Show when photo was last updated
-
     with st.expander("Robot Image", False):
         team_key = f"frc{input_team}"
         competition_year = get_event_year(st.secrets["DEFAULT_EVENT_KEY"])
-        url = f"https://www.thebluealliance.com/api/v3/team/{team_key}/media/{competition_year}"
-        
-        headers = {"X-TBA-Auth-Key": st.secrets["TBA_API"]}
-        response = requests.get(url, headers=headers)
-        
-        if response.status_code == 200:
-            media = response.json()
-            robot_photo_url = None
-            for item in media:
-                if item["type"] == "imgur":
-                    robot_photo_url = f"https://i.imgur.com/{item['foreign_key']}.jpg"
-                    break
 
-            if robot_photo_url:
-                st.image(robot_photo_url, caption=f"Team {input_team} Robot", use_column_width=True)
-            else:
-                st.warning("No robot photo available.")
-        else:
-            st.error("Failed to fetch robot photo.")
+        try:
+            robot_photo_url = load.tba.team_media(input_team, competition_year)[1]['direct_url']
+            
+            st.image(robot_photo_url, caption=f"Team {input_team} Robot", use_column_width=True)
+        except:
+            st.warning("No robot photo available.")
             
     set_inputs = [
         input_name,
