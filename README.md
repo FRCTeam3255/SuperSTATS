@@ -55,10 +55,15 @@ streamlit run src/SuperSTATs/Main.py
 ```
 
 <span style="font-size: 1.2em;">All set! Head to http://localhost:8501 to access the app, or the URL provided when launching.</span>
-
 ## Usage
 
-N/A
+<span style="font-size: 1.2em;">To use SuperSTATs, follow these steps:</span>
+
+1. Ensure you have completed the setup steps mentioned above.
+2. Start the application using the provided script or manually with Streamlit.
+3. Open your web browser and navigate to `http://localhost:8501` or the URL provided by Streamlit.
+4. Use the interface to upload your data files and configure the analysis parameters.
+5. View the generated statistics and visualizations directly in the app.
 
 ## Get Involved
 
@@ -95,6 +100,8 @@ N/A
 - [Kane Barnes](https://github.com/FRCTeam3255/SuperSTATS/commits/package-conversion/?author=KaneBarnes) - [3255](https://github.com/FRCTeam3255)
 
 - [Tayler Uva](https://github.com/FRCTeam3255/SuperSTATS/commits/package-conversion/?author=TaylerUva) - [3255](https://github.com/FRCTeam3255)
+
+- [Evan Grinnell](https://github.com/FRCTeam3255/SuperSTATS/commits/package-conversion/?author=EvanGrinnell) - [3255](https://github.com/FRCTeam3255)
 
 ## License
 

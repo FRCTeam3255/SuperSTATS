@@ -19,25 +19,23 @@ def get_entries(url):
     html = BeautifulSoup(response.content, "html.parser")
 
     found = "FB_PUBLIC_LOAD_DATA_ ="
-
-    split_html = str(html).split(found)[1]
-    split_html = str(split_html).split("]],[")
-
+    split_html = str(html).split(found)[1].split("]],[")
+    
     first_val = split_html[0].split("[[")[2].split(",")[0]
-
     split_html.insert(
         0,
         (split_html[0].split("[[")[1].split(",null,")[0])
-        + f",null,0,[[{first_val},null,1]],null,",
+        + f",null,0,[[{first_val},null,1]],null,"
     )
     split_html = [line for line in split_html if line[0].isdigit()]
 
     entries_dict = {}
-
     for html in split_html:
         if "]],null," in html:
             num_raw = html.split("[[")[1]
-            entries_dict[html.split('"')[1]] = num_raw.split(",")[0]
+            entry_name = html.split('"')[1]
+            entry_id = num_raw.split(",")[0]
+            entries_dict[entry_name] = entry_id
 
     gen_entries = {
         name: id

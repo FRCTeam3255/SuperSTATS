@@ -1,3 +1,4 @@
+import streamlit.components.v1 as components
 import SuperSTATs.analytics as analytics
 import SuperSTATs.load as load
 import SuperSTATs.form as form
@@ -7,6 +8,25 @@ import requests
 import datetime
 import qrcode
 import io
+import random
+
+
+def get_event_year(event_key):
+    """
+    Extracts the year from the event key.
+
+    Args:
+        event_key (str): The event key.
+
+    Returns:
+        int: The year of the event.
+    """
+    try:
+        year = int(event_key[:4])
+        return year
+    except ValueError:
+        st.error("Invalid event key format")
+        return None
 
 
 def get_match_scouts(team):
@@ -76,6 +96,9 @@ def main():
 
     st.markdown(style.shimmer("#ffc1ad"), unsafe_allow_html=True)
     st.markdown("<div class='shimmer'>✏️ Stats Input ✏️</div>", unsafe_allow_html=True)
+
+    if random.random() < 0.1:  # 10% chance
+        st.markdown("<div style='text-align: center; font-size: small; color: #808080;'>Susan was here😸</div>", unsafe_allow_html=True)
 
     st.title("")
 
@@ -313,6 +336,19 @@ def main():
         unsafe_allow_html=True,
     )
 
+    st.divider()
+
+    with st.expander("Robot Image", False):
+        team_key = f"frc{input_team}"
+        competition_year = get_event_year(st.secrets["DEFAULT_EVENT_KEY"])
+
+        try:
+            robot_photo_url = load.tba.team_media(input_team, competition_year)[1]['direct_url']
+            
+            st.image(robot_photo_url, caption=f"Team {input_team} Robot", use_column_width=True)
+        except:
+            st.warning("No robot photo available.")
+            
     set_inputs = [
         input_name,
         input_match,
@@ -415,18 +451,16 @@ def main():
 
     submitted = False
 
-    st.divider()
-
-    with st.form("Stats Input", clear_on_submit=False, border=False):
+    with st.form("Stats Input", clear_on_submit=True, border=False):
         with st.expander("Autonomous", True):
             phase_header("Autonomous")
             gen_phase_input("AUTO")
 
-        with st.expander("Teleop", False):
+        with st.expander("Teleop", True):
             phase_header("Teleop")
             gen_phase_input("TELE")
 
-        with st.expander("Endgame", False):
+        with st.expander("Endgame", True):
             phase_header("Endgame")
             gen_phase_input("END")
 
