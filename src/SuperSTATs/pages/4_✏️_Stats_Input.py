@@ -338,38 +338,30 @@ def main():
 
     st.divider()
 
-    def get_robot_photo(team_number):
-        """
-        Fetch the robot photo for a given team from The Blue Alliance API.
-
-        Parameters:
-        - team_number (int): The team number.
-
-        Returns:
-        - str: The URL of the robot photo.
-        """
-        tba_api_key = st.secrets["TBA_API"]
-        competition_year = get_event_year(st.secrets["DEFAULT_EVENT_KEY"])
-
-        headers = {"X-TBA-Auth-Key": tba_api_key}
-        url = f"https://www.thebluealliance.com/api/v3/team/frc{team_number}/media/{competition_year}"
-
-        response = requests.get(url, headers=headers)
-        if response.status_code == 200:
-            media = response.json()
-            for item in media:
-                if item["type"] == "imgur":
-                    return f"https://i.imgur.com/{item['foreign_key']}.jpg"
-        return None
-
     # TODO: Show when photo was last updated
 
     with st.expander("Robot Image", False):
-        robot_photo_url = get_robot_photo(input_team)
-        if robot_photo_url:
-            st.image(robot_photo_url, caption=f"Team {input_team} Robot", use_column_width=True)
+        team_key = f"frc{input_team}"
+        competition_year = get_event_year(st.secrets["DEFAULT_EVENT_KEY"])
+        url = f"https://www.thebluealliance.com/api/v3/team/{team_key}/media/{competition_year}"
+        
+        headers = {"X-TBA-Auth-Key": st.secrets["TBA_API"]}
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200:
+            media = response.json()
+            robot_photo_url = None
+            for item in media:
+                if item["type"] == "imgur":
+                    robot_photo_url = f"https://i.imgur.com/{item['foreign_key']}.jpg"
+                    break
+
+            if robot_photo_url:
+                st.image(robot_photo_url, caption=f"Team {input_team} Robot", use_column_width=True)
+            else:
+                st.warning("No robot photo available.")
         else:
-            st.warning("No robot photo available.")
+            st.error("Failed to fetch robot photo.")
             
     set_inputs = [
         input_name,
@@ -462,9 +454,6 @@ def main():
         with st.expander("Autonomous", True):
             phase_header("Autonomous")
             gen_phase_input("AUTO")
-
-            # st.image("src/SuperSTATs/images/blue_field.JPEG", use_column_width=True)
-
 
         with st.expander("Teleop", True):
             phase_header("Teleop")
