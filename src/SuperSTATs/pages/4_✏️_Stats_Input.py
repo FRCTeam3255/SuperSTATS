@@ -24,29 +24,28 @@ def get_match_scouts(team):
     scouts = {}
 
     processed = 0
-    count = 0
     i = 0
+    team_size = len(team)
+    active_scouts = team_size - 1  # Number of scouts active at any time
 
     while processed < len(match_list):
-        scout_1 = team[count]
-        scout_2 = team[count - 1]
-        scout_3 = team[count - 2]
+        for j in range(rotation):
+            scout_indices = [(i + k) % team_size for k in range(active_scouts)]
+            current_scouts = [team[index] for index in scout_indices]
 
-        if i % rotation == 0:
-            count += 1
-
-        if count == len(team):
-            count = 0
-
-        for match_type in ["Quals", "Playoffs", "Finals"]:
-            for j in range(rotation):
-                match_name = f"{match_type} {(i + 1) + j}"
+            for match_type in ["Quals", "Playoffs", "Finals"]:
+                match_name = f"{match_type} {processed + 1}"
 
                 if match_name in match_list:
-                    scouts[match_name] = [scout_1, scout_2, scout_3]
+                    scouts[match_name] = current_scouts
                     processed += 1
+                    if processed >= len(match_list):
+                        break
 
-        i += rotation
+            if processed >= len(match_list):
+                break
+
+        i += 1
 
     return scouts
 
