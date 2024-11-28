@@ -150,7 +150,10 @@ def organize_df(df):
     try:
         df = pd.concat([all_non_prac_df, all_prac_df], ignore_index=True)
     except:
-        df = all_non_prac_df
+        try:
+            df = all_non_prac_df
+        except:
+            df = all_prac_df
 
     return df
 
