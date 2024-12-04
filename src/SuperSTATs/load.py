@@ -88,18 +88,29 @@ def get_point_values():
 
 def organize_df(df):
     """
-    Organizes the given DataFrame by performing various operations such as filtering, sorting, and concatenating.
-
+    Organizes and processes a DataFrame containing match data.
+    This function performs the following steps:
+    1. Downloads raw data from Google Sheets using a specified GID.
+    2. Filters out rows with missing timestamps and sorts the DataFrame by match and timestamp.
+    3. Filters the DataFrame to include only rows with a specific event key.
+    4. Removes duplicate rows based on team, match type, and match.
+    5. Separates the data into practice and non-practice matches.
+    6. For teams with only practice matches, selects the match with the highest score.
+    7. Concatenates the processed practice and non-practice DataFrames.
+    8. If the resulting DataFrame is empty, creates a DataFrame with fake data.
     Args:
-        df (pandas.DataFrame): The DataFrame to be organized.
-
+        df (pd.DataFrame): The input DataFrame containing match data.
     Returns:
-        pandas.DataFrame: The organized DataFrame.
+        pd.DataFrame: The organized and processed DataFrame.
     """
+
     df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
     df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
     df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
     df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
+
+    all_prac_df = pd.DataFrame()
+    all_non_prac_df = pd.DataFrame()
 
     phases = ["AUTO", "TELE", "END"]
     all_non_prac_list = []
@@ -154,6 +165,34 @@ def organize_df(df):
             df = all_non_prac_df
         except:
             df = all_prac_df
+
+    if df.empty:
+        fake_data = {
+            "Timestamp": ["3/2/2024 15:10:54"],
+            "Name": ["Susan"],
+            "Match Type": ["Quals"],
+            "Match": ["1"],
+            "Team Color": ["B"],
+            "Team": ["0000"],
+            "Event Key": [st.secrets["DEFAULT_EVENT_KEY"]],
+            "COMMENT_GENERAL_STR_1": [""],
+            "INFO_DEFENSE_INT_1": [0],
+            "INFO_PENALTY_INT_-1": [0],
+            "INFO_NO SHOW_BOOL_-1": [False],
+            "INFO_BRICK RSL SOLID_BOOL_-1": [False],
+            "INFO_BRICK RSL BLINK/OFF_BOOL_-2": [False],
+            "AUTO_LEAVE_BOOL_2": [False],
+            "AUTO_AMP_INT_2": [0],
+            "AUTO_SPEAKER_INT_5": [0],
+            "TELE_AMP_INT_1": [0],
+            "TELE_SPEAKER_INT_2": [0],
+            "TELE_SHUFFLE_INT_1": [0],
+            "END_PARKED_BOOL_1": [False],
+            "END_ON STAGE_BOOL_3": [False],
+            "END_TRAP_INT_5": [0],
+            "END_HARMONY_INT_2": [0]
+        }
+        df = pd.DataFrame(fake_data)
 
     return df
 
