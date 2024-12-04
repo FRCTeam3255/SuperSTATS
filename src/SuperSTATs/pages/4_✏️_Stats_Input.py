@@ -338,15 +338,22 @@ def main():
 
     st.divider()
 
+    @st.cache_data
+    def get_robot_photo_url(team_key, competition_year):
+        try:
+            return load.tba.team_media(team_key, competition_year)[1]['direct_url']
+        except:
+            return None
+
     with st.expander("Robot Image", False):
         team_key = f"frc{input_team}"
         competition_year = get_event_year(st.secrets["DEFAULT_EVENT_KEY"])
 
-        try:
-            robot_photo_url = load.tba.team_media(input_team, competition_year)[1]['direct_url']
-            
+        robot_photo_url = get_robot_photo_url(team_key, competition_year)
+
+        if robot_photo_url:
             st.image(robot_photo_url, caption=f"Team {input_team} Robot", use_column_width=True)
-        except:
+        else:
             st.warning("No robot photo available.")
             
     set_inputs = [
