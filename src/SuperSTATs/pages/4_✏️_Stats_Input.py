@@ -11,24 +11,6 @@ import io
 import random
 
 
-def get_event_year(event_key):
-    """
-    Extracts the year from the event key.
-
-    Args:
-        event_key (str): The event key.
-
-    Returns:
-        int: The year of the event.
-    """
-    try:
-        year = int(event_key[:4])
-        return year
-    except ValueError:
-        st.error("Invalid event key format")
-        return None
-
-
 def get_match_scouts(team):
     """
     Get the match scouts for a given team.
@@ -338,17 +320,8 @@ def main():
 
     st.divider()
 
-    with st.expander("Robot Image", False):
-        team_key = f"frc{input_team}"
-        competition_year = get_event_year(st.secrets["DEFAULT_EVENT_KEY"])
+    load.robot_photo_dropdown(input_team)
 
-        try:
-            robot_photo_url = load.tba.team_media(input_team, competition_year)[1]['direct_url']
-            
-            st.image(robot_photo_url, caption=f"Team {input_team} Robot", use_column_width=True)
-        except:
-            st.warning("No robot photo available.")
-            
     set_inputs = [
         input_name,
         input_match,
