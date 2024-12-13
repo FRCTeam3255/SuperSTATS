@@ -167,36 +167,28 @@ def organize_df(df):
             df = all_prac_df
 
     if df.empty:
+        df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
+        df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
+        
         fake_data = {
-            "Timestamp": ["3/2/2024 15:10:54"],
+            "Timestamp": ["1/1/2009 15:10:54"],
             "Name": ["Susan"],
             "Match Type": ["Quals"],
             "Match": ["1"],
             "Team Color": ["B"],
             "Team": ["0000"],
             "Event Key": [st.secrets["DEFAULT_EVENT_KEY"]],
-            "COMMENT_GENERAL_STR_1": [""],
-            "INFO_DEFENSE_INT_1": [0],
-            "INFO_PENALTY_INT_-1": [0],
-            "INFO_NO SHOW_BOOL_-1": [False],
-            "INFO_BRICK RSL SOLID_BOOL_-1": [False],
-            "INFO_BRICK RSL BLINK/OFF_BOOL_-2": [False],
-            "AUTO_LEAVE_BOOL_2": [False],
-            "AUTO_AMP_INT_2": [0],
-            "AUTO_SPEAKER_INT_5": [0],
-            "TELE_AMP_INT_1": [0],
-            "TELE_SPEAKER_INT_2": [0],
-            "TELE_SHUFFLE_INT_1": [0],
-            "END_PARKED_BOOL_1": [False],
-            "END_ON STAGE_BOOL_3": [False],
-            "END_TRAP_INT_5": [0],
-            "END_HARMONY_INT_2": [0]
         }
+
+        for key in df.columns:
+            if key not in fake_data:
+                fake_data[key] = [0]
+        
         df = pd.DataFrame(fake_data)
 
     return df
-
-
+    
+    
 def get_configs():
     """
     Retrieves the configurations from a Google Sheets document and saves them to a pickle file.
