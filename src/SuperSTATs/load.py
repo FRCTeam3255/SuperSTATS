@@ -88,18 +88,29 @@ def get_point_values():
 
 def organize_df(df):
     """
-    Organizes the given DataFrame by performing various operations such as filtering, sorting, and concatenating.
-
+    Organizes and processes a DataFrame containing match data.
+    This function performs the following steps:
+    1. Downloads raw data from Google Sheets using a specified GID.
+    2. Filters out rows with missing timestamps and sorts the DataFrame by match and timestamp.
+    3. Filters the DataFrame to include only rows with a specific event key.
+    4. Removes duplicate rows based on team, match type, and match.
+    5. Separates the data into practice and non-practice matches.
+    6. For teams with only practice matches, selects the match with the highest score.
+    7. Concatenates the processed practice and non-practice DataFrames.
+    8. If the resulting DataFrame is empty, creates a DataFrame with fake data.
     Args:
-        df (pandas.DataFrame): The DataFrame to be organized.
-
+        df (pd.DataFrame): The input DataFrame containing match data.
     Returns:
-        pandas.DataFrame: The organized DataFrame.
+        pd.DataFrame: The organized and processed DataFrame.
     """
+
     df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
     df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
     df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
     df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
+
+    all_prac_df = pd.DataFrame()
+    all_non_prac_df = pd.DataFrame()
 
     phases = ["AUTO", "TELE", "END"]
     all_non_prac_list = []
@@ -150,11 +161,34 @@ def organize_df(df):
     try:
         df = pd.concat([all_non_prac_df, all_prac_df], ignore_index=True)
     except:
-        df = all_non_prac_df
+        try:
+            df = all_non_prac_df
+        except:
+            df = all_prac_df
+
+    if df.empty:
+        df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
+        df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
+        
+        fake_data = {
+            "Timestamp": ["1/1/2009 15:10:54"],
+            "Name": ["Susan"],
+            "Match Type": ["Quals"],
+            "Match": ["1"],
+            "Team Color": ["B"],
+            "Team": ["0000"],
+            "Event Key": [st.secrets["DEFAULT_EVENT_KEY"]],
+        }
+
+        for key in df.columns:
+            if key not in fake_data:
+                fake_data[key] = [0]
+        
+        df = pd.DataFrame(fake_data)
 
     return df
-
-
+    
+    
 def get_configs():
     """
     Retrieves the configurations from a Google Sheets document and saves them to a pickle file.
