@@ -169,7 +169,7 @@ def organize_df(df):
     if df.empty:
         df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
         df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
-        
+
         fake_data = {
             "Timestamp": ["1/1/2009 15:10:54"],
             "Name": ["Susan"],
@@ -183,12 +183,12 @@ def organize_df(df):
         for key in df.columns:
             if key not in fake_data:
                 fake_data[key] = [0]
-        
+
         df = pd.DataFrame(fake_data)
 
     return df
-    
-    
+
+
 def get_configs():
     """
     Retrieves the configurations from a Google Sheets document and saves them to a pickle file.
@@ -585,7 +585,7 @@ def get_presets():
         with open(presets_path, "wb") as f:
             pickle.dump({}, f, pickle.HIGHEST_PROTOCOL)
         return {}
-    
+
 
 def get_event_year(event_key):
     """
@@ -625,12 +625,16 @@ def robot_photo_dropdown(input_team):
     competition_year = get_event_year(st.secrets["DEFAULT_EVENT_KEY"])
 
     media = tba.team_media(team_key, competition_year)
-    robot_photo_url = media[1]['direct_url'] if len(media) > 1 else None
+    robot_photo_url = media[1]["direct_url"] if len(media) > 1 else None
     with st.expander("Robot Image", False):
         if robot_photo_url:
-            st.image(robot_photo_url, caption=f"Team {input_team} Robot", use_column_width=True)
+            st.image(
+                robot_photo_url,
+                caption=f"Team {input_team} Robot",
+                use_container_width=True,
+            )
         else:
-            st.warning("No robot photo available.")
+            st.warning("⚠️ No robot photo available")
 
 
 def app_init():
@@ -692,7 +696,6 @@ def app_init():
         "Ducktaping notes...",
         "Overclocking the power supply...",
     ]
-
 
     ascii_SN = [
         "     yyyyyyyyyyyyyyyyyyyyyyyyyy     ",
