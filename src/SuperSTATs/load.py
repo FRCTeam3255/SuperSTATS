@@ -176,8 +176,9 @@ def organize_df(df):
             "Match Type": ["Quals"],
             "Match": ["1"],
             "Team Color": ["B"],
-            "Team": ["0000"],
+            "Team": [st.secrets["TEAM_NUMBER"]],
             "Event Key": [st.secrets["DEFAULT_EVENT_KEY"]],
+            "COMMENT_GENERAL_STR_1": ["hello,world"],
         }
 
         for key in df.columns:
