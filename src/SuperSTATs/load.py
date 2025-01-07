@@ -392,14 +392,14 @@ def get_match_data():
             data = {
                 "comp_level": match_level,
                 "match_number": match_num,
-                "set_number": {f"{index}": 1},
-                "score_breakdown": {f"{index}": "im having a breakdown"},
-                "winning_alliance": {f"{index}": "blue"},
-                "blue.score": {f"{index}": 1},
+                "set_number": 1,
+                "score_breakdown": "im having a breakdown",
+                "winning_alliance": "blue",
+                "blue.score": 1,
                 "blue.team_keys": blue_team,
-                "red.score": {f"{index}": 0},
+                "red.score": 0,
                 "red.team_keys": red_team,
-                "Match Name": {f"{index}": match_name},
+                "Match Name": match_name,
             }
 
             custom_data[index] = data
