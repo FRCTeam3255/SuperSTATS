@@ -109,53 +109,22 @@ def display_matches(matches, team, columns):
 
 
 def display_nexus_data():
-    with st.expander("Nexus Data", st.session_state.console["practice_mode"]):
-        try:
-            api_url = (
-                f"https://frc.nexus/api/v1/event/{st.secrets['DEFAULT_EVENT_KEY']}"
-            )
-            nexus_headers = {"Nexus-Api-Key": st.secrets["NEXUS_API"]}
-            team_num = str(st.secrets["TEAM_NUMBER"])
+    nexus_data = st.session_state.nexus_data
 
-            response = requests.get(api_url, headers=nexus_headers)
-            data = response.json()
+    if nexus_data:
+        with st.expander("Nexus Data", st.session_state.console["practice_mode"]):
+            st.subheader("Now Playing")
+            st.write(nexus_data["now_playing"])
 
-            st.subheader("Now Playing:", anchor=False)
-            on_field = [
-                match["label"]
-                for match in data["matches"]
-                if match["status"] == "On field"
-            ]
-            st.write(on_field[-1])
+            st.subheader("Queue Status")
+            queue_status = nexus_data.get("queue_status", "").upper()
+            next_match = nexus_data.get("next_match")
+            alliance_color = nexus_data.get("alliance_color")
 
-            team_matches = filter(
-                lambda m: team_num in m.get("redTeams", []) + m.get("blueTeams", []),
-                data["matches"],
-            )
-            next_match = next(
-                filter(lambda m: not m["status"] == "On field", team_matches), None
-            )
-
-            st.subheader("Next Match:", anchor=False)
             if next_match:
-                match_status = next_match["status"].upper()
-                is_queued = (
-                    f"[{match_status}] " if match_status != "Queuing soon" else ""
-                )
-
-                alliance_color = (
-                    "red" if team_num in next_match.get("redTeams", []) else "blue"
-                )
-                st.write(
-                    f"{is_queued}{next_match['label']} on {alliance_color} alliance"
-                )
+                st.write(f"[{queue_status}] {next_match} on {alliance_color} alliance")
             else:
-                st.write(f"No scheduled matches found")
-
-            st.subheader("Now Queuing:", anchor=False)
-            st.write(data["nowQueuing"])
-        except:
-            st.error("⚠️ Error getting Nexus data")
+                st.write("No scheduled matches found")
 
 
 def display_event_keys():
