@@ -7,6 +7,7 @@ import datetime
 import requests
 
 
+
 def display_header():
     st.markdown(style.rainbow(), unsafe_allow_html=True)
     st.markdown("<div class='rainbow'>🤖 SuperSTATs 🤖</div>", unsafe_allow_html=True)
@@ -87,7 +88,7 @@ def get_team_color(use_team_colors, team_colors, columns):
     if use_team_colors:
         if team_colors[0] == "003255" or team_colors[1] == "003255":
             columns[1].toggle("Use Secondary Color", disabled=True)
-            st.warning("Team Colors Not Found")
+            st.warning("⚠️ Team Colors Not Found")
             return "#ffffff"
         else:
             if columns[1].toggle("Use Secondary Color"):

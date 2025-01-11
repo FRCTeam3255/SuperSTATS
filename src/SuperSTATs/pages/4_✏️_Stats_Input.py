@@ -80,7 +80,10 @@ def main():
     st.markdown("<div class='shimmer'>✏️ Stats Input ✏️</div>", unsafe_allow_html=True)
 
     if random.random() < 0.1:  # 10% chance
-        st.markdown("<div style='text-align: center; font-size: small; color: #808080;'>Susan was here😸</div>", unsafe_allow_html=True)
+        st.markdown(
+            "<div style='text-align: center; font-size: small; color: #808080;'>Susan was here😸</div>",
+            unsafe_allow_html=True,
+        )
 
     st.title("")
 
@@ -397,7 +400,7 @@ def main():
                 entry_responses[entry] = st.number_input(
                     (f"{entry_name}:"), min_value=0, step=1, key=entry
                 )
-                
+
                 # Add css to increase button width
                 st.markdown(
                     """
@@ -467,7 +470,7 @@ def main():
             st.form_submit_button(
                 "Submit", type="primary", use_container_width=True, disabled=True
             )
-            st.warning("Required Input Missing")
+            st.warning("⚠️ Required Input Missing")
 
     def gen_qr(contents):
         """
@@ -504,10 +507,10 @@ def main():
             st.toast("Submission successful!", icon="✅")
             if st.session_state.console["force_qr"]:
                 with st.expander("QR Code", False):
-                    st.image(gen_qr(prefill_url), use_column_width=True)
+                    st.image(gen_qr(prefill_url), use_container_width=True)
         else:
             st.toast("Submission unsuccessful! Use QR code...", icon="⚠️")
-            st.image(gen_qr(prefill_url), use_column_width=True)
+            st.image(gen_qr(prefill_url), use_container_width=True)
 
 
 if __name__ == "__main__":
