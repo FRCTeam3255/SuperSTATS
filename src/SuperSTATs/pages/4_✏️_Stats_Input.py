@@ -1,14 +1,12 @@
-import streamlit.components.v1 as components
 import SuperSTATs.analytics as analytics
 import SuperSTATs.load as load
-import SuperSTATs.form as form
 from bs4 import BeautifulSoup
 import streamlit as st
 import requests
 import datetime
 import qrcode
-import io
 import random
+import io
 
 
 def get_match_scouts(team):
@@ -23,34 +21,45 @@ def get_match_scouts(team):
     """
     rotation = int(st.session_state.configs["Scouting Rotations"][0])
     match_list = st.session_state.matches["Match"].to_list()
-    scouts = {}
+    all_scouts = []
 
-    processed = 0
-    count = 0
-    i = 0
+    seven_scouts = len(team) == 7
+    teams = [team[0:3], team[3:6]] if seven_scouts else [team]
 
-    while processed < len(match_list):
-        scout_1 = team[count]
-        scout_2 = team[count - 1]
-        scout_3 = team[count - 2]
+    for team in teams:
+        scouts = {}
 
-        if i % rotation == 0:
-            count += 1
+        processed = 0
+        count = 0
+        i = 0
 
-        if count == len(team):
-            count = 0
+        while processed < len(match_list):
+            scout_1 = team[count]
+            scout_2 = team[count - 1]
+            scout_3 = team[count - 2]
 
-        for match_type in ["Quals", "Playoffs", "Finals"]:
-            for j in range(rotation):
-                match_name = f"{match_type} {(i + 1) + j}"
+            if i % rotation == 0:
+                count += 1
 
-                if match_name in match_list:
-                    scouts[match_name] = [scout_1, scout_2, scout_3]
-                    processed += 1
+            if count == len(team):
+                count = 0
 
-        i += rotation
+            for match_type in ["Quals", "Playoffs", "Finals"]:
+                for j in range(rotation):
+                    match_name = f"{match_type} {(i + 1) + j}"
 
-    return scouts
+                    if match_name in match_list:
+                        scouts[match_name] = [scout_1, scout_2, scout_3]
+                        processed += 1
+
+            i += rotation
+
+            if seven_scouts:
+                team.append(team.pop(0))
+
+        all_scouts.append(scouts)
+
+    return all_scouts if seven_scouts else all_scouts[0]
 
 
 def name_check(value, lst):
@@ -134,10 +143,17 @@ def main():
         teams = matches[matches["Match"] == match].set_index("Match").transpose()
         df_teams.update(teams.to_dict())
 
-        red_scouts = get_match_scouts(scouters[::2])[match]
-        blue_scouts = get_match_scouts(scouters[1::2])[match]
+        if len(scouters) == 7:
+            all_red_scouts, all_blue_scouts = get_match_scouts(scouters)
+            red_scouts = all_red_scouts[match]
+            blue_scouts = all_blue_scouts[match]
+        else:
+            red_scouts = get_match_scouts(scouters[::2])[match]
+            blue_scouts = get_match_scouts(scouters[1::2])[match]
+
         match_scouts = red_scouts + blue_scouts
         all_match_scouts[match] = match_scouts
+    st.write(all_match_scouts)
 
     for match in all_match_scouts:
         if input_name in all_match_scouts[match]:
