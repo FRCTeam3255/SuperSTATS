@@ -153,7 +153,6 @@ def main():
 
         match_scouts = red_scouts + blue_scouts
         all_match_scouts[match] = match_scouts
-    st.write(all_match_scouts)
 
     for match in all_match_scouts:
         if input_name in all_match_scouts[match]:
