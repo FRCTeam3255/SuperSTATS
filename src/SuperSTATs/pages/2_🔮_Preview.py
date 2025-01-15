@@ -153,7 +153,7 @@ def display_team(
                     "\n\n".join(
                         [
                             f"{key.split('_')[1].title()}: {round(value, 2)}"
-                            for key, value in team_pieces_df[team].items()
+                            for key, value in sorted(team_pieces_df[team].items())
                             if key.startswith("TELE")
                         ]
                     )

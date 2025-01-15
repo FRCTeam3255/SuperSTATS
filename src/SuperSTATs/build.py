@@ -152,7 +152,11 @@ def calc_projected(
 
     """
     score_df = st.session_state.df
-    phases = [phase for phase in st.session_state.phases if phase != "COMMENT"]
+    phases = [
+        phase
+        for phase in st.session_state.phases
+        if phase != "COMMENT" and phase != "INFO"
+    ]
 
     phase_count = len(
         [
@@ -277,7 +281,7 @@ def gen_match_comp(df, team_num, match_name, not_preview=True):
             match_scores = (
                 team_df.reset_index(drop=True).loc[len(team_df) - 1].to_frame().T
             )
-            match_name = match_scores["Match Name"].to_list()[0]
+            match_name = match_scores["Match Name"].to_list()[0].replace(" ", "_")
 
             query_url = f"Tracker/?team_num={team_num}&match_name={match_name}"
 

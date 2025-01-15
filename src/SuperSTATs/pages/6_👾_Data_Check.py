@@ -418,6 +418,10 @@ def main():
 
                     get_variance("RED", red_tba_score)
                     get_variance("BLUE", blue_tba_score)
+
+                    if st.toggle("Show TBA JSON", False):
+                        with st.container(border=True):
+                            st.json(data[0])
                 except:
                     st.error("⚠️ Invalid TBA Match Data")
 
