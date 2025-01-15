@@ -4,6 +4,8 @@ import SuperSTATs.styles as style
 import streamlit as st
 import pandas as pd
 import datetime
+import requests
+
 
 
 def display_header():
@@ -107,6 +109,25 @@ def display_matches(matches, team, columns):
         st.dataframe(matches.set_index("Match"), use_container_width=True)
 
 
+def display_nexus_data():
+    nexus_data = st.session_state.nexus_data
+
+    if nexus_data:
+        with st.expander("Nexus Data", st.session_state.console["practice_mode"]):
+            st.subheader("Now Playing")
+            st.write(nexus_data["now_playing"])
+
+            st.subheader("Queue Status")
+            queue_status = nexus_data.get("queue_status", "").upper()
+            next_match = nexus_data.get("next_match")
+            alliance_color = nexus_data.get("alliance_color")
+
+            if next_match:
+                st.write(f"[{queue_status}] {next_match} on {alliance_color} alliance")
+            else:
+                st.write("No scheduled matches found")
+
+
 def display_event_keys():
     with st.expander("Event Keys", st.session_state.console["practice_mode"]):
         columns = st.columns(2)
@@ -140,6 +161,7 @@ def main():
         team, columns = get_team_selection(teams)
         matches = update_match_scores(matches)
         display_matches(matches, team, columns)
+    display_nexus_data()
     display_event_keys()
 
 
