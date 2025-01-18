@@ -274,7 +274,9 @@ def main():
 
     start_expanded = columns[0].toggle("Auto Expand", False)
     combined_chart = columns[1].toggle("Show Combined Chart", False)
-    use_calc_error = columns[2].toggle("Error Weights", True)
+    use_calc_error = columns[2].toggle(
+        "Error Weights", False, disabled=st.secrets["DEFAULT_EVENT_KEY"] == "NoTBA"
+    )
     calc_bumpers = columns[3].toggle("Calculate Bumpers", True)
 
     prediction_weight = 1

@@ -281,9 +281,9 @@ def gen_match_comp(df, team_num, match_name, not_preview=True):
             match_scores = (
                 team_df.reset_index(drop=True).loc[len(team_df) - 1].to_frame().T
             )
-            match_name = match_scores["Match Name"].to_list()[0].replace(" ", "_")
+            match_name = match_scores["Match Name"].to_list()[0]
 
-            query_url = f"Tracker/?team_num={team_num}&match_name={match_name}"
+            query_url = f"Tracker/?team_num={team_num}&match_name={match_name.replace(' ', '_')}"
 
             button_style = (
                 "background-color: #141414; border: 1px solid #424242; border-radius: 8px;"
