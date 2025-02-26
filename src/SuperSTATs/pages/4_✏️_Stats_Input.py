@@ -130,14 +130,29 @@ def main():
     else:
         input_sub = None
 
-    for match in st.session_state.matches["Match"]:
-        teams = matches[matches["Match"] == match].set_index("Match").transpose()
-        df_teams.update(teams.to_dict())
+    if len(scouters) == 7:
+        # For exactly 7 scouters, rotate so one scout sits out each match.
+        for match_index, match in enumerate(st.session_state.matches["Match"]):
+            teams = matches[matches["Match"] == match].set_index("Match").transpose()
+            df_teams.update(teams.to_dict())
+            
+            # Determine which scout gets a break for this match.
+            skip_index = match_index % 7
+            # Create a list omitting the scout that gets the break.
+            assigned_scouts = [scout for i, scout in enumerate(scouters) if i != skip_index]
+            # Split the remaining 6 scouts into two teams: first 3 for red, next 3 for blue.
+            red_scouts = assigned_scouts[:3]
+            blue_scouts = assigned_scouts[3:6]
+            all_match_scouts[match] = red_scouts + blue_scouts
+    else:
+        # For any other number of scouters, use existing alternating logic.
+        for match in st.session_state.matches["Match"]:
+            teams = matches[matches["Match"] == match].set_index("Match").transpose()
+            df_teams.update(teams.to_dict())
 
-        red_scouts = get_match_scouts(scouters[::2])[match]
-        blue_scouts = get_match_scouts(scouters[1::2])[match]
-        match_scouts = red_scouts + blue_scouts
-        all_match_scouts[match] = match_scouts
+            red_scouts = get_match_scouts(scouters[::2])[match]
+            blue_scouts = get_match_scouts(scouters[1::2])[match]
+            all_match_scouts[match] = red_scouts + blue_scouts
 
     for match in all_match_scouts:
         if input_name in all_match_scouts[match]:
