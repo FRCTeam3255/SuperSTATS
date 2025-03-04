@@ -31,6 +31,28 @@ def show_raw(match_num, match_info, match_key):
         pass
 
 
+def flatten_dict(d, parent_key='', sep='_'):
+    """
+    Flatten a nested dictionary.
+
+    Parameters:
+    - d (dict): The dictionary to flatten.
+    - parent_key (str): The base key string for the flattened keys.
+    - sep (str): The separator to use between parent and child keys.
+
+    Returns:
+    dict: The flattened dictionary.
+    """
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
+
 def main():
     load.app_init()
     analytics.collect_analytics("page_change", "data_check")
@@ -415,6 +437,9 @@ def main():
 
                             nonlocal data_variance
                             data_variance = True
+
+                    red_data_flat = flatten_dict(red_data)
+                    blue_data_flat = flatten_dict(blue_data)
 
                     get_variance("RED", red_tba_score)
                     get_variance("BLUE", blue_tba_score)
