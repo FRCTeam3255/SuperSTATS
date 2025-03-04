@@ -142,70 +142,77 @@ def calc_projected(
     Calculate the projected score for a team based on the given parameters.
 
     Parameters:
-        team_df (DataFrame): The team DataFrame containing the team data.
-        prediction_weight (int, optional): The weight to apply to the projected score. Defaults to 1.
-        show_ungrouped (bool, optional): Whether to show ungrouped phases. Defaults to False.
-        return_row (bool, optional): Whether to return the row data. Defaults to False.
+        team_df (DataFrame):
+            The team DataFrame containing the 
+            team data.
+        prediction_weight (int, optional):
+            The weight to apply to the 
+            projected score.
+            Defaults to 1.
+        show_ungrouped (bool, optional):
+            Whether to show ungrouped 
+            phases.
+            Defaults to False.
+        return_row (bool, optional):
+            Whether to return the row data.
+            Defaults to False.
 
     Returns:
         int: The projected score for the team.
-
     """
     score_df = st.session_state.df
     phases = [
         phase
         for phase in st.session_state.phases
-        if phase != "COMMENT" and phase != "INFO"
+        if phase not in ("COMMENT", "INFO")
     ]
-
-    phase_count = len(
-        [
-            col
-            for col in score_df.columns
-            if any(col.startswith(f"{phase}_") for phase in phases)
-        ]
-    ) * len(team_df)
-
-    alliance_score = pd.DataFrame(columns=phases)
-    match_count = 0
-
+    total_score_sum = 0
+    total_matches = 0
     for team in team_df:
-        team_score = score_df[score_df["Team"] == team]
-
-        if show_ungrouped:
-            phases = [
+        team_data = score_df[score_df["Team"] == team]
+        if show_ungrouped:match_avg
+            phases_filtered = [
                 col
-                for col in team_score.columns
+                for col in team_data.columns
                 if any(col.startswith(f"{phase}_") for phase in phases)
                 and col != "COMMENT_GENERAL_STR_1"
             ]
-
-        for i in range(len(phases)):
-            team_score.loc[:, phases[i]] = load.add_cols(
-                team_score,
-                phases[i],
+        else:
+            phases_filtered = phases
+        for idx, ph in enumerate(phases_filtered):
+            team_data.loc[:, ph] = load.add_cols(
+                team_data,
+                ph,
             )
-
-        if return_row:
-            team_score["Match Name"] = (
-                team_score["Match Type"]
+        if team_data.empty:
+            continue
+        # Compute the sum of average phase scores across all matches for the team.
+        match_avg = team_data[phases_filtered].mean().sum()
+        total_score_sum += 
+        total_matches += 1
+    if total_matches > 0:
+        projected_score = round(
+            (total_score_sum / total_matches) * prediction_weight
+        )
+    else:
+        projected_score = 0
+    if return_row:
+        dummy_match = score_df[score_df["Team"] == team_df[0]].copy()
+        if not dummy_match.empty:
+            dummy_match["Match Name"] = (
+                dummy_match["Match Type"]
                 + " "
-                + team_score["Match"].astype(int).astype(str)
+                + dummy_match["Match"].astype(int).astype(str)
             )
-            return {"score": team_score[["Match Name"] + phases], "phases": phases}
-
-        match_count += len(team_score)
-
-        team_score = team_score.iloc[-4:][phases].mean().to_frame().T
-        team_score = team_score.dropna(axis=1, how="all")
-
-        alliance_score = alliance_score.dropna(axis=1, how="all")
-        alliance_score = pd.concat([alliance_score, team_score], ignore_index=True)
-
-    alliance_score = alliance_score.sum().sum()
-    projected_score = round((alliance_score / phase_count) * round(match_count))
-
-    return int(projected_score * prediction_weight)
+        return {
+            "score": dummy_match[["Match Name"] + phases]
+            if not dummy_match.empty
+            else pd.DataFrame(),
+            "phases": phases,
+            "projected": projected_score,
+        }
+    else:
+        return projected_score
 
 
 def gen_match_comp(df, team_num, match_name, not_preview=True):
