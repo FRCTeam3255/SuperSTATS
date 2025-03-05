@@ -169,7 +169,7 @@ def display_team(
                 df=st.session_state.df,
                 key=column,
                 use_presets=False,
-                use_group_filters=False,
+                use_group_filters=True,
                 use_show_available=False,
                 use_show_nums=False,
                 use_features=False,
