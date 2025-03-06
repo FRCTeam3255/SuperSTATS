@@ -88,18 +88,29 @@ def get_point_values():
 
 def organize_df(df):
     """
-    Organizes the given DataFrame by performing various operations such as filtering, sorting, and concatenating.
-
+    Organizes and processes a DataFrame containing match data.
+    This function performs the following steps:
+    1. Downloads raw data from Google Sheets using a specified GID.
+    2. Filters out rows with missing timestamps and sorts the DataFrame by match and timestamp.
+    3. Filters the DataFrame to include only rows with a specific event key.
+    4. Removes duplicate rows based on team, match type, and match.
+    5. Separates the data into practice and non-practice matches.
+    6. For teams with only practice matches, selects the match with the highest score.
+    7. Concatenates the processed practice and non-practice DataFrames.
+    8. If the resulting DataFrame is empty, creates a DataFrame with fake data.
     Args:
-        df (pandas.DataFrame): The DataFrame to be organized.
-
+        df (pd.DataFrame): The input DataFrame containing match data.
     Returns:
-        pandas.DataFrame: The organized DataFrame.
+        pd.DataFrame: The organized and processed DataFrame.
     """
+
     df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
     df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
     df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
     df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
+
+    all_prac_df = pd.DataFrame()
+    all_non_prac_df = pd.DataFrame()
 
     phases = ["AUTO", "TELE", "END"]
     all_non_prac_list = []
@@ -150,7 +161,31 @@ def organize_df(df):
     try:
         df = pd.concat([all_non_prac_df, all_prac_df], ignore_index=True)
     except:
-        df = all_non_prac_df
+        try:
+            df = all_non_prac_df
+        except:
+            df = all_prac_df
+
+    if df.empty:
+        df = download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
+        df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
+
+        fake_data = {
+            "Timestamp": ["1/1/2009 15:10:54"],
+            "Name": ["Susan"],
+            "Match Type": ["Quals"],
+            "Match": ["1"],
+            "Team Color": ["B"],
+            "Team": [st.secrets["TEAM_NUMBER"]],
+            "Event Key": [st.secrets["DEFAULT_EVENT_KEY"]],
+            "COMMENT_GENERAL_STR_1": ["hello,world"],
+        }
+
+        for key in df.columns:
+            if key not in fake_data:
+                fake_data[key] = [0]
+
+        df = pd.DataFrame(fake_data)
 
     return df
 
@@ -358,14 +393,14 @@ def get_match_data():
             data = {
                 "comp_level": match_level,
                 "match_number": match_num,
-                "set_number": {f"{index}": 1},
-                "score_breakdown": {f"{index}": "im having a breakdown"},
-                "winning_alliance": {f"{index}": "blue"},
-                "blue.score": {f"{index}": 1},
+                "set_number": 1,
+                "score_breakdown": "im having a breakdown",
+                "winning_alliance": "blue",
+                "blue.score": 1,
                 "blue.team_keys": blue_team,
-                "red.score": {f"{index}": 0},
+                "red.score": 0,
                 "red.team_keys": red_team,
-                "Match Name": {f"{index}": match_name},
+                "Match Name": match_name,
             }
 
             custom_data[index] = data
@@ -468,6 +503,54 @@ def get_unplayed(df, matches):
         unplayed_matches = []
 
     return unplayed_matches
+
+
+def get_nexus_data(
+    team_num=st.secrets["TEAM_NUMBER"], event_key=st.secrets["DEFAULT_EVENT_KEY"]
+):
+    try:
+        api_url = f"https://frc.nexus/api/v1/event/{event_key}"
+        nexus_headers = {"Nexus-Api-Key": st.secrets["NEXUS_API"]}
+
+        response = requests.get(api_url, headers=nexus_headers)
+        data = response.json()
+        team_num = str(team_num)
+
+        nexus_data = {}
+
+        on_field = [
+            match["label"] for match in data["matches"] if match["status"] == "On field"
+        ]
+        nexus_data["now_playing"] = on_field[-1]
+
+        team_matches = filter(
+            lambda m: team_num in m.get("redTeams", []) + m.get("blueTeams", []),
+            data["matches"],
+        )
+        next_match = next(
+            filter(lambda m: not m["status"] == "On field", team_matches), None
+        )
+
+        if next_match:
+            match_status = next_match["status"]
+            queue_status = None if match_status == "Queuing soon" else match_status
+
+            alliance_color = (
+                "red" if team_num in next_match.get("redTeams", []) else "blue"
+            )
+
+            nexus_data["team_num"] = team_num
+            nexus_data["next_match"] = next_match["label"]
+            nexus_data["queue_status"] = queue_status
+            nexus_data["alliance_color"] = alliance_color
+        else:
+            nexus_data["next_match"] = None
+
+        nexus_data["now_queuing"] = data["nowQueuing"]
+
+        return nexus_data
+    except:
+        nexus_data = None
 
 
 def get_picked():
@@ -599,6 +682,56 @@ def robot_photo_dropdown(input_team):
             st.warning("No robot photo available.")
 
 
+def get_event_year(event_key):
+    """
+    Extracts the year from the event key.
+
+    Args:
+        event_key (str): The event key.
+
+    Returns:
+        int: The year of the event.
+    """
+    try:
+        year = int(event_key[:4])
+        return year
+    except ValueError:
+        st.error("Invalid event key format")
+        return None
+
+
+@st.cache_data(show_spinner=False, persist=True)
+def robot_photo_dropdown(input_team):
+    """
+    Displays a dropdown with the robot photo for a given team.
+    Args:
+        input_team (int): The team number for which the robot photo is to be displayed.
+    Retrieves the robot photo URL for the specified team and competition year using The Blue Alliance API.
+    If a photo is available, it is displayed in an expander with the caption "Team {input_team} Robot".
+    If no photo is available, a warning message is shown.
+    Note:
+        The function assumes that `st` (Streamlit) and `tba` (The Blue Alliance API client) are already imported and configured.
+        The function also assumes that `get_event_year` is a predefined function that retrieves the event year.
+    Raises:
+        KeyError: If the "DEFAULT_EVENT_KEY" is not found in `st.secrets`.
+        IndexError: If the media list does not contain at least two elements.
+    """
+    team_key = f"frc{input_team}"
+    competition_year = get_event_year(st.secrets["DEFAULT_EVENT_KEY"])
+
+    if competition_year != None:
+        media = tba.team_media(team_key, competition_year)
+        robot_photo_url = media[1]["direct_url"] if len(media) > 1 else None
+        with st.expander("Robot Image", False):
+            if robot_photo_url:
+                st.image(
+                    robot_photo_url,
+                    caption=f"Team {input_team} Robot",
+                    use_container_width=True,
+                )
+            else:
+                st.warning("⚠️ No robot photo available")
+
 def app_init():
     """
     Initializes the SuperSTATs application and is called on every page.
@@ -659,7 +792,6 @@ def app_init():
         "Overclocking the power supply...",
     ]
 
-
     ascii_SN = [
         "     yyyyyyyyyyyyyyyyyyyyyyyyyy     ",
         "   yyyrryyyyyyyrrryyyrrrrrryyryyy   ",
@@ -696,6 +828,7 @@ def app_init():
         "match_data",
         "matches",
         "unplayed_matches",
+        "nexus",
         "picked",
         "scouting",
         "scouts",
@@ -770,6 +903,9 @@ def app_init():
             st.session_state.unplayed_matches = get_unplayed(
                 st.session_state.df, st.session_state.matches
             )
+
+            display_status("nexus")
+            st.session_state.nexus_data = get_nexus_data()
 
             display_status("picked")
             st.session_state.picked = get_picked()

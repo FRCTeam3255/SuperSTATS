@@ -37,7 +37,7 @@ def main():
     if url_query:
         url_team_num = int(url_query["team_num"])
         url_team_name = f"{url_team_num} | {team_info[url_team_num]}"
-        url_match_name = url_query["match_name"]
+        url_match_name = url_query["match_name"].replace("_", " ")
     else:
         url_team_num = None
         url_match_name = None

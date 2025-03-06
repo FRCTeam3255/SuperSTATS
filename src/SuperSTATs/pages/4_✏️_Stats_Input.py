@@ -80,7 +80,10 @@ def main():
     st.markdown("<div class='shimmer'>✏️ Stats Input ✏️</div>", unsafe_allow_html=True)
 
     if random.random() < 0.1:  # 10% chance
-        st.markdown("<div style='text-align: center; font-size: small; color: #808080;'>Susan was here😸</div>", unsafe_allow_html=True)
+        st.markdown(
+            "<div style='text-align: center; font-size: small; color: #808080;'>Susan was here😸</div>",
+            unsafe_allow_html=True,
+        )
 
     st.title("")
 
@@ -313,12 +316,13 @@ def main():
 
     st.divider()
 
-    st.markdown(
-        f'<div style="text-align: center; font-size: 2.5em;">{color_icon} {input_team} | {st.session_state.team_info[input_team]} {color_icon}</div>',
-        unsafe_allow_html=True,
-    )
+    try:
+        st.markdown(
+            f'<div style="text-align: center; font-size: 2.5em;">{color_icon} {input_team} | {st.session_state.team_info[input_team]} {color_icon}</div>',
+            unsafe_allow_html=True,
+        )
 
-    st.divider()
+        st.divider()
 
     load.robot_photo_dropdown(input_team)
 
@@ -331,184 +335,185 @@ def main():
         input_key,
     ]
 
-    set_combined = {}
+        set_combined = {}
 
-    def combine_set(entry_name, variable):
-        """
-        Combines the entry number and variable into the set_combined dictionary.
+        def combine_set(entry_name, variable):
+            """
+            Combines the entry number and variable into the set_combined dictionary.
 
-        Parameters:
-        entry_name (str): The name of the entry.
-        variable: The variable to be combined with the entry number.
+            Parameters:
+            entry_name (str): The name of the entry.
+            variable: The variable to be combined with the entry number.
 
-        Returns:
-        None
-        """
-        entry_number = set_entries[entry_name]
-        set_combined[entry_name] = [int(entry_number), variable]
-
-    for i in range(len(set_entries)):
-        combine_set(list(set_entries.keys())[i], set_inputs[i])
-
-    sorted_entries = {"AUTO": [], "TELE": [], "END": [], "INFO": [], "COMMENT": []}
-
-    for entry in gen_entries.keys():
-        for prefix, entries in sorted_entries.items():
-            if entry.startswith(prefix):
-                entries.append(entry)
-                break
-
-    entry_responses = {}
-
-    def phase_header(phase):
-        """
-        Displays a header for the given phase.
-
-        Parameters:
-            phase (str): The phase name to display.
-
-        Returns:
+            Returns:
             None
-        """
-        st.markdown(
-            f'<div style="text-align: center; font-size: 32px;">{phase}</div>',
-            unsafe_allow_html=True,
-        )
-        st.title("")
+            """
+            entry_number = set_entries[entry_name]
+            set_combined[entry_name] = [int(entry_number), variable]
 
-    def gen_phase_input(entries):
-        """
-        Generate input fields for each entry in the given list of entries.
+        for i in range(len(set_entries)):
+            combine_set(list(set_entries.keys())[i], set_inputs[i])
 
-        Parameters:
-        - entries (list): A list of entries for which input fields need to be generated.
+        sorted_entries = {"AUTO": [], "TELE": [], "END": [], "INFO": [], "COMMENT": []}
 
-        Returns:
-        - entry_responses (dict): A dictionary containing the user responses for each entry.
+        for entry in gen_entries.keys():
+            for prefix, entries in sorted_entries.items():
+                if entry.startswith(prefix):
+                    entries.append(entry)
+                    break
 
-        """
-        for entry in sorted_entries[entries]:
-            entry_parts = entry.split("_")
-            entry_name = entry_parts[1].title().replace("Rsl", "RSL")
+        entry_responses = {}
 
-            feature_list = st.session_state.configs["Features"]
+        def phase_header(phase):
+            """
+            Displays a header for the given phase.
 
-            if entry_parts[2] == "INT":
-                entry_responses[entry] = st.number_input(
-                    (f"{entry_name}:"), min_value=0, step=1, key=entry
-                )
-                
-                # Add css to increase button width
-                st.markdown(
-                    """
-                    <style>
-                    .st-emotion-cache-nnubno {
-                        width: 100px;
-                    }
-                    svg {
-                        transform: scale(2);
+            Parameters:
+                phase (str): The phase name to display.
+
+            Returns:
+                None
+            """
+            st.markdown(
+                f'<div style="text-align: center; font-size: 32px;">{phase}</div>',
+                unsafe_allow_html=True,
+            )
+            st.title("")
+
+        def gen_phase_input(entries):
+            """
+            Generate input fields for each entry in the given list of entries.
+
+            Parameters:
+            - entries (list): A list of entries for which input fields need to be generated.
+
+            Returns:
+            - entry_responses (dict): A dictionary containing the user responses for each entry.
+
+            """
+            for entry in sorted_entries[entries]:
+                entry_parts = entry.split("_")
+                entry_name = entry_parts[1].title().replace("Rsl", "RSL")
+
+                feature_list = st.session_state.configs["Features"]
+
+                if entry_parts[2] == "INT":
+                    entry_responses[entry] = st.number_input(
+                        (f"{entry_name}:"), min_value=0, step=1, key=entry
+                    )
+
+                    # Add css to increase button width
+                    st.markdown(
+                        """
+                        <style>
+                        .st-emotion-cache-nnubno {
+                            width: 100px;
                         }
-                    </style>
-                    """,
-                    unsafe_allow_html=True,
+                        svg {
+                            transform: scale(2);
+                            }
+                        </style>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+
+                elif entry_parts[2] == "STR":
+                    selected_options = st.multiselect(
+                        (f"{entry_name}:"), feature_list, key=entry
+                    )
+                    entry_responses[entry] = ", ".join(selected_options)
+
+                elif entry_parts[2] == "BOOL":
+                    entry_responses[entry] = int(st.toggle(entry_name, key=entry))
+
+        submitted = False
+
+        with st.form("Stats Input", clear_on_submit=True, border=False):
+            with st.expander("Autonomous", True):
+                phase_header("Autonomous")
+                gen_phase_input("AUTO")
+
+            with st.expander("Teleop", True):
+                phase_header("Teleop")
+                gen_phase_input("TELE")
+
+            with st.expander("Endgame", True):
+                phase_header("Endgame")
+                gen_phase_input("END")
+
+            with st.expander("Info & Comments", True):
+                phase_header("Info & Comments")
+                gen_phase_input("INFO")
+                gen_phase_input("COMMENT")
+
+            st.divider()
+
+            gen_combined = {}
+
+            for key in gen_entries.keys():
+                if key in entry_responses:
+                    gen_combined[key] = [gen_entries[key], entry_responses[key]]
+
+            entries_combined = set_combined.copy()
+            entries_combined.update(gen_combined)
+
+            entry_url = ""
+            for result in entries_combined.values():
+                entry_url += f"&entry.{result[0]}={result[1]}"
+
+            prefill_url = f"{st.secrets['STATS_FORM'].split('/viewform')[0]}/formResponse?usp=pp_url{entry_url}&submit=Submit"
+
+            if input_name != "":
+                submitted = st.form_submit_button(
+                    "Submit", type="primary", use_container_width=True
                 )
-
-            elif entry_parts[2] == "STR":
-                selected_options = st.multiselect(
-                    (f"{entry_name}:"), feature_list, key=entry
+            else:
+                st.form_submit_button(
+                    "Submit", type="primary", use_container_width=True, disabled=True
                 )
-                entry_responses[entry] = ", ".join(selected_options)
+                st.warning("⚠️ Required Input Missing")
 
-            elif entry_parts[2] == "BOOL":
-                entry_responses[entry] = int(st.toggle(entry_name, key=entry))
+        def gen_qr(contents):
+            """
+            Generate a QR code image from the given contents.
 
-    submitted = False
+            Parameters:
+            - contents (str): The data to be encoded in the QR code.
 
-    with st.form("Stats Input", clear_on_submit=True, border=False):
-        with st.expander("Autonomous", True):
-            phase_header("Autonomous")
-            gen_phase_input("AUTO")
-
-        with st.expander("Teleop", True):
-            phase_header("Teleop")
-            gen_phase_input("TELE")
-
-        with st.expander("Endgame", True):
-            phase_header("Endgame")
-            gen_phase_input("END")
-
-        with st.expander("Info & Comments", True):
-            phase_header("Info & Comments")
-            gen_phase_input("INFO")
-            gen_phase_input("COMMENT")
-
-        st.divider()
-
-        gen_combined = {}
-
-        for key in gen_entries.keys():
-            if key in entry_responses:
-                gen_combined[key] = [gen_entries[key], entry_responses[key]]
-
-        entries_combined = set_combined.copy()
-        entries_combined.update(gen_combined)
-
-        entry_url = ""
-        for result in entries_combined.values():
-            entry_url += f"&entry.{result[0]}={result[1]}"
-
-        prefill_url = f"{st.secrets['STATS_FORM'].split('/viewform')[0]}/formResponse?usp=pp_url{entry_url}&submit=Submit"
-
-        if input_name != "":
-            submitted = st.form_submit_button(
-                "Submit", type="primary", use_container_width=True
+            Returns:
+            - bytes: The byte representation of the generated QR code image.
+            """
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
             )
-        else:
-            st.form_submit_button(
-                "Submit", type="primary", use_container_width=True, disabled=True
-            )
-            st.warning("Required Input Missing")
 
-    def gen_qr(contents):
-        """
-        Generate a QR code image from the given contents.
+            qr.add_data(contents)
+            qr.make(fit=True)
 
-        Parameters:
-        - contents (str): The data to be encoded in the QR code.
+            img = qr.make_image(fill_color="#ffffff", back_color="#141414")
 
-        Returns:
-        - bytes: The byte representation of the generated QR code image.
-        """
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_L,
-        )
+            byte_stream = io.BytesIO()
 
-        qr.add_data(contents)
-        qr.make(fit=True)
+            img.save(byte_stream, format="JPEG")
+            bytes_image = byte_stream.getvalue()
 
-        img = qr.make_image(fill_color="#ffffff", back_color="#141414")
+            return bytes_image
 
-        byte_stream = io.BytesIO()
+        if submitted:
+            req = requests.get(prefill_url)
 
-        img.save(byte_stream, format="JPEG")
-        bytes_image = byte_stream.getvalue()
-
-        return bytes_image
-
-    if submitted:
-        req = requests.get(prefill_url)
-
-        if req.status_code == 200:
-            st.balloons()
-            st.toast("Submission successful!", icon="✅")
-            if st.session_state.console["force_qr"]:
-                with st.expander("QR Code", False):
-                    st.image(gen_qr(prefill_url), use_column_width=True)
-        else:
-            st.toast("Submission unsuccessful! Use QR code...", icon="⚠️")
-            st.image(gen_qr(prefill_url), use_column_width=True)
-
+            if req.status_code == 200:
+                st.balloons()
+                st.toast("Submission successful!", icon="✅")
+                if st.session_state.console["force_qr"]:
+                    with st.expander("QR Code", False):
+                        st.image(gen_qr(prefill_url), use_container_width=True)
+            else:
+                st.toast("Submission unsuccessful! Use QR code...", icon="⚠️")
+                st.image(gen_qr(prefill_url), use_container_width=True)
+    except:
+        st.error("⚠️ No Data...")
 
 if __name__ == "__main__":
     main()

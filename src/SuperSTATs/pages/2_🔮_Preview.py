@@ -153,7 +153,7 @@ def display_team(
                     "\n\n".join(
                         [
                             f"{key.split('_')[1].title()}: {round(value, 2)}"
-                            for key, value in team_pieces_df[team].items()
+                            for key, value in sorted(team_pieces_df[team].items())
                             if key.startswith("TELE")
                         ]
                     )
@@ -169,7 +169,7 @@ def display_team(
                 df=st.session_state.df,
                 key=column,
                 use_presets=False,
-                use_group_filters=False,
+                use_group_filters=True,
                 use_show_available=False,
                 use_show_nums=False,
                 use_features=False,
@@ -274,7 +274,9 @@ def main():
 
     start_expanded = columns[0].toggle("Auto Expand", False)
     combined_chart = columns[1].toggle("Show Combined Chart", False)
-    use_calc_error = columns[2].toggle("Error Weights", True)
+    use_calc_error = columns[2].toggle(
+        "Error Weights", False, disabled=st.secrets["DEFAULT_EVENT_KEY"] == "NoTBA"
+    )
     calc_bumpers = columns[3].toggle("Calculate Bumpers", True)
 
     prediction_weight = 1

@@ -139,7 +139,7 @@ def main():
             img.save(byte_stream, format="JPEG")
             bytes_image = byte_stream.getvalue()
 
-            st.image(bytes_image, use_column_width=True)
+            st.image(bytes_image, use_container_width=True)
 
     st.write("""---""")
 
@@ -152,7 +152,7 @@ def main():
             try:
                 with open("src\\pickles\\map.pickle", "rb") as f:
                     pit_map = pickle.load(f)
-                st.image(pit_map, use_column_width=True)
+                st.image(pit_map, use_container_width=True)
             except:
                 pass
 
