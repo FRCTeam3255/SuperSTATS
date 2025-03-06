@@ -324,16 +324,16 @@ def main():
 
         st.divider()
 
-    load.robot_photo_dropdown(input_team)
+        load.robot_photo_dropdown(input_team)
 
-    set_inputs = [
-        input_name,
-        input_match,
-        input_type,
-        input_color,
-        input_team,
-        input_key,
-    ]
+        set_inputs = [
+            input_name,
+            input_match,
+            input_type,
+            input_color,
+            input_team,
+            input_key,
+        ]
 
         set_combined = {}
 
