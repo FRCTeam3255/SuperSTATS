@@ -31,6 +31,31 @@ def show_raw(match_num, match_info, match_key):
         pass
 
 
+def flatten_dict(d, parent_key='', sep='_'):
+    """
+    Flatten a nested dictionary, preserving the first key.
+
+    Parameters:
+    - d (dict): The dictionary to flatten.
+    - parent_key (str): The base key string for the flattened keys.
+    - sep (str): The separator to use between parent and child keys.
+
+    Returns:
+    dict: The flattened dictionary.
+    """
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict):
+            if parent_key:
+                items.extend(flatten_dict(v, new_key, sep=sep).items())
+            else:
+                items.extend(flatten_dict(v, k, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
+
 def main():
     load.app_init()
     analytics.collect_analytics("page_change", "data_check")
@@ -248,6 +273,8 @@ def main():
                         match_data["Match Name"] == match_name
                     ]["score_breakdown"].to_list()[0]
 
+                    score_breakdown = flatten_dict(score_breakdown)
+
                     calc_teams = {}
 
                     for team in missing_teams:
@@ -283,9 +310,7 @@ def main():
                                 calc_values = {}
 
                                 for tba, col in tba_columns.items():
-                                    tba_counts[tba] = score_breakdown[
-                                        calc_teams[team]["color"].lower()
-                                    ][tba]
+                                    tba_counts[tba] = score_breakdown.get(f"{calc_teams[team]['color'].lower()}_{tba}", 0)
 
                                 team_color = calc_teams[team]["color"]
 
@@ -378,8 +403,8 @@ def main():
                     score_breakdown = score_breakdown.to_json(orient="records")
                     data = json.loads(score_breakdown)
 
-                    red_data = data[0]["red"]
-                    blue_data = data[0]["blue"]
+                    red_data = flatten_dict(data[0]["red"])
+                    blue_data = flatten_dict(data[0]["blue"])
 
                     red_tba_score = red_data["totalPoints"] - red_data["foulPoints"]
                     blue_tba_score = blue_data["totalPoints"] - blue_data["foulPoints"]
