@@ -42,97 +42,42 @@ def display_team(
     comment_df = st.session_state.df
 
     for team_num in team_df:
-        team_name = load.get_team(team_num).get("nickname", "N/A")
-        column.markdown(
-            f"<p style='font-size:20px'><b>[{int(team_num)}]</b> {team_name}</p>",
-            unsafe_allow_html=True,
+        team_values = (
+            comment_df.loc[comment_df["Team"] == team_num, "COMMENT_GENERAL_STR_1"]
+            .dropna()
+            .tolist()
         )
-        if show_scouting:
-            with column.expander("Scouting Data"):
-                sorted_df = df.loc[df["Team #"] == int(team_num)]
 
-                sorted_df = sorted_df.sort_values(by="Timestamp")
-                sorted_df = sorted_df.drop_duplicates(keep="last", subset="Team #")
+        team_features = [value.split(", ") for value in team_values]
+        team_features = list(
+            set([feature for sublist in team_features for feature in sublist])
+        )
 
-                time_logged = str(sorted_df["Timestamp"].max())
-                if time_logged == "nan":
-                    column.error("No Data Collected For Team")
+        build.scouting_expander(
+            df=df,
+            team_num=team_num,
+            team_features=team_features,
+            match_name=match_choice,
+            start_expanded=start_expanded,
+            calc_bumpers=calc_bumpers,
+            column=column,
+        )
 
-                else:
-                    length = sorted_df["Frame Size LENGTH"].max()
-                    width = sorted_df["Frame Size WIDTH"].max()
-                    st.text(f"Length: {length} in | Width: {width} in")
-                    st.text(f"Area: {length * width} in²")
+    column.markdown("""---""")
 
-                    check_nan("Drivetrain", sorted_df["Drivetrain Type"].max(), st)
-                    check_nan("Scouting Comments", sorted_df["Comments"].max(), st)
+    projected_score = build.calc_projected(team_df, prediction_weight)
 
-                    st.text(f"Time Logged: {time_logged}")
+    text_color = "#f8312f" if team_header[0] == "🔴" else "#0074ba"
+    column.markdown(
+        f"<h3 style='color: {text_color};'>Projected Score: {projected_score}</h3>",
+        unsafe_allow_html=True,
+    )
 
+    match_df = st.session_state.match_data
+    match_df = match_df.loc[match_df["Match Name"] == match_choice]
 
-def sort_cols(starts_with):
-    df = load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset="Timestamp")
-    df_picked = load.download_sheets_raw(st.secrets["GID_PICKED"])
-    df = df.merge(df_picked, on="Team", how="left")
-
-    filter_cols = []
-    cols = [col for col in df.columns if col.startswith(starts_with)]
-    filter_cols.extend(cols)
-    return filter_cols
-
-
-def calc_score(df, team_num, sections):
-    df = df.drop("COMMENT_GENERAL_STR_1", axis=1)
-    df_plot = df.loc[(df["Team"] == team_num)]
-
-    mask = df.columns == "Match"
-    for section in sections:
-        mask = mask | df.columns.str.startswith(f"{section}_")
-
-    df_plot = df_plot.loc[:, mask]
-
-    df_split = []
-    for col in df.columns:
-        split_col = col.split("_")
-        if len(split_col) > 1:
-            df_split.append(split_col)
-
-    points = {}
-    for value in df_split:
-        if len(value) == 3:
-            points[f"{value[0]}_{value[1]}_{value[2]}"] = int(value[2])
-
-    for col, point in points.items():
-        if col in df_plot.columns:
-            df_plot[col] *= point
-
-    for score_type in sections:
-        columns = [col for col in df_plot.columns if col.startswith(score_type)]
-        df_plot[f"{score_type.strip('_').title()} Score"] = df_plot[columns].sum(axis=1)
-
-    excluded_cols = ["Match"]
-    sum_cols = [f"{section.strip('_').title()} Score" for section in sections]
-    all_columns = excluded_cols + sum_cols
-
-    df_plot["Total Score"] = df_plot.drop(columns=all_columns, axis=1).sum(axis=1)
-
-    return df_plot
-
-
-def team_score(df, team_df):
-    team_df = [int(team) for team in team_df]
-    team_scores = []
-    for team in team_df:
-        scores = calc_score(df, team, sections)["Total Score"]
-        if not np.isnan(scores.mean()):
-            team_scores.append(scores.mean())
-
-    if not team_scores:
-        return "None"
-
-    if len(team_scores) < 3:
-        team_sum = sum(team_scores)
-        return f"{str(int(team_sum))} *"
+    if match_choice == "Custom":
+        pass
     else:
         try:
             match_breakdown = match_df["score_breakdown"].to_list()[0]
@@ -237,6 +182,44 @@ def team_score(df, team_df):
             )
 
 
+def calc_score(df, team_num, sections):
+    df = df.drop("COMMENT_GENERAL_STR_1", axis=1)
+    df_plot = df.loc[(df["Team"] == team_num)]
+
+    mask = df.columns == "Match"
+    for section in sections:
+        mask = mask | df.columns.str.startswith(f"{section}_")
+
+    df_plot = df_plot.loc[:, mask]
+
+    df_split = []
+    for col in df.columns:
+        split_col = col.split("_")
+        if len(split_col) > 1:
+            df_split.append(split_col)
+
+    points = {}
+    for value in df_split:
+        if len(value) == 3:
+            points[f"{value[0]}_{value[1]}_{value[2]}"] = int(value[2])
+
+    for col, point in points.items():
+        if col in df_plot.columns:
+            df_plot[col] *= point
+
+    for score_type in sections:
+        columns = [col for col in df_plot.columns if col.startswith(score_type)]
+        df_plot[f"{score_type.strip('_').title()} Score"] = df_plot[columns].sum(axis=1)
+
+    excluded_cols = ["Match"]
+    sum_cols = [f"{section.strip('_').title()} Score" for section in sections]
+    all_columns = excluded_cols + sum_cols
+
+    df_plot["Total Score"] = df_plot.drop(columns=all_columns, axis=1).sum(axis=1)
+
+    return df_plot
+
+
 def main():
     load.app_init()
     analytics.collect_analytics("page_change", "preview")
@@ -245,8 +228,7 @@ def main():
 
     st.markdown(style.shimmer("#d9adff"), unsafe_allow_html=True)
     st.markdown(
-        "<h1 style='text-align: center;'>🔮 Match Preview 🔮</h1>",
-        unsafe_allow_html=True,
+        "<div class='shimmer'>🔮 Match Preview 🔮</div>", unsafe_allow_html=True
     )
     st.title("")
 
