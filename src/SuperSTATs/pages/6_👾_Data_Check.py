@@ -33,7 +33,7 @@ def show_raw(match_num, match_info, match_key):
 
 def flatten_dict(d, parent_key='', sep='_'):
     """
-    Flatten a nested dictionary.
+    Flatten a nested dictionary, preserving the first key.
 
     Parameters:
     - d (dict): The dictionary to flatten.
@@ -47,7 +47,10 @@ def flatten_dict(d, parent_key='', sep='_'):
     for k, v in d.items():
         new_key = f"{parent_key}{sep}{k}" if parent_key else k
         if isinstance(v, dict):
-            items.extend(flatten_dict(v, new_key, sep=sep).items())
+            if parent_key:
+                items.extend(flatten_dict(v, new_key, sep=sep).items())
+            else:
+                items.extend(flatten_dict(v, k, sep=sep).items())
         else:
             items.append((new_key, v))
     return dict(items)
@@ -270,6 +273,8 @@ def main():
                         match_data["Match Name"] == match_name
                     ]["score_breakdown"].to_list()[0]
 
+                    score_breakdown = flatten_dict(score_breakdown)
+
                     calc_teams = {}
 
                     for team in missing_teams:
@@ -304,10 +309,10 @@ def main():
                                 tba_counts = {}
                                 calc_values = {}
 
+                                # st.write(score_breakdown)
+
                                 for tba, col in tba_columns.items():
-                                    tba_counts[tba] = score_breakdown[
-                                        calc_teams[team]["color"].lower()
-                                    ][tba]
+                                    tba_counts[tba] = score_breakdown.get(f"{calc_teams[team]['color'].lower()}_{tba}", 0)
 
                                 team_color = calc_teams[team]["color"]
 
