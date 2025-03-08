@@ -400,8 +400,8 @@ def main():
                     score_breakdown = score_breakdown.to_json(orient="records")
                     data = json.loads(score_breakdown)
 
-                    red_data = data[0]["red"]
-                    blue_data = data[0]["blue"]
+                    red_data = flatten_dict(data[0]["red"])
+                    blue_data = flatten_dict(data[0]["blue"])
 
                     red_tba_score = red_data["totalPoints"] - red_data["foulPoints"]
                     blue_tba_score = blue_data["totalPoints"] - blue_data["foulPoints"]
@@ -437,9 +437,6 @@ def main():
 
                             nonlocal data_variance
                             data_variance = True
-
-                    red_data_flat = flatten_dict(red_data)
-                    blue_data_flat = flatten_dict(blue_data)
 
                     get_variance("RED", red_tba_score)
                     get_variance("BLUE", blue_tba_score)
