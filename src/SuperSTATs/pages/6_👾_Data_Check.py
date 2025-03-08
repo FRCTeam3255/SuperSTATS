@@ -309,8 +309,6 @@ def main():
                                 tba_counts = {}
                                 calc_values = {}
 
-                                # st.write(score_breakdown)
-
                                 for tba, col in tba_columns.items():
                                     tba_counts[tba] = score_breakdown.get(f"{calc_teams[team]['color'].lower()}_{tba}", 0)
 
