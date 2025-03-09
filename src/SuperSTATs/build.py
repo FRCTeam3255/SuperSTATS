@@ -169,6 +169,26 @@ def calc_projected(
     alliance_score = pd.DataFrame(columns=phases)
     match_count = 0
 
+    phase_multipliers = get_phase_multipliers(score_df)
+
+    '''
+    for each column in the score dataframe:
+        for each cell in the column:
+            if it is the first cell in the column:
+                multiplyer = phase_multiplyers[cell.get_contence()]
+            else:
+                cell = cell.get_contence() * multiplyer
+    '''
+
+    print(score_df)
+    for col in score_df.columns:
+        if score_df[col][0] in phase_multipliers.keys():
+            for index, row_value in score_df[col].items():
+                if index == 0:
+                    multiplier = phase_multipliers[row_value]
+                else:
+                    score_df.at[index, col] = row_value * multiplier
+
     for team in team_df:
         team_score = score_df[score_df["Team"] == team]
 
@@ -1011,3 +1031,25 @@ def gen_bar(
                     f"<span style='font-size: small; color: #808080;'>Loaded in {round(time.time() - start_time, 2)} seconds...</span>",
                     unsafe_allow_html=True,
                 )
+
+
+def get_phase_multipliers(phases):
+    """
+    Get the phase multipliers for the given phases.
+
+    Parameters:
+    - phases (list): A list of phase strings.
+
+    Returns:
+    - dict: A dictionary with phase strings as keys and their corresponding multipliers as values.
+    """
+    multipliers = {}
+    for phase in phases:
+        # Extract the number at the end of the phase string
+        try:
+            multiplier = int(phase.split('_')[-1])
+        except ValueError:
+            multiplier = 1  # Default multiplier if no number is found
+        multipliers[phase] = multiplier
+
+    return multipliers
