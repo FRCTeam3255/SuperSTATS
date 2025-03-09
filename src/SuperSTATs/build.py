@@ -169,8 +169,6 @@ def calc_projected(
     alliance_score = pd.DataFrame(columns=phases)
     match_count = 0
 
-    phase_multipliers = get_phase_multipliers(score_df)
-
     '''
     for each column in the score dataframe:
         for each cell in the column:
@@ -180,15 +178,17 @@ def calc_projected(
                 cell = cell.get_contence() * multiplyer
     '''
 
-    print(score_df)
-    for col in score_df.columns:
-        if score_df[col][0] in phase_multipliers.keys():
-            multiplier = phase_multipliers[col][0]
-            for index, row_value in score_df[col].items():
-                score_df.at[index, col] = row_value * multiplier
+    multiplied_data = score_df.copy()
+    phase_multipliers = get_phase_multipliers(multiplied_data)
+
+    for col in multiplied_data.columns:
+        if col in phase_multipliers.keys():
+            multiplier = phase_multipliers[col]
+            for index, row_value in multiplied_data[col].items():
+                multiplied_data[col][index] = row_value * multiplier
 
     for team in team_df:
-        team_score = score_df[score_df["Team"] == team]
+        team_score = multiplied_data[multiplied_data["Team"] == team]
 
         if show_ungrouped:
             phases = [
@@ -217,6 +217,7 @@ def calc_projected(
         team_score = team_score.iloc[-4:][phases].mean().to_frame().T
         team_score = team_score.dropna(axis=1, how="all")
 
+        
         alliance_score = alliance_score.dropna(axis=1, how="all")
         alliance_score = pd.concat([alliance_score, team_score], ignore_index=True)
 
