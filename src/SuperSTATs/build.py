@@ -183,11 +183,9 @@ def calc_projected(
     print(score_df)
     for col in score_df.columns:
         if score_df[col][0] in phase_multipliers.keys():
+            multiplier = phase_multipliers[col][0]
             for index, row_value in score_df[col].items():
-                if index == 0:
-                    multiplier = phase_multipliers[row_value]
-                else:
-                    score_df.at[index, col] = row_value * multiplier
+                score_df.at[index, col] = row_value * multiplier
 
     for team in team_df:
         team_score = score_df[score_df["Team"] == team]
