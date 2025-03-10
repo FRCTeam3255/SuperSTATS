@@ -317,7 +317,7 @@ def main():
     )
     calc_bumpers = columns[3].toggle("Calculate Bumpers", True)
 
-    prediction_weight = 1
+    prediction_weight = 10
 
     if use_calc_error:
         all_match_teams = {}
