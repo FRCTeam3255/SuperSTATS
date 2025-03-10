@@ -173,9 +173,9 @@ def calc_projected(
     for each column in the score dataframe:
         for each cell in the column:
             if it is the first cell in the column:
-                multiplyer = phase_multiplyers[cell.get_contence()]
+                multiplier = phase_multipliers[cell.get_contents()]
             else:
-                cell = cell.get_contence() * multiplyer
+                cell = cell.get_contents() * multiplier
     '''
 
     multiplied_data = score_df.copy()
