@@ -863,7 +863,9 @@ def gen_bar(
             picked = (
                 "💎"
                 if team == st.secrets["TEAM_NUMBER"]
-                else "🚫" if team in picked["Team"].values else "🟢"
+                else "🚫" if team in picked["Team"].values else "".join(
+                    [f"{int(digit)}️⃣" for digit in str(rank_df.loc[rank_df['Team'] == team, 'rank'].values[0])]
+                )
             )
         else:
             picked = ""
