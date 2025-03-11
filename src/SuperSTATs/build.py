@@ -169,15 +169,6 @@ def calc_projected(
     alliance_score = pd.DataFrame(columns=phases)
     match_count = 0
 
-    '''
-    for each column in the score dataframe:
-        for each cell in the column:
-            if it is the first cell in the column:
-                multiplier = phase_multipliers[cell.get_contents()]
-            else:
-                cell = cell.get_contents() * multiplier
-    '''
-
     multiplied_data = score_df.copy()
     phase_multipliers = get_phase_multipliers(multiplied_data)
 
