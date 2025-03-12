@@ -634,52 +634,6 @@ def get_presets():
         with open(presets_path, "wb") as f:
             pickle.dump({}, f, pickle.HIGHEST_PROTOCOL)
         return {}
-    
-
-def get_event_year(event_key):
-    """
-    Extracts the year from the event key.
-
-    Args:
-        event_key (str): The event key.
-
-    Returns:
-        int: The year of the event.
-    """
-    try:
-        year = int(event_key[:4])
-        return year
-    except ValueError:
-        st.error("Invalid event key format")
-        return None
-
-
-@st.cache_data(show_spinner=False, persist=True)
-def robot_photo_dropdown(input_team):
-    """
-    Displays a dropdown with the robot photo for a given team.
-    Args:
-        input_team (int): The team number for which the robot photo is to be displayed.
-    Retrieves the robot photo URL for the specified team and competition year using The Blue Alliance API.
-    If a photo is available, it is displayed in an expander with the caption "Team {input_team} Robot".
-    If no photo is available, a warning message is shown.
-    Note:
-        The function assumes that `st` (Streamlit) and `tba` (The Blue Alliance API client) are already imported and configured.
-        The function also assumes that `get_event_year` is a predefined function that retrieves the event year.
-    Raises:
-        KeyError: If the "DEFAULT_EVENT_KEY" is not found in `st.secrets`.
-        IndexError: If the media list does not contain at least two elements.
-    """
-    team_key = f"frc{input_team}"
-    competition_year = get_event_year(st.secrets["DEFAULT_EVENT_KEY"])
-
-    media = tba.team_media(team_key, competition_year)
-    robot_photo_url = media[1]['direct_url'] if len(media) > 1 else None
-    with st.expander("Robot Image", False):
-        if robot_photo_url:
-            st.image(robot_photo_url, caption=f"Team {input_team} Robot", use_column_width=True)
-        else:
-            st.warning("No robot photo available.")
 
 
 def get_event_year(event_key):
