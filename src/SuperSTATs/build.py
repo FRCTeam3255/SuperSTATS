@@ -53,7 +53,7 @@ def scouting_expander(
     has_data = False if time_logged == "nan" else True
 
     if len(rank_info) == 2:
-        expander_name += f" [🦸{rank_info[0]}/💎{rank_info[1]}]"
+        expander_name = f"[🦸{rank_info[0]}/🚨{rank_info[1]}] " + expander_name
 
     with column.expander(
         f"{expander_name} {'⚠️' if not has_data else ''}", start_expanded
@@ -877,7 +877,9 @@ def gen_bar(
             picked = ""
 
         if use_local_rank:
-            rank = str(calc_df.loc[calc_df["Team"] == team, "rank"].to_list()[0]).zfill(2)
+            rank = str(calc_df.loc[calc_df["Team"] == team, "rank"].to_list()[0]).zfill(
+                2
+            )
         else:
             rank = str(tba_ranks.get(str(int(team)), "NA")).zfill(2)
 
@@ -997,6 +999,7 @@ def gen_bar(
             with st.container(border=True):
                 start_time = time.time()
 
+                rank_df = rank_df.sort_values(by="rank")
                 for _, row in rank_df.iterrows():
                     team_num = row["Team"]
 
