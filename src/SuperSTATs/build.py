@@ -212,7 +212,7 @@ def calc_projected(
         alliance_score = alliance_score.dropna(axis=1, how="all")
         alliance_score = pd.concat([alliance_score, team_score], ignore_index=True)
 
-    projected_score = (alliance_score.sum().sum() / phase_count)
+    projected_score = (alliance_score.sum().sum() / phase_count) * round(match_count)
 
     return int(projected_score * prediction_weight)
 
@@ -883,6 +883,7 @@ def gen_bar(
 
     ranked_data = data.copy()
 
+
     ranked_data["Team"] = ranked_data["Team"].apply(
         lambda team: format_y(team, show_available, picked)
     )
@@ -1020,6 +1021,8 @@ def gen_bar(
                     f"<span style='font-size: small; color: #808080;'>Loaded in {round(time.time() - start_time, 2)} seconds...</span>",
                     unsafe_allow_html=True,
                 )
+
+    return ranked_data
 
 
 def get_phase_multipliers(phases):
