@@ -1021,6 +1021,8 @@ def gen_bar(
                     unsafe_allow_html=True,
                 )
 
+    return ranked_data
+
 
 def get_phase_multipliers(phases):
     """
