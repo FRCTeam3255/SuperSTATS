@@ -136,13 +136,14 @@ def scouting_expander(
 
 
 def calc_projected(
-    team_df, prediction_weight=10, show_ungrouped=False, return_row=False
+    team_df, average_scores, prediction_weight=10, show_ungrouped=False, return_row=False
 ):
     """
     Calculate the projected score for a team based on the given parameters.
 
     Parameters:
         team_df (DataFrame): The team DataFrame containing the team data.
+        average_scores (DataFrame): The DataFrame containing the average scores.
         prediction_weight (int, optional): The weight to apply to the projected score. Defaults to 1.
         show_ungrouped (bool, optional): Whether to show ungrouped phases. Defaults to False.
         return_row (bool, optional): Whether to return the row data. Defaults to False.
@@ -203,16 +204,7 @@ def calc_projected(
             )
             return {"score": team_score[["Match Name"] + phases], "phases": phases}
 
-        match_count += len(team_score)
-
-        team_score = team_score.iloc[-4:][phases].mean().to_frame().T
-        team_score = team_score.dropna(axis=1, how="all")
-
-        
-        alliance_score = alliance_score.dropna(axis=1, how="all")
-        alliance_score = pd.concat([alliance_score, team_score], ignore_index=True)
-
-    projected_score = (alliance_score.sum().sum() / phase_count) * round(match_count)
+    projected_score = average_scores["value"].sum()
 
     return int(projected_score * prediction_weight)
 
