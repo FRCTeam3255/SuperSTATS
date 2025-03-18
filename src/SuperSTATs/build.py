@@ -53,7 +53,7 @@ def scouting_expander(
     has_data = False if time_logged == "nan" else True
 
     if len(rank_info) == 2:
-        expander_name += f" [🦸{rank_info[0]}/💎{rank_info[1]}]"
+        expander_name = f"[🦸{rank_info[0]}/🚨{rank_info[1]}] " + expander_name
 
     with column.expander(
         f"{expander_name} {'⚠️' if not has_data else ''}", start_expanded
@@ -450,6 +450,7 @@ def gen_bar(
     use_show_nums=True,
     use_inline_legend=True,
     use_features=True,
+    use_local_rank=True,
     use_agg_type=True,
     use_filter_selection=True,
     use_max_size=True,
@@ -472,6 +473,7 @@ def gen_bar(
     - use_show_nums (bool): Whether to show team numbers or not.
     - use_inline_legend (bool): Whether to use inline legend or not.
     - use_features (bool): Whether to use features or not.
+    - use_local_rank (bool): Whether to use local rank or not.
     - use_agg_type (bool): Whether to use aggregation type or not.
     - use_filter_selection (bool): Whether to use filter selection or not.
     - use_max_size (bool): Whether to use maximum size or not.
@@ -491,6 +493,7 @@ def gen_bar(
         "show_available" if use_show_available else None,
         "show_nums" if use_show_nums else None,
         "features" if use_features else None,
+        "local_rank" if use_local_rank else None,
     ]
 
     variables = [var for var in variables if var != None]
@@ -571,6 +574,10 @@ def gen_bar(
             "features", var_count, "Features", False, key, False
         )
 
+        use_local_rank, var_count = gen_toggle(
+            "local_rank", var_count, "Local Rank", False, key, False
+        )
+
         group_filters, var_count = gen_toggle(
             "group_filters", var_count, "Group Filters", True, key, False
         )
@@ -606,6 +613,7 @@ def gen_bar(
         show_nums = preset["show_nums"]
         show_available = preset["show_available"]
         features = preset["use_features"]
+        local_rank = preset["use_local_rank"]
         group_filters = preset["group_filters"]
         filter_choices = preset["selected_filters"]
         inline_legend = preset["inline_legend"]
@@ -869,9 +877,14 @@ def gen_bar(
         else:
             picked = ""
 
-        rank = str(tba_ranks.get(str(int(team)), "NA")).zfill(2)
+        if use_local_rank:
+            rank = str(calc_df.loc[calc_df["Team"] == team, "rank"].to_list()[0]).zfill(
+                2
+            )
+        else:
+            rank = str(tba_ranks.get(str(int(team)), "NA")).zfill(2)
 
-        return f"{picked} {str(int(team)).rjust(4)} [{rank}]"
+        return f"{picked} {str(int(team)).rjust(5)} [{rank}]"
 
     ranked_data = data.copy()
 
@@ -988,6 +1001,7 @@ def gen_bar(
             with st.container(border=True):
                 start_time = time.time()
 
+                rank_df = rank_df.sort_values(by="rank")
                 for _, row in rank_df.iterrows():
                     team_num = row["Team"]
 
