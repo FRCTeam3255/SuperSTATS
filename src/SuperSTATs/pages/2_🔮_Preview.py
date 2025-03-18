@@ -144,7 +144,6 @@ def display_team(
                 expanders=False,
                 use_inline_legend=False,
             )
-    column.write(ranked_df)
 
     projected_score = build.calc_projected(team_df, ranked_df, prediction_weight)
 
