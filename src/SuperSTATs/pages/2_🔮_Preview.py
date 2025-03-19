@@ -65,45 +65,8 @@ def display_team(
 
     column.markdown("""---""")
 
-    projected_score = build.calc_projected(team_df, prediction_weight)
-
-    text_color = "#f8312f" if team_header[0] == "🔴" else "#0074ba"
-    column.markdown(
-        f"<h3 style='color: {text_color};'>Projected Score: {projected_score}</h3>",
-        unsafe_allow_html=True,
-    )
-
-    match_df = st.session_state.match_data
-    match_df = match_df.loc[match_df["Match Name"] == match_choice]
-
-    if match_choice == "Custom":
-        pass
-    else:
-        try:
-            match_breakdown = match_df["score_breakdown"].to_list()[0]
-
-            try:
-                actual_score = match_breakdown[team_header[1].lower()]["totalPoints"]
-            except:
-                actual_score = -1
-
-            match_key = match_df["key"].to_list()[0]
-            match_url = f"https://www.thebluealliance.com/match/{match_key}"
-        except:
-            actual_score = -1
-            match_url = None
-
-        percent_error = (
-            round((actual_score - projected_score) / actual_score * 100)
-            if actual_score != 0
-            else "inf"
-        )
-
-        if match_url:
-            column.markdown(
-                f"<h6><a href='{match_url}' style='color: #808080; text-decoration: none;'>Actual Score: {'Unplayed' if actual_score == -1 else actual_score} {'' if actual_score == -1 else f'({percent_error}%)'}</a></h6>",
-                unsafe_allow_html=True,
-            )
+    projected_score_holder = column.empty()
+    actual_score_holder = column.empty()
 
     df_raw = st.session_state.df
     alliance_pieces = 0
@@ -163,9 +126,10 @@ def display_team(
 
     column.markdown("""---""")
 
+
     if not combined_chart:
         with column.container():
-            build.gen_bar(
+            ranked_df = build.gen_bar(
                 df=st.session_state.df,
                 key=column,
                 use_presets=False,
@@ -180,6 +144,84 @@ def display_team(
                 expanders=False,
                 use_inline_legend=False,
             )
+
+    projected_score = build.calc_projected(team_df, ranked_df, prediction_weight)
+
+    text_color = "#f8312f" if team_header[0] == "🔴" else "#0074ba"
+    projected_score_holder.markdown(
+        f"<h3 style='color: {text_color};'>Projected Score: {projected_score}</h3>",
+        unsafe_allow_html=True,
+    )
+
+    match_df = st.session_state.match_data
+    match_df = match_df.loc[match_df["Match Name"] == match_choice]
+
+    if match_choice == "Custom":
+        pass
+    else:
+        try:
+            match_breakdown = match_df["score_breakdown"].to_list()[0]
+
+            try:
+                actual_score = match_breakdown[team_header[1].lower()]["totalPoints"]
+            except:
+                actual_score = -1
+
+            match_key = match_df["key"].to_list()[0]
+            match_url = f"https://www.thebluealliance.com/match/{match_key}"
+        except:
+            actual_score = -1
+            match_url = None
+
+        percent_error = (
+            round((actual_score - projected_score) / actual_score * 100)
+            if actual_score != 0
+            else "inf"
+        )
+
+        if match_url:
+            actual_score_holder.markdown(
+                f"<h6><a href='{match_url}' style='color: #808080; text-decoration: none;'>Actual Score: {'Unplayed' if actual_score == -1 else actual_score} {'' if actual_score == -1 else f'({percent_error}%)'}</a></h6>",
+                unsafe_allow_html=True,
+            )
+
+
+def calc_score(df, team_num, sections):
+    df = df.drop("COMMENT_GENERAL_STR_1", axis=1)
+    df_plot = df.loc[(df["Team"] == team_num)]
+
+    mask = df.columns == "Match"
+    for section in sections:
+        mask = mask | df.columns.str.startswith(f"{section}_")
+
+    df_plot = df_plot.loc[:, mask]
+
+    df_split = []
+    for col in df.columns:
+        split_col = col.split("_")
+        if len(split_col) > 1:
+            df_split.append(split_col)
+
+    points = {}
+    for value in df_split:
+        if len(value) == 3:
+            points[f"{value[0]}_{value[1]}_{value[2]}"] = int(value[2])
+
+    for col, point in points.items():
+        if col in df_plot.columns:
+            df_plot[col] *= point
+
+    for score_type in sections:
+        columns = [col for col in df_plot.columns if col.startswith(score_type)]
+        df_plot[f"{score_type.strip('_').title()} Score"] = df_plot[columns].sum(axis=1)
+
+    excluded_cols = ["Match"]
+    sum_cols = [f"{section.strip('_').title()} Score" for section in sections]
+    all_columns = excluded_cols + sum_cols
+
+    df_plot["Total Score"] = df_plot.drop(columns=all_columns, axis=1).sum(axis=1)
+
+    return df_plot
 
 
 def main():

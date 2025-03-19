@@ -136,13 +136,14 @@ def scouting_expander(
 
 
 def calc_projected(
-    team_df, prediction_weight=1, show_ungrouped=False, return_row=False
+    team_df, average_scores, prediction_weight=10, show_ungrouped=False, return_row=False
 ):
     """
     Calculate the projected score for a team based on the given parameters.
 
     Parameters:
         team_df (DataFrame): The team DataFrame containing the team data.
+        average_scores (DataFrame): The DataFrame containing the average scores.
         prediction_weight (int, optional): The weight to apply to the projected score. Defaults to 1.
         show_ungrouped (bool, optional): Whether to show ungrouped phases. Defaults to False.
         return_row (bool, optional): Whether to return the row data. Defaults to False.
@@ -169,8 +170,17 @@ def calc_projected(
     alliance_score = pd.DataFrame(columns=phases)
     match_count = 0
 
+    multiplied_data = score_df.copy()
+    phase_multipliers = get_phase_multipliers(multiplied_data)
+
+    for col in multiplied_data.columns:
+        if col in phase_multipliers.keys():
+            multiplier = phase_multipliers[col]
+            for index, row_value in multiplied_data[col].items():
+                multiplied_data.loc[index, col] = row_value * multiplier
+
     for team in team_df:
-        team_score = score_df[score_df["Team"] == team]
+        team_score = multiplied_data[multiplied_data["Team"] == team]
 
         if show_ungrouped:
             phases = [
@@ -194,16 +204,7 @@ def calc_projected(
             )
             return {"score": team_score[["Match Name"] + phases], "phases": phases}
 
-        match_count += len(team_score)
-
-        team_score = team_score.iloc[-4:][phases].mean().to_frame().T
-        team_score = team_score.dropna(axis=1, how="all")
-
-        alliance_score = alliance_score.dropna(axis=1, how="all")
-        alliance_score = pd.concat([alliance_score, team_score], ignore_index=True)
-
-    alliance_score = alliance_score.sum().sum()
-    projected_score = round((alliance_score / phase_count) * round(match_count))
+    projected_score = average_scores["value"].sum()
 
     return int(projected_score * prediction_weight)
 
@@ -887,6 +888,7 @@ def gen_bar(
 
     ranked_data = data.copy()
 
+
     ranked_data["Team"] = ranked_data["Team"].apply(
         lambda team: format_y(team, show_available, picked)
     )
@@ -1025,3 +1027,27 @@ def gen_bar(
                     f"<span style='font-size: small; color: #808080;'>Loaded in {round(time.time() - start_time, 2)} seconds...</span>",
                     unsafe_allow_html=True,
                 )
+
+    return ranked_data
+
+
+def get_phase_multipliers(phases):
+    """
+    Get the phase multipliers for the given phases.
+
+    Parameters:
+    - phases (list): A list of phase strings.
+
+    Returns:
+    - dict: A dictionary with phase strings as keys and their corresponding multipliers as values.
+    """
+    multipliers = {}
+    for phase in phases:
+        # Extract the number at the end of the phase string
+        try:
+            multiplier = int(phase.split('_')[-1])
+        except ValueError:
+            multiplier = 1  # Default multiplier if no number is found
+        multipliers[phase] = multiplier
+
+    return multipliers
