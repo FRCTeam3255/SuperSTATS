@@ -232,7 +232,21 @@ def gen_match_comp(df, team_num, match_name, not_preview=True):
     else:
         show_ungrouped = False
 
-    team_df = calc_projected([team_num], show_ungrouped, return_row=True)
+    ranked_df = gen_bar(
+        df=st.session_state.df,
+        use_presets=False,
+        use_group_filters=True,
+        use_show_available=False,
+        use_show_nums=False,
+        use_features=False,
+        use_agg_type=False,
+        use_max_size=False,
+        displayed_teams=team_df,
+        expanders=False,
+        use_inline_legend=False,
+    )
+
+    team_df = calc_projected([team_num], ranked_df, show_ungrouped, return_row=True)
 
     phases = team_df["phases"]
     team_df = team_df["score"]
