@@ -617,7 +617,7 @@ def gen_bar(
         show_nums = preset["show_nums"]
         show_available = preset["show_available"]
         features = preset["use_features"]
-        local_rank = preset["use_local_rank"]
+        use_local_rank = preset["use_local_rank"]
         group_filters = preset["group_filters"]
         filter_choices = preset["selected_filters"]
         inline_legend = preset["inline_legend"]
