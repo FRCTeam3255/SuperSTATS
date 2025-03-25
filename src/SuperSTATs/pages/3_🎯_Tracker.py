@@ -60,6 +60,12 @@ def main():
     match_df = match_df[match_df[team_cols].isin([team_num]).any(axis=1)]
     matches = match_df["Match"].to_list()
 
+    if st.session_state.console["practice_mode"]:
+        practice_matches = st.session_state.df[
+            st.session_state.df["Match Type"].str.startswith("Prac")
+        ]["Match"].unique()
+        matches.extend(practice_matches)
+
     try:
         match_index = matches.index(url_match_name)
     except:
