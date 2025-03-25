@@ -136,7 +136,11 @@ def scouting_expander(
 
 
 def calc_projected(
-    team_df, average_scores, prediction_weight=10, show_ungrouped=False, return_row=False
+    team_df,
+    average_scores,
+    prediction_weight=10,
+    show_ungrouped=False,
+    return_row=False,
 ):
     """
     Calculate the projected score for a team based on the given parameters.
@@ -613,7 +617,7 @@ def gen_bar(
         show_nums = preset["show_nums"]
         show_available = preset["show_available"]
         features = preset["use_features"]
-        local_rank = preset["use_local_rank"]
+        use_local_rank = preset["use_local_rank"]
         group_filters = preset["group_filters"]
         filter_choices = preset["selected_filters"]
         inline_legend = preset["inline_legend"]
@@ -888,7 +892,6 @@ def gen_bar(
 
     ranked_data = data.copy()
 
-
     ranked_data["Team"] = ranked_data["Team"].apply(
         lambda team: format_y(team, show_available, picked)
     )
@@ -964,6 +967,7 @@ def gen_bar(
                 "selected_features": selected_features,
                 "selected_filters": selected_filters,
                 "size_limit": size_limit,
+                "use_local_rank": use_local_rank,
                 "show_available": show_available,
                 "show_nums": show_nums,
                 "use_features": features,
@@ -1045,7 +1049,7 @@ def get_phase_multipliers(phases):
     for phase in phases:
         # Extract the number at the end of the phase string
         try:
-            multiplier = int(phase.split('_')[-1])
+            multiplier = int(phase.split("_")[-1])
         except ValueError:
             multiplier = 1  # Default multiplier if no number is found
         multipliers[phase] = multiplier
