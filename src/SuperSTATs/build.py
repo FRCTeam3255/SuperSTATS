@@ -226,221 +226,123 @@ def gen_match_comp(df, team_num, match_name, not_preview=True):
     Returns:
     None
     """
-    team_df = df[df["Team"] == team_num]
+
+    team_df = df[df["Team"] == team_num].copy()
     match_count = len(team_df)
+
+    phases = [phase for phase in st.session_state.phases if phase != "COMMENT"]
+
+    team_df["Match"] = team_df["Match"].astype(int)
+    team_df["Match Name"] = team_df["Match Type"] + " " + team_df["Match"].astype(str)
+
+    for phase in phases:
+        team_df.loc[:, phase] = load.add_cols(team_df, phase)
+
+    match_df = team_df[team_df["Match Name"] == match_name]
+
+    team_phase_counts = {
+        phase: round(team_df[phase].sum() / match_count) for phase in phases
+    }
+    match_phase_counts = {phase: match_df[phase].sum() for phase in phases}
+
+    use_phases = phases if not_preview else ["AUTO", "TELE", "END"]
+
+    team_averages = {
+        phase: round(team_df[phase].sum() / match_count) for phase in phases
+    }
+
+    team_scores = match_df.select_dtypes(include=[int, float]).sum()
+
+    team_scores["TOTAL"] = team_scores.sum(numeric_only=True)
 
     config_columns = st.columns(3)
 
     if not_preview:
         show_ungrouped = config_columns[0].toggle("Ungroup", False)
-    else:
-        show_ungrouped = False
-
-    team_df = calc_projected([team_num], show_ungrouped, return_row=True)
-
-    phases = team_df["phases"]
-    team_df = team_df["score"]
-
-    if not_preview and show_ungrouped:
-        selected_phase = st.selectbox(
-            "Phase:", ["AUTO", "TELE", "END", "INFO"], index=1
+        use_team_colors = config_columns[1].toggle("Use Team Colors")
+        swap_team_colors = config_columns[2].toggle(
+            "Swap Colors", disabled=not use_team_colors
         )
-
-        if selected_phase:
-            if any("_" in phase for phase in phases):
-                phases = [
-                    phase for phase in phases if phase.startswith(f"{selected_phase}_")
-                ]
-
-    team_scores = team_df.drop(columns=["Match Name"]).sum()
-
-    if not_preview:
         st.divider()
 
-    columns = st.columns(len(phases))
+        use_phases = []
+        columns = st.columns(len(phases))
 
-    use_phases = []
-    if not_preview:
         for i, phase in enumerate(phases):
             phase_name = phase.split("_")[1] if show_ungrouped else phase
             use = columns[i].toggle(phase_name.title(), True)
             if use:
                 use_phases.append(phase)
 
+        filtered_scores = {
+            phase: team_scores[phase] for phase in use_phases if phase in team_scores
+        }
+
+        for i, phase in enumerate(use_phases):
+            delta = filtered_scores[phase] - team_phase_counts[phase]
+            columns[i].metric(
+                label=phase,
+                value=filtered_scores[phase],
+                delta=delta,
+                delta_color="off" if delta == 0 else "normal",
+                label_visibility="hidden",
+            )
+
+        if team_scores.empty:
+            st.error(f"⚠️ No data collected for team {team_num} in {match_name}")
+            return
+
+        use_colors = ["#0074ba", "#f8312f"]
+        if use_team_colors:
+            use_colors = st.session_state.team_colors[str(team_num)]
+
+        if swap_team_colors:
+            use_colors = use_colors[::-1]
+
         st.divider()
     else:
-        use_phases = ["AUTO", "TELE", "END"]
+        show_ungrouped = False
+        use_team_colors = False
+        swap_team_colors = False
+        use_colors = ["#0074ba", "#f8312f"]
 
-    alt_size = st.columns(len(use_phases) + 1)
-    team_averages = {}
+    match_label = "Match" if not_preview else "M"
+    average_label = "Average" if not_preview else "A"
 
-    try:
-        for phase, score in team_scores.items():
-            team_averages[phase] = round(score / match_count)
-
-        if not_preview:
-            match_scores = team_df.loc[team_df["Match Name"] == match_name]
-        else:
-            team_df = team_df.sort_index()
-
-            match_scores = (
-                team_df.reset_index(drop=True).loc[len(team_df) - 1].to_frame().T
-            )
-            match_name = match_scores["Match Name"].to_list()[0]
-
-            query_url = f"Tracker/?team_num={team_num}&match_name={match_name.replace(' ', '_')}"
-
-            button_style = (
-                "background-color: #141414; border: 1px solid #424242; border-radius: 8px;"
-                "color: #ffffff; text-align: center; text-decoration: none;"
-                "display: block; width: 100%; padding: 8px 0;"
-            )
-
-            st.markdown(
-                f"<a href='{query_url}' target='_self' style='{button_style}'>Send To Team Tracker</a>",
-                unsafe_allow_html=True,
-            )
-    except:
-        match_scores = team_df.loc[team_df["Match Name"] == match_name]
-
-    team_scores = match_scores.drop(columns=["Match Name"])
-
-    if team_scores.empty:
-        st.error(f"⚠️ No data collected for team {team_num} in {match_name}")
-
-    team_scores = team_scores.sum()
-    team_scores["TOTAL"] = team_scores.sum()
-
-    match_score = {}
-
-    for phase, score in team_scores.items():
-        match_score[phase] = score
-
-    default_colors = ["#0074ba", "#f8312f"]
-
-    if not_preview:
-        use_team_colors = config_columns[1].toggle("Use Team Colors")
-        team_colors = st.session_state.team_colors[str(team_num)]
-
-        if use_team_colors:
-            if team_colors[0] == "003255" or team_colors[1] == "003255":
-                config_columns[2].toggle("Swap Colors", disabled=True)
-                use_colors = default_colors
-                st.toast(
-                    f"Team colors not found for {st.session_state.team_info[team_num]} (Team {team_num})",
-                    icon="⚠️",
-                )
-            else:
-                if config_columns[2].toggle("Swap Colors"):
-                    use_colors = [team_colors[1], team_colors[0]]
-                else:
-                    use_colors = [team_colors[0], team_colors[1]]
-        else:
-            config_columns[2].toggle("Swap Colors", disabled=True)
-            use_colors = default_colors
-
-        try:
-            for i, phase in enumerate(phases):
-                delta = match_score[phase] - team_averages[phase]
-                columns[i].metric(
-                    label=phase,
-                    value=match_score[phase],
-                    delta=delta,
-                    delta_color="off" if delta == 0 else "normal",
-                    label_visibility="hidden",
-                )
-        except:
-            pass
-    else:
-        use_colors = default_colors
-
-    try:
-        df = pd.DataFrame(
-            {
-                "Phase": use_phases,
-                "Average": [team_averages[phase] for phase in use_phases],
-                "Match": [match_score[phase] for phase in use_phases],
-            }
-        )
-    except:
-        df = pd.DataFrame.from_dict(
-            {
-                "Phase": [],
-                "Average": [],
-                "Match": [],
-            }
-        )
-        df["Phase"] = df["Phase"].astype(str)
-        df["Average"] = df["Average"].astype(int)
-        df["Match"] = df["Match"].astype(int)
-
-    if show_ungrouped:
-        df["Phase"] = df["Phase"].apply(lambda x: x.split("_")[1])
+    df_chart = pd.DataFrame(
+        {
+            "Phase": use_phases,
+            average_label: [team_averages[phase] for phase in use_phases],
+            match_label: [match_phase_counts[phase] for phase in use_phases],
+        }
+    )
 
     chart = (
-        alt.Chart(df.melt("Phase"))
+        alt.Chart(df_chart.melt("Phase"))
         .mark_bar()
         .encode(
-            alt.X(
-                "variable:N",
-                axis=alt.Axis(title=""),
-                sort=["Match", "Average"],
+            x=alt.X(
+                "variable:N", axis=alt.Axis(title=""), sort=[match_label, average_label]
             ),
-            alt.Y(
+            y=alt.Y(
                 "value:Q",
                 axis=alt.Axis(title=f"{match_name} vs {team_num} Average", grid=False),
             ),
             color=alt.Color(
                 "variable:N",
-                scale=alt.Scale(
-                    domain=["Match", "Average"],
-                    range=[use_colors[0], use_colors[1]],
-                ),
-                legend=alt.Legend(
-                    title=None,
-                    orient=("right" if not_preview else "bottom"),
-                    symbolType="circle",
-                ),
+                scale=alt.Scale(domain=[match_label, average_label], range=use_colors),
+                legend=alt.Legend(title=None, orient="right", symbolType="circle"),
             ),
-            stroke=alt.value("#ffffff"),
-            strokeWidth=alt.value(2),
             column="Phase:O",
         )
         .properties(height=200, width=225)
         .configure_axis(labelAngle=0)
     )
 
+    alt_size = st.columns(len(use_phases) + int(not not_preview) + 1)
+
     with alt_size[0].container():
         st.altair_chart(chart, use_container_width=True)
-
-    if not_preview:
-        try:
-            match_progress = team_df
-            match_progress["Match Name"] = match_progress["Match Name"].apply(
-                lambda x: f"{x} ⭐" if x == match_name else x
-            )
-
-            column_config = {}
-
-            for phase in ["AUTO", "TELE", "END", "INFO"]:
-                column_config[phase] = st.column_config.ProgressColumn(
-                    phase.title(),
-                    format=f"%f/{int(max(match_progress[phase]))}",
-                    min_value=math.floor(min(match_progress[phase])) - 0.5,
-                    max_value=math.ceil(max(match_progress[phase])),
-                )
-
-            st.divider()
-
-            st.dataframe(
-                match_progress,
-                column_config=column_config,
-                column_order=("Match Name", "AUTO", "TELE", "END", "INFO"),
-                hide_index=True,
-                use_container_width=True,
-            )
-        except:
-            pass
 
 
 def gen_bar(
