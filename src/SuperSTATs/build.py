@@ -163,17 +163,6 @@ def calc_projected(
         if phase != "COMMENT" and phase != "INFO"
     ]
 
-    phase_count = len(
-        [
-            col
-            for col in score_df.columns
-            if any(col.startswith(f"{phase}_") for phase in phases)
-        ]
-    ) * len(team_df)
-
-    alliance_score = pd.DataFrame(columns=phases)
-    match_count = 0
-
     multiplied_data = score_df.copy()
     phase_multipliers = get_phase_multipliers(multiplied_data)
 
@@ -244,11 +233,26 @@ def gen_match_comp(df, team_num, match_name, not_preview=True):
     for phase in phases:
         team_df.loc[:, phase] = load.add_cols(team_df, phase)
 
-    # TODO: Show previous match
     if not_preview:
         match_df = team_df[team_df["Match Name"] == match_name]
     else:
-        match_df = team_df[team_df["Match Name"] == match_name]
+        time_df = team_df.copy().reset_index(drop=True)
+        time_df["Timestamp"] = pd.to_datetime(time_df["Timestamp"])
+        time_df = (
+            time_df[time_df["Team"] == team_num]
+            .sort_values(by="Timestamp")
+            .reset_index(drop=True)
+        )
+
+        match_index = time_df[time_df["Match Name"] == match_name].index[0]
+        if match_index > 0:
+            match_df = time_df.iloc[match_index - 1 : match_index]
+        else:
+            match_df = time_df.iloc[match_index : match_index + 1]
+
+    match_name = (
+        match_df["Match Type"].values[0] + " " + str(match_df["Match"].values[0])
+    )
 
     team_phase_counts = {
         phase: round(team_df[phase].sum() / match_count) for phase in phases
@@ -334,7 +338,7 @@ def gen_match_comp(df, team_num, match_name, not_preview=True):
     st.divider()
 
     match_name_split = match_name.split(" ")
-    match_short_code = match_name_split[0][0] + match_name_split[1][0]
+    match_short_code = match_name_split[0][0] + match_name_split[1]
     match_label = "Match" if not_preview else match_short_code
     average_label = "Average" if not_preview else "Avg"
 
