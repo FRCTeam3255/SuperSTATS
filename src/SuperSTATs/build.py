@@ -395,10 +395,11 @@ def gen_match_comp(df, team_num, match_name, not_preview=True):
 
         st.divider()
 
+        match_progress = match_progress.sort_values(by=["Match Type", "Match"], ascending=[False,True])
         st.dataframe(
             match_progress,
             column_config=column_config,
-            column_order=("Match Name", "AUTO", "TELE", "END"),
+            column_order=("Match Type", "Match", "AUTO", "TELE", "END"),
             hide_index=True,
             use_container_width=True,
         )
