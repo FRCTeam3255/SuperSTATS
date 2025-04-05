@@ -744,6 +744,10 @@ def app_init():
         "Calculating PI...",
         "Ducktaping notes...",
         "Overclocking the power supply...",
+        "Shallow climbing on the reef..."
+        "Why does Susan have a pet turtle?",
+        "OHH MY GOD ITS TEJ!!!",
+        "Tuning PID again..."
     ]
 
     ascii_SN = [
