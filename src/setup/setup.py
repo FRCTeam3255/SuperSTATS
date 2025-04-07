@@ -7,12 +7,12 @@ venv_path = ".venv\\Scripts\\activate.bat"
 setup = "src\\setup"
 
 to_create = [
-    "src\\pickles",  # Ensure the pickles folder is created as an empty folder
-    ".streamlit",    # Ensure the .streamlit folder exists for secrets.toml
+    ".streamlit",  # Ensure the .streamlit folder exists for secrets.toml
 ]
 
 to_move = {
     f"{setup}\\streamlit\\secrets.toml": ".streamlit\\secrets.toml",
+    f"{setup}\\pickles": "src\\pickles",
 }
 
 os.chdir(app_dir)
@@ -21,6 +21,11 @@ os.chdir(app_dir)
 for folder in to_create:
     if not os.path.exists(folder):
         os.makedirs(folder)
+
+# Check if src\setup\pickles exists, and only create src\pickles if it doesn't
+if not os.path.exists(f"{setup}\\pickles"):
+    if not os.path.exists("src\\pickles"):
+        os.makedirs("src\\pickles")
 
 for py in ["python3", "py"]:
     print(f"Attempting environment creation with '{py}'...")
