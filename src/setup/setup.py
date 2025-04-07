@@ -1,9 +1,10 @@
-import shutil, os
+import shutil
+import os
 
 launch_dir = os.path.dirname(os.path.abspath(__file__))
 app_dir = os.path.abspath(os.path.join(launch_dir, os.pardir, os.pardir))
 venv_path = ".venv\\Scripts\\activate.bat"
-setup = f"src\\setup"
+setup = "src\\setup"
 
 to_create = [
     "src\\pickles",  # Ensure the pickles folder is created as an empty folder
@@ -39,7 +40,9 @@ for py in ["python3", "py"]:
 
         print("Installing libraries...")
         os.system("call .venv/Scripts/activate & pip install -e .")
-        os.system("call .venv/Scripts/activate & pip install -r requirements.txt")
+        os.system(
+            "call .venv/Scripts/activate & pip install -r requirements.txt"
+        )
 
         break
 
