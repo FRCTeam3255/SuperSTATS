@@ -3,4 +3,4 @@ import streamlit as st
 
 
 load.initialise_app()
-st.write("SuperSTATs is loaded!")
+st.write("Home!")

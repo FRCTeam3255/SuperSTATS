@@ -1,6 +1,8 @@
 import json
+import pickle
 import random
 import time
+import pandas as pd
 import streamlit as st
 from SuperSTATs import constants
 
@@ -32,7 +34,10 @@ class DataInitializer:
                 .replace("y", "<font color='ECC412'><b>#</b></font>")
             )
 
-        self.states = []
+        self.states = [
+            "get_configs",
+            "get_console",
+        ]
 
         self.start_time = time.time()
 
@@ -51,8 +56,15 @@ class DataInitializer:
 
         self.init_status = st.empty()
 
+    def initialise_all(self):
         with self.init_status.status(random.choice(self.loading_messages), expanded=True) as self.status:
             st.divider()
+
+            self.display_status("get_configs")
+            st.session_state.configs = self.get_configs()
+
+            self.display_status("get_console")
+            st.session_state.console = self.get_console()
 
     def display_status(self, state):
         if self.status_messages[state] is not None:
@@ -70,6 +82,62 @@ class DataInitializer:
 
             time.sleep(1)
             self.init_status.empty()
+
+
+    def get_configs(self):
+        """
+        Retrieves the configurations from a Google Sheets document and saves them to a pickle file.
+
+        Returns:
+            dict: A dictionary containing the configurations, where each configuration is a key and its corresponding value is a list of values.
+        """
+        configs_raw = download_sheets_raw(st.secrets["GID_CONFIG"])
+        configs = {}
+
+        for _, row in configs_raw.iterrows():
+            config = row["Config"]
+            value = row["Value"]
+            configs[config] = value.split(", ")
+
+        configs_path = "src\\pickles\\configs.pickle"
+
+        try:
+            with open(configs_path, "rb") as f:
+                configs = pickle.load(f)
+            return configs
+        except:
+            with open(configs_path, "wb") as f:
+                pickle.dump(configs, f, pickle.HIGHEST_PROTOCOL)
+            return configs
+
+
+    def get_console(self):
+        st.session_state.console = {}
+        for config in st.session_state.configs["Console"]:
+            config, default_status = config.split("=")
+            st.session_state.console[config] = bool(default_status == "true")
+
+def download_sheets_raw(gid):
+    """
+    Downloads a Google Sheets document as a pandas DataFrame.
+
+    Args:
+        gid (str): The ID of the Google Sheets document.
+
+    Returns:
+        pandas.DataFrame: The downloaded Google Sheets document as a DataFrame.
+    """
+    url = f"https://docs.google.com/spreadsheets/d/{st.secrets['GSHEET_DOC_ID']}/edit#gid={gid}"
+    doc_id, sheet_id = url.split("/")[5:7]
+    sheet_id = sheet_id.split("gid=")[1]
+    sheet_url = f"https://docs.google.com/spreadsheets/d/{doc_id}/export?format=csv&gid={sheet_id}"
+    df = pd.read_csv(sheet_url)
+    df.columns = (
+        df.columns.str.lstrip()
+        .str.replace("[", repl="", regex=False)
+        .str.replace("]", repl="", regex=False)
+    )
+    return df
 
 
 def initialise_app():
@@ -100,11 +168,10 @@ def initialise_app():
         pass
 
     init = DataInitializer()
-
+    init.initialise_all()
     init.close()
 
-    '''
-
+    """
     if (
         st.session_state.console["require_login"]
         and not st.session_state.logged_in
@@ -118,4 +185,4 @@ def initialise_app():
         else:
             st.session_state.logged_in = True
             sign_in.empty()
-    '''
+    """
