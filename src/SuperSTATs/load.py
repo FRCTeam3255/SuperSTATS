@@ -1,79 +1,20 @@
 import json
 import random
 import time
-
-import tbapy
-from SuperSTATs import constants
-import pandas as pd
 import streamlit as st
+from SuperSTATs import constants
 
 
-def download_sheets_raw(gid):
+def app_init():
     """
-    Downloads a Google Sheets document as a pandas DataFrame.
+    Initializes the SuperSTATs application and is called on every page.
 
-    Args:
-        gid (str): The ID of the Google Sheets document.
+    This function sets the page configuration, loads functions, initializes
+    session state variables, and performs various data loading and setup tasks.
 
     Returns:
-        pandas.DataFrame: The downloaded Google Sheets document as a DataFrame.
+        None
     """
-    url = (
-        f"https://docs.google.com/spreadsheets/d/{st.secrets['GSHEET_DOC_ID']}"
-        f"/edit#gid={gid}"
-    )
-    doc_id, sheet_id = url.split("/")[5:7]
-    sheet_id = sheet_id.split("gid=")[1]
-    sheet_url = (
-        f"https://docs.google.com/spreadsheets/d/{doc_id}/export"
-        f"?format=csv&gid={sheet_id}"
-    )
-    df = pd.read_csv(sheet_url)
-    df.columns = (
-        df.columns.str.lstrip()
-        .str.replace("[", repl="", regex=False)
-        .str.replace("]", repl="", regex=False)
-    )
-    return df
-
-
-def get_point_values():
-    """
-    Calculates the point values for each column in the dataframe
-    based on the values within the column names.
-
-    Returns:
-        dict: A dictionary containing the calculated point values
-        for each column.
-    """
-    points = {
-        f"{value[0]}_{value[1]}_{value[2]}": int(value[3])
-        for value in df.columns.str.split("_")
-        if len(value) > 1
-    }
-
-    for col, point in points.items():
-        df[f"{col}_{point}"] *= point
-
-    return points
-
-
-df = download_sheets_raw(st.secrets["GID_RAW"])
-tba = tbapy.TBA(st.secrets["TBA_API"])
-
-
-def initialise_app():
-    """
-        Initializes the SuperSTATs application and is called on every page.
-
-        This function sets the page configuration, loads functions, initializes
-        session state variables, and performs various data loading
-        and setup tasks.
-
-        Returns:
-            None
-    """
-
     try:
         st.set_page_config(
             page_title="SuperSTATs",
@@ -85,16 +26,15 @@ def initialise_app():
                 "Report a bug": (
                     "https://github.com/FRCTeam3255/SuperSTATS/issues"
                 ),
-                "About": "Errorz Was Here 🐢",
+                "About": "S0L0GUY Was Here",
             },
         )
     except Exception:
         pass
 
-    with open(constants.JsonPaths.LOADING_MESSAGES, 'r') as f:
-        loading_messages = json.load(f)
+    load_messages = json.loads(constants.JsonPaths.LOADING_MESSAGES)
 
-    loading_ascii = [
+    ascii_SN = [
         "     yyyyyyyyyyyyyyyyyyyyyyyyyy     ",
         "   yyyrryyyyyyyrrryyyrrrrrryyryyy   ",
         " yyyrrryyyrrrryyrryyyyrrrrryyrrryyy ",
@@ -110,14 +50,14 @@ def initialise_app():
         "                                    ",
     ]
 
-    for line in range(len(loading_ascii)):
-        loading_ascii[line] = (
-            loading_ascii[line]
+    for line in range(len(ascii_SN)):
+        ascii_SN[line] = (
+            ascii_SN[line]
             .replace("r", "<font color='C40301'>#</font>")
             .replace("y", "<font color='ECC412'><b>#</b></font>")
         )
 
-    stages = [
+    states = [
         "df_raw",
         "points",
         "df",
@@ -143,53 +83,93 @@ def initialise_app():
     status_messages = {}
     displayed_rows = []
 
-    for i, stage in enumerate(stages):
-        row = round(len(loading_ascii) / len(stages) * (i + 1)) - 1
+    for i, state in enumerate(states):
+        row = round(len(ascii_SN) / len(states) * (i + 1)) - 1
         if row not in displayed_rows:
-            status_messages[stage] = (
-                f"<div style='text-align: center'>{loading_ascii[row]}</div>"
+            status_messages[state] = (
+                f"<div style='text-align: center'>{ascii_SN[row]}</div>"
             )
         else:
-            status_messages[stage] = None
+            status_messages[state] = None
         displayed_rows.append(row)
 
     init_status = st.empty()
 
     if "init" not in st.session_state:
-        init_status.markdown(
-            f"<div style='text-align: center'>"
-            f"{random.choice(loading_messages)}</div>",
-            unsafe_allow_html=True,
-        )
-        st.divider()
+        with init_status.status(random.choice(load_messages), expanded=True) as status:
+            st.divider()
 
-        start_time = time.time()
+            start_time = time.time()
 
-        def display_status(stage):
-            if status_messages[stage] is not None:
-                st.markdown(status_messages[stage], unsafe_allow_html=True)
+            def display_status(state):
+                if status_messages[state] is not None:
+                    st.markdown(status_messages[state], unsafe_allow_html=True)
 
-        display_status("df_raw")
-        df = download_sheets_raw(
-            st.secrets["GID_RAW"]
-        ).dropna(subset=["Timestamp"])
+            display_status("df_raw")
 
-        display_status("points")
-        st.session_state.points = get_point_values()
+            display_status("points")
 
-        elapsed_time = round(time.time() - start_time, 2)
+            display_status("df")
 
-        init_status.markdown(
-            (
-                f"<div style='text-align: center'>Initialization complete in "
-                f"{elapsed_time} seconds!</div>"
-            ),
-            unsafe_allow_html=True,
-        )
-        st.session_state.init = True
+            display_status("configs")
 
-        time.sleep(1)
-        init_status.empty()
+            display_status("console")
+            st.session_state.console = {}
+            for config in st.session_state.configs["Console"]:
+                config, default_status = config.split("=")
+                st.session_state.console[config] = bool(
+                    default_status == "true"
+                )
+
+            display_status("tba")
+
+            display_status("tba_ranks")
+
+            display_status("team_info")
+
+            display_status("team_colors")
+
+            display_status("match_data")
+
+            display_status("matches")
+
+            display_status("unplayed_matches")
+
+            display_status("nexus")
+
+            display_status("picked")
+
+            display_status("scouting")
+
+            display_status("scouts")
+
+            display_status("phases")
+
+            display_status("presets")
+
+            display_status("forms")
+
+            display_status("analytics")
+            st.session_state.analytics_settings = [
+                "page_change",
+                "page_update",
+                "button_press",
+                "input",
+            ]
+
+            st.session_state.logged_in = False
+
+            elapsed_time = round(time.time() - start_time, 2)
+
+            status.update(
+                label=f"Initialization complete in {elapsed_time} seconds!",
+                state="complete",
+                expanded=True,
+            )
+            st.session_state.init = True
+
+            time.sleep(1)
+            init_status.empty()
 
     if (
         st.session_state.console["require_login"]
