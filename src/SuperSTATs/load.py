@@ -10,19 +10,19 @@ class DataInitializer:
             self.loading_messages = json.load(file)
 
         self.ascii_SN = [
-        "     yyyyyyyyyyyyyyyyyyyyyyyyyy     ",
-        "   yyyrryyyyyyyrrryyyrrrrrryyryyy   ",
-        " yyyrrryyyrrrryyrryyyyrrrrryyrrryyy ",
-        " yyrrrryyyrrrrrrrryyyryyrrryyrrrryy ",
-        "  yyyrrryyyyyyrrrryyyrryyrryyrryyy  ",
-        "    yyrrrryyyyyyrryyyrrryyryyryy    ",
-        "      yyrrrrrryyyryyyrrrryyyyy      ",
-        "        yyyrrrryyryyyrrrryyy        ",
-        "          yyyyyyrryyrrryyy          ",
-        "            yyyrrryyyryy            ",
-        "              yyrryyyy              ",
-        "                yyyy                ",
-        "                                    ",
+            "     yyyyyyyyyyyyyyyyyyyyyyyyyy     ",
+            "   yyyrryyyyyyyrrryyyrrrrrryyryyy   ",
+            " yyyrrryyyrrrryyrryyyyrrrrryyrrryyy ",
+            " yyrrrryyyrrrrrrrryyyryyrrryyrrrryy ",
+            "  yyyrrryyyyyyrrrryyyrryyrryyrryyy  ",
+            "    yyrrrryyyyyyrryyyrrryyryyryy    ",
+            "      yyrrrrrryyyryyyrrrryyyyy      ",
+            "        yyyrrrryyryyyrrrryyy        ",
+            "          yyyyyyrryyrrryyy          ",
+            "            yyyrrryyyryy            ",
+            "              yyrryyyy              ",
+            "                yyyy                ",
+            "                                    ",
         ]
 
         for line in range(len(self.ascii_SN)):
@@ -32,21 +32,44 @@ class DataInitializer:
                 .replace("y", "<font color='ECC412'><b>#</b></font>")
             )
 
-        states = []
+        self.states = []
 
-        status_messages = {}
-        displayed_rows = []
+        self.start_time = time.time()
 
-        for i, state in enumerate(states):
-            row = round(len(self.ascii_SN) / len(states) * (i + 1)) - 1
-            if row not in displayed_rows:
-                status_messages[state] = (
+        self.status_messages = {}
+        self.displayed_rows = []
+
+        for i, state in enumerate(self.states):
+            row = round(len(self.ascii_SN) / len(self.states) * (i + 1)) - 1
+            if row not in self.displayed_rows:
+                self.status_messages[state] = (
                     f"<div style='text-align: center'>{self.ascii_SN[row]}</div>"
                 )
             else:
-                status_messages[state] = None
-            displayed_rows.append(row)
+                self.status_messages[state] = None
+            self.displayed_rows.append(row)
 
+        self.init_status = st.empty()
+
+        with self.init_status.status(random.choice(self.loading_messages), expanded=True) as self.status:
+            st.divider()
+
+    def display_status(self, state):
+        if self.status_messages[state] is not None:
+            st.markdown(self.status_messages[state], unsafe_allow_html=True)
+
+    def close(self):
+            elapsed_time = round(time.time() - self.start_time, 2)
+
+            self.status.update(
+                label=f"Initialization complete in {elapsed_time} seconds!",
+                state="complete",
+                expanded=True,
+            )
+            st.session_state.init = True
+
+            time.sleep(1)
+            self.init_status.empty()
 
 
 def initialise_app():
@@ -78,6 +101,10 @@ def initialise_app():
 
     init = DataInitializer()
 
+    init.close()
+
+    '''
+
     if (
         st.session_state.console["require_login"]
         and not st.session_state.logged_in
@@ -91,3 +118,4 @@ def initialise_app():
         else:
             st.session_state.logged_in = True
             sign_in.empty()
+    '''
