@@ -162,5 +162,3 @@ cython_debug/
 # Setup
 .streamlit/secrets.toml
 src/pickles/*
-/src/setup
-*.pickle
