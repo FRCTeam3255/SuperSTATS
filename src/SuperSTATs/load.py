@@ -2,6 +2,7 @@ import json
 import pickle
 import random
 import time
+import requests
 import tbapy
 import pandas as pd
 import streamlit as st
@@ -37,11 +38,13 @@ class DataInitializer:
             )
 
         self.states = [
+            "tba",
             "team_info",
             "get_configs",
             "get_console",
             "match_data",
             "matches",
+            "nexus",
         ]
 
         self.start_time = time.time()
@@ -69,6 +72,9 @@ class DataInitializer:
         ) as self.status:
             st.divider()
 
+            self.display_status("tba")
+            st.session_state.tba = self.tba
+
             self.display_status("team_info")
             st.session_state.team_info = self.get_team_info()
 
@@ -84,9 +90,62 @@ class DataInitializer:
             self.display_status("matches")
             st.session_state.matches = self.get_matches()
 
+            self.display_status("nexus")
+            st.session_state.nexus_data = self.get_nexus_data()
+
     def display_status(self, state):
         if self.status_messages[state] is not None:
             st.markdown(self.status_messages[state], unsafe_allow_html=True)
+
+    def get_nexus_data(
+        team_num=st.secrets["TEAM_NUMBER"], event_key=st.secrets["DEFAULT_EVENT_KEY"]
+    ):
+        try:
+            api_url = f"https://frc.nexus/api/v1/event/{event_key}"
+            nexus_headers = {"Nexus-Api-Key": st.secrets["NEXUS_API"]}
+
+            response = requests.get(api_url, headers=nexus_headers)
+            data = response.json()
+            team_num = str(team_num)
+
+            nexus_data = {}
+
+            on_field = [
+                match["label"]
+                for match in data["matches"]
+                if match["status"] == "On field"
+            ]
+            nexus_data["now_playing"] = on_field[-1]
+
+            team_matches = filter(
+                lambda m: team_num in m.get("redTeams", []) + m.get("blueTeams", []),
+                data["matches"],
+            )
+            next_match = next(
+                filter(lambda m: not m["status"] == "On field", team_matches), None
+            )
+
+            if next_match:
+                match_status = next_match["status"]
+                queue_status = None if match_status == "Queuing soon" else match_status
+
+                alliance_color = (
+                    "red" if team_num in next_match.get("redTeams", []) else "blue"
+                )
+
+                nexus_data["team_num"] = team_num
+                nexus_data["next_match"] = next_match["label"]
+                nexus_data["queue_status"] = queue_status
+                nexus_data["alliance_color"] = alliance_color
+            else:
+                nexus_data["next_match"] = None
+
+            nexus_data["now_queuing"] = data["nowQueuing"]
+
+            return nexus_data
+        except:
+            nexus_data = None
+            return nexus_data
 
     @st.cache_data(show_spinner=False, persist=True)
     def get_team_info(
@@ -206,9 +265,11 @@ class DataInitializer:
 
             # Generate match names
             df["Match Name"] = df.apply(
-                lambda row: f"{row['comp_level']} {int(row['set_number'])}"
-                if row["comp_level"] == "Playoffs"
-                else f"{row['comp_level']} {int(row['match_number'])}",
+                lambda row: (
+                    f"{row['comp_level']} {int(row['set_number'])}"
+                    if row["comp_level"] == "Playoffs"
+                    else f"{row['comp_level']} {int(row['match_number'])}"
+                ),
                 axis=1,
             )
 

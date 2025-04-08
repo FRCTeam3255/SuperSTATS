@@ -205,7 +205,7 @@ def display_event_keys():
     - The default year is set to the current year using `datetime.datetime.now().year`.
     """
 
-    with st.expander("Event Keys", st.session_state.console["practice_mode"]):
+    with st.expander("Event Keys"):
         columns = st.columns(2)
         year = columns[0].number_input(
             "Year:", min_value=0, step=1, value=datetime.datetime.now().year
@@ -223,3 +223,4 @@ def display_event_keys():
                 st.text(f"[{key}] {name}")
             if len(event_keys) == 0:
                 st.error(f"⚠️ No keys found for {year}")
+                

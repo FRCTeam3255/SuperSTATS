@@ -19,6 +19,9 @@ def main():
     with st.expander("Match Schedule", True):
         ui.display_scoreboard(matches, team, columns)
 
+    ui.display_nexus_data()
+    ui.display_event_keys()
+
 
 if __name__ == "__main__":
     main()
