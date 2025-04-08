@@ -45,6 +45,7 @@ class DataInitializer:
             "match_data",
             "matches",
             "nexus",
+            "team_colors",
         ]
 
         self.start_time = time.time()
@@ -92,6 +93,9 @@ class DataInitializer:
 
             self.display_status("nexus")
             st.session_state.nexus_data = self.get_nexus_data()
+
+            self.display_status("team_colors")
+            st.session_state.team_colors = self.get_team_colors()
 
     def display_status(self, state):
         if self.status_messages[state] is not None:
@@ -143,9 +147,65 @@ class DataInitializer:
             nexus_data["now_queuing"] = data["nowQueuing"]
 
             return nexus_data
-        except:
+        except Exception:
             nexus_data = None
             return nexus_data
+
+    @st.cache_data(show_spinner=False)
+    def get_team_colors(_self):
+        """
+        Retrieves the colors associated with each team from the FRC-Colors API or a pickle file if the colors are already known.
+
+        Returns:
+            dict: A dictionary containing the team colors, where the keys are the team names and the values are lists of primary and secondary colors.
+        """
+        team_info = st.session_state.team_info
+        team_colors = {}
+        unrecorded = []
+
+        # Load recorded colors from pickle file
+        try:
+            with open("src\\pickles\\colors.pickle", "rb") as f:
+                recorded = pickle.load(f)
+
+            for team in team_info.keys():
+                colors = recorded.get(str(team))
+                if not colors or colors == ["003255", "003255"]:
+                    unrecorded.append(team)
+                else:
+                    team_colors[str(team)] = colors
+        except FileNotFoundError:
+            unrecorded = list(team_info.keys())
+
+        # Fetch unrecorded team colors from the API
+        if unrecorded:
+            teams_url = "&".join(f"team={team}" for team in unrecorded)
+            api_url = f"https://frc-colors.com/api/v1/team?{teams_url}"
+
+            try:
+                response = requests.get(api_url, timeout=5)
+                if response.status_code == 200:
+                    raw_data = response.json()
+                    for team, colors in raw_data["teams"].items():
+                        if colors and colors["colors"]:
+                            primary_color = colors["colors"]["primaryHex"]
+                            secondary_color = colors["colors"]["secondaryHex"]
+                            team_colors[str(team)] = [primary_color, secondary_color]
+                        else:
+                            team_colors[str(team)] = ["003255", "003255"]
+                else:
+                    # Default colors for teams if API fails
+                    for team in unrecorded:
+                        team_colors[str(team)] = ["003255", "003255"]
+            except requests.RequestException:
+                for team in unrecorded:
+                    team_colors[str(team)] = ["003255", "003255"]
+
+        # Save updated team colors to pickle file
+        with open("src\\pickles\\colors.pickle", "wb") as f:
+            pickle.dump(team_colors, f, pickle.HIGHEST_PROTOCOL)
+
+        return team_colors
 
     @st.cache_data(show_spinner=False, persist=True)
     def get_team_info(
