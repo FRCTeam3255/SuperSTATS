@@ -1,3 +1,4 @@
+import datetime
 import pandas as pd
 import streamlit as st
 import styles as style
@@ -137,3 +138,88 @@ def display_scoreboard(matches, team, columns):
 
     except Exception as e:
         st.error(f"⚠️ Error processing matches: {e}")
+
+def display_nexus_data():
+    """
+    Displays Nexus data in a Streamlit application.
+    This function retrieves Nexus data from the Streamlit session state and 
+    displays it in an expandable section. It includes information about the 
+    currently playing item, queue status, the next match, and the alliance color.
+    The displayed information includes:
+    - "Now Playing": The current item being played.
+    - "Queue Status": The status of the queue (e.g., READY, WAITING).
+    - "Next Match": Details of the next scheduled match, if available.
+    - "Alliance Color": The color of the alliance for the next match.
+    If no Nexus data or scheduled matches are found, appropriate messages are displayed.
+    Dependencies:
+    - Requires `st.session_state.nexus_data` to contain the Nexus data.
+    - Requires `st.session_state.console["practice_mode"]` for the expander label.
+    Note:
+    - This function is designed to be used within a Streamlit application.
+    """
+
+    nexus_data = st.session_state.nexus_data
+
+    if nexus_data:
+        with st.expander("Nexus Data", st.session_state.console["practice_mode"]):
+            st.subheader("Now Playing")
+            st.write(nexus_data["now_playing"])
+
+            st.subheader("Queue Status")
+            queue_status = nexus_data.get("queue_status", "").upper()
+            next_match = nexus_data.get("next_match")
+            alliance_color = nexus_data.get("alliance_color")
+
+            if next_match:
+                st.write(f"[{queue_status}] {next_match} on {alliance_color} alliance")
+            else:
+                st.write("No scheduled matches found")
+
+
+def display_event_keys():
+    """
+    Displays a Streamlit UI component for viewing and selecting event keys.
+    This function creates an expandable section in a Streamlit app where users
+    can input a year, view a list of events for that year, and optionally select
+    an event to display its key. If no specific event is selected, all event keys
+    for the given year are displayed.
+    The function uses the following:
+    - A number input for the user to specify the year.
+    - A selectbox for searching and selecting events.
+    - Displays the selected event's key or all event keys for the year.
+    Behavior:
+    - If a specific event is selected, its key and name are displayed as a subheader.
+    - If "All Events" is selected, all event keys and names are listed.
+    - If no events are found for the given year, an error message is displayed.
+    Dependencies:
+    - `st.expander`: Used to create an expandable section.
+    - `st.columns`: Used to create two columns for year input and event selection.
+    - `st.session_state`: Accesses session state for practice mode and event data.
+    - `st.number_input`: Used for year input.
+    - `st.selectbox`: Used for event selection.
+    - `st.subheader` and `st.text`: Used for displaying event information.
+    - `st.error`: Used for displaying error messages.
+    Note:
+    - The function assumes `st.session_state.tba.events(year)` returns a list of
+      events, where each event is a dictionary containing "name" and "key".
+    - The default year is set to the current year using `datetime.datetime.now().year`.
+    """
+
+    with st.expander("Event Keys", st.session_state.console["practice_mode"]):
+        columns = st.columns(2)
+        year = columns[0].number_input(
+            "Year:", min_value=0, step=1, value=datetime.datetime.now().year
+        )
+        events = st.session_state.tba.events(year)
+        event_keys = {event["name"]: event["key"] for event in events}
+        searched_event = columns[1].selectbox(
+            "Search Events", ["All Events"] + list(event_keys.keys())
+        )
+        if searched_event != "All Events":
+            selected_key = event_keys.get(searched_event, "")
+            st.subheader(f"[{selected_key}] {searched_event}", False)
+        else:
+            for name, key in event_keys.items():
+                st.text(f"[{key}] {name}")
+            if len(event_keys) == 0:
+                st.error(f"⚠️ No keys found for {year}")
