@@ -89,7 +89,9 @@ class DataInitializer:
             st.markdown(self.status_messages[state], unsafe_allow_html=True)
 
     @st.cache_data(show_spinner=False, persist=True)
-    def get_team_info(_self): # TODO: Make sure that this is formatted the best it can be
+    def get_team_info(
+        _self,
+    ):
         """
         Retrieves team information from TBA API.
 
@@ -101,9 +103,17 @@ class DataInitializer:
 
         if st.secrets["DEFAULT_EVENT_KEY"] == "NoTBA":
             matches = download_sheets_raw(st.secrets["GID_MATCHES"])
+
+            # Extract columns excluding "Match"
             custom_teams = matches.loc[:, ~matches.columns.isin(["Match"])]
-            unique_teams = [custom_teams[col].unique().tolist() for col in custom_teams]
-            team_list = [team for sublist in unique_teams for team in sublist]
+
+            # Get unique teams from each column
+            unique_teams = []
+            for col in custom_teams:
+                unique_teams.extend(custom_teams[col].unique().tolist())
+
+            # Flatten the list of unique teams
+            team_list = list(set(unique_teams))
 
             tba_teams = []
             for team in team_list:
@@ -119,7 +129,7 @@ class DataInitializer:
         }
         return team_info
 
-    def get_matches(self):  # TODO: Make sure that this is formatted the best it can be
+    def get_matches(self):
         """
         Retrieves and processes match data to create a DataFrame of matches with desired alliances.
 
@@ -165,83 +175,62 @@ class DataInitializer:
 
         return df
 
-    def get_match_data(
-        self,
-    ):  # TODO: Make sure that this is formatted the best it can be
+    def get_match_data(self):
         """
-        Retrieves match data from the TBA API or a custom data source if TBA is down.
+        Retrieves match data from the TBA API or a custom data source if TBA is unavailable.
 
         Returns:
             pandas.DataFrame: A DataFrame containing the match data.
         """
         try:
+            # Attempt to fetch match data from TBA API
             df = pd.DataFrame(self.tba.event_matches(st.secrets["DEFAULT_EVENT_KEY"]))
-        except:
+        except Exception:
             df = pd.DataFrame()
 
         if not df.empty:
-            df = pd.concat([df, pd.json_normalize(df["alliances"])], axis=1).drop(
-                columns="alliances"
-            )
+            # Normalize alliances data and drop the original column
+            alliances_df = pd.json_normalize(df["alliances"])
+            df = pd.concat([df, alliances_df], axis=1).drop(columns="alliances")
 
+            # Replace competition level codes with readable names
             df["comp_level"] = df["comp_level"].replace(
                 {"qm": "Quals", "sf": "Playoffs", "f": "Finals"}
             )
 
+            # Convert team keys to integers
             for color in ["red", "blue"]:
                 df[f"{color}.team_keys"] = df[f"{color}.team_keys"].apply(
-                    lambda teams: [int(x.replace("frc", "")) for x in teams]
+                    lambda teams: [int(team.replace("frc", "")) for team in teams]
                 )
 
-            def set_match_name(row):
-                """
-                Sets the name for a match based on the given row.
-
-                Parameters:
-                - row: A dictionary representing a row of match data.
-
-                Returns:
-                - match_name: A string representing the name of the match.
-                """
-                if row["comp_level"] == "Playoffs":
-                    return row["comp_level"] + " " + str(int(row["set_number"]))
-                return row["comp_level"] + " " + str(int(row["match_number"]))
-
-            df["Match Name"] = df.apply(set_match_name, axis=1)
+            # Generate match names
+            df["Match Name"] = df.apply(
+                lambda row: f"{row['comp_level']} {int(row['set_number'])}"
+                if row["comp_level"] == "Playoffs"
+                else f"{row['comp_level']} {int(row['match_number'])}",
+                axis=1,
+            )
 
             return df
 
         else:
+            # Fallback to custom data source if TBA API is unavailable
             matches = download_sheets_raw(st.secrets["GID_MATCHES"])
 
-            custom_data = {}
-
-            for index, row in matches.iterrows():
-                match_name = row["Match"]
-                match_level = match_name.split()[0]
-                match_num = int(match_name.split()[1])
-
-                red_team = [row["Red 1"], row["Red 2"], row["Red 3"]]
-                blue_team = [row["Blue 1"], row["Blue 2"], row["Blue 3"]]
-
-                data = {
-                    "comp_level": match_level,
-                    "match_number": match_num,
+            custom_data = []
+            for _, row in matches.iterrows():
+                match_data = {
+                    "comp_level": row["Match"].split()[0],
+                    "match_number": int(row["Match"].split()[1]),
                     "set_number": 1,
-                    "score_breakdown": "im having a breakdown",
-                    "winning_alliance": "blue",
-                    "blue.score": 1,
-                    "blue.team_keys": blue_team,
-                    "red.score": 0,
-                    "red.team_keys": red_team,
-                    "Match Name": match_name,
+                    "blue.team_keys": [row["Blue 1"], row["Blue 2"], row["Blue 3"]],
+                    "red.team_keys": [row["Red 1"], row["Red 2"], row["Red 3"]],
+                    "Match Name": row["Match"],
                 }
+                custom_data.append(match_data)
 
-                custom_data[index] = data
-
-            df = pd.DataFrame(custom_data).T
-
-            return df
+            return pd.DataFrame(custom_data)
 
     def close(self):
         elapsed_time = round(time.time() - self.start_time, 2)
