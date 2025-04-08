@@ -2,13 +2,15 @@ import json
 import pickle
 import random
 import time
+import tbapy
 import pandas as pd
 import streamlit as st
 from SuperSTATs import constants
 
+
 class DataInitializer:
     def __init__(self):
-        with open(constants.JsonPaths.LOADING_MESSAGES, 'r') as file:
+        with open(constants.JsonPaths.LOADING_MESSAGES, "r") as file:
             self.loading_messages = json.load(file)
 
         self.ascii_SN = [
@@ -35,11 +37,16 @@ class DataInitializer:
             )
 
         self.states = [
+            "team_info",
             "get_configs",
             "get_console",
+            "match_data",
+            "matches",
         ]
 
         self.start_time = time.time()
+
+        self.tba = tbapy.TBA(st.secrets["TBA_API"])
 
         self.status_messages = {}
         self.displayed_rows = []
@@ -57,8 +64,13 @@ class DataInitializer:
         self.init_status = st.empty()
 
     def initialise_all(self):
-        with self.init_status.status(random.choice(self.loading_messages), expanded=True) as self.status:
+        with self.init_status.status(
+            random.choice(self.loading_messages), expanded=True
+        ) as self.status:
             st.divider()
+
+            self.display_status("team_info")
+            st.session_state.team_info = self.get_team_info()
 
             self.display_status("get_configs")
             st.session_state.configs = self.get_configs()
@@ -66,23 +78,183 @@ class DataInitializer:
             self.display_status("get_console")
             st.session_state.console = self.get_console()
 
+            self.display_status("match_data")
+            st.session_state.match_data = self.get_match_data()
+
+            self.display_status("matches")
+            st.session_state.matches = self.get_matches()
+
     def display_status(self, state):
         if self.status_messages[state] is not None:
             st.markdown(self.status_messages[state], unsafe_allow_html=True)
 
-    def close(self):
-            elapsed_time = round(time.time() - self.start_time, 2)
+    @st.cache_data(show_spinner=False, persist=True)
+    def get_team_info(_self): # TODO: Make sure that this is formatted the best it can be
+        """
+        Retrieves team information from TBA API.
 
-            self.status.update(
-                label=f"Initialization complete in {elapsed_time} seconds!",
-                state="complete",
-                expanded=True,
+        Returns:
+            dict: A dictionary containing team information, where the keys are team numbers
+                and the values are team nicknames. If the nickname is not available, the
+                value will be set to "Unknown Team".
+        """
+
+        if st.secrets["DEFAULT_EVENT_KEY"] == "NoTBA":
+            matches = download_sheets_raw(st.secrets["GID_MATCHES"])
+            custom_teams = matches.loc[:, ~matches.columns.isin(["Match"])]
+            unique_teams = [custom_teams[col].unique().tolist() for col in custom_teams]
+            team_list = [team for sublist in unique_teams for team in sublist]
+
+            tba_teams = []
+            for team in team_list:
+                tba_teams.append(_self.tba.team(f"frc{team}"))
+        else:
+            tba_teams = _self.tba.event_teams(st.secrets["DEFAULT_EVENT_KEY"])
+
+        team_info = {
+            team["team_number"]: _self.tba.team(team["team_number"]).get(
+                "nickname", "Unknown Team"
             )
-            st.session_state.init = True
+            for team in tba_teams
+        }
+        return team_info
 
-            time.sleep(1)
-            self.init_status.empty()
+    def get_matches(self):  # TODO: Make sure that this is formatted the best it can be
+        """
+        Retrieves and processes match data to create a DataFrame of matches with desired alliances.
 
+        Returns:
+            pandas.DataFrame: DataFrame containing match data with columns for match number and team keys.
+        """
+        df = st.session_state.match_data
+
+        # Split team keys into separate columns for red and blue alliances
+        frames = []
+        for color in ["red", "blue"]:
+            frame = pd.DataFrame(
+                df[f"{color}.team_keys"].to_list(),
+                columns=[
+                    f"{color.capitalize()} 1",
+                    f"{color.capitalize()} 2",
+                    f"{color.capitalize()} 3",
+                ],
+            )
+            df.drop(columns=f"{color}.team_keys", inplace=True)
+            frames.append(frame)
+
+        # Combine the original DataFrame with the new alliance columns
+        df = pd.concat([df] + frames, axis=1)
+
+        # Adjust match numbers for playoff matches
+        df.loc[df["comp_level"] == "Playoffs", "match_number"] = df.loc[
+            df["comp_level"] == "Playoffs", "set_number"
+        ]
+
+        # Create a "Match" column combining competition level and match number
+        df["Match"] = (
+            df["comp_level"] + " " + df["match_number"].astype(int).astype(str)
+        )
+
+        # Sort matches by competition level and match number
+        df = df.sort_values(
+            by=["comp_level", "match_number"], ascending=[False, True]
+        ).reset_index(drop=True)
+
+        # Select and reorder columns for the final DataFrame
+        df = df[["Match", "Red 1", "Red 2", "Red 3", "Blue 1", "Blue 2", "Blue 3"]]
+
+        return df
+
+    def get_match_data(
+        self,
+    ):  # TODO: Make sure that this is formatted the best it can be
+        """
+        Retrieves match data from the TBA API or a custom data source if TBA is down.
+
+        Returns:
+            pandas.DataFrame: A DataFrame containing the match data.
+        """
+        try:
+            df = pd.DataFrame(self.tba.event_matches(st.secrets["DEFAULT_EVENT_KEY"]))
+        except:
+            df = pd.DataFrame()
+
+        if not df.empty:
+            df = pd.concat([df, pd.json_normalize(df["alliances"])], axis=1).drop(
+                columns="alliances"
+            )
+
+            df["comp_level"] = df["comp_level"].replace(
+                {"qm": "Quals", "sf": "Playoffs", "f": "Finals"}
+            )
+
+            for color in ["red", "blue"]:
+                df[f"{color}.team_keys"] = df[f"{color}.team_keys"].apply(
+                    lambda teams: [int(x.replace("frc", "")) for x in teams]
+                )
+
+            def set_match_name(row):
+                """
+                Sets the name for a match based on the given row.
+
+                Parameters:
+                - row: A dictionary representing a row of match data.
+
+                Returns:
+                - match_name: A string representing the name of the match.
+                """
+                if row["comp_level"] == "Playoffs":
+                    return row["comp_level"] + " " + str(int(row["set_number"]))
+                return row["comp_level"] + " " + str(int(row["match_number"]))
+
+            df["Match Name"] = df.apply(set_match_name, axis=1)
+
+            return df
+
+        else:
+            matches = download_sheets_raw(st.secrets["GID_MATCHES"])
+
+            custom_data = {}
+
+            for index, row in matches.iterrows():
+                match_name = row["Match"]
+                match_level = match_name.split()[0]
+                match_num = int(match_name.split()[1])
+
+                red_team = [row["Red 1"], row["Red 2"], row["Red 3"]]
+                blue_team = [row["Blue 1"], row["Blue 2"], row["Blue 3"]]
+
+                data = {
+                    "comp_level": match_level,
+                    "match_number": match_num,
+                    "set_number": 1,
+                    "score_breakdown": "im having a breakdown",
+                    "winning_alliance": "blue",
+                    "blue.score": 1,
+                    "blue.team_keys": blue_team,
+                    "red.score": 0,
+                    "red.team_keys": red_team,
+                    "Match Name": match_name,
+                }
+
+                custom_data[index] = data
+
+            df = pd.DataFrame(custom_data).T
+
+            return df
+
+    def close(self):
+        elapsed_time = round(time.time() - self.start_time, 2)
+
+        self.status.update(
+            label=f"Initialization complete in {elapsed_time} seconds!",
+            state="complete",
+            expanded=True,
+        )
+        st.session_state.init = True
+
+        time.sleep(1)
+        self.init_status.empty()
 
     def get_configs(self):
         """
@@ -110,12 +282,12 @@ class DataInitializer:
                 pickle.dump(configs, f, pickle.HIGHEST_PROTOCOL)
             return configs
 
-
     def get_console(self):
         st.session_state.console = {}
         for config in st.session_state.configs["Console"]:
             config, default_status = config.split("=")
             st.session_state.console[config] = bool(default_status == "true")
+
 
 def download_sheets_raw(gid):
     """
@@ -158,9 +330,7 @@ def initialise_app():
             layout="wide",
             menu_items={
                 "Get Help": "https://supernurds.com/contact",
-                "Report a bug": (
-                    "https://github.com/FRCTeam3255/SuperSTATS/issues"
-                ),
+                "Report a bug": ("https://github.com/FRCTeam3255/SuperSTATS/issues"),
                 "About": "S0L0GUY Was Here",
             },
         )
