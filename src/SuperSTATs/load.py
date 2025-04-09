@@ -453,6 +453,7 @@ def initialise_app():
     init.initialise_all()
     init.close()
 
+    st.session_state.logged_in = False
 
     if (
         st.session_state.console["require_login"]
