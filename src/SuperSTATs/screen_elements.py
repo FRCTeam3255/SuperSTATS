@@ -257,3 +257,4 @@ def update_button(button_name, key="update_page"):
         use_container_width=True,
         key=key,
     )
+    st.divider()

@@ -47,6 +47,7 @@ class DataInitializer:
             "matches",
             "nexus",
             "team_colors",
+            "scouts",
         ]
 
         self.start_time = time.time()
@@ -97,6 +98,11 @@ class DataInitializer:
 
             self.display_status("team_colors")
             st.session_state.team_colors = self.get_team_colors()
+
+            self.display_status("scouts")
+            self.scouters = self.get_scouters()
+            st.session_state.scouts = self.scouters["scouts"]
+            st.session_state.assigned = self.scouters["assigned"]
 
     def display_status(self, state):
         if self.status_messages[state] is not None:
@@ -207,6 +213,36 @@ class DataInitializer:
             pickle.dump(team_colors, f, pickle.HIGHEST_PROTOCOL)
 
         return team_colors
+
+    def get_scouters(self):
+        """
+        Retrieves the list of team scouts and their assigned status.
+
+        If the pickle file exists, it loads the data from the file and returns a dictionary
+        with two keys: 'scouts' and 'assigned'. Otherwise downloads the data from Sheets document
+        and returns a dictionary with the same keys.
+
+        Returns:
+            dict: A dictionary with two keys: 'scouts' and 'assigned'. The 'scouts' key contains a list of
+            all scout names, and the 'assigned' key contains a list of scout names that are assigned.
+        """
+        try:
+            with open("src\\pickles\\scouts.pickle", "rb") as f:
+                scouts = pickle.load(f)
+
+            return {"scouts": scouts[0], "assigned": scouts[1]}
+
+        except Exception:
+            scouts_df = download_sheets_raw(st.secrets["GID_SCOUTS"]).sort_values(
+                by="Name"
+            )
+
+            return {
+                "scouts": scouts_df["Name"].tolist(),
+                "assigned": scouts_df.loc[
+                    scouts_df["Assigned"] == "x", "Name"
+                ].tolist(),
+            }
 
     @st.cache_data(show_spinner=False, persist=True)
     def get_team_info(
@@ -367,7 +403,6 @@ class DataInitializer:
         time.sleep(1)
         self.init_status.empty()
 
-
     def get_configs(self):
         """
         Retrieves the configurations from a Google Sheets document and saves them to a pickle file.
@@ -455,10 +490,7 @@ def initialise_app():
 
     st.session_state.logged_in = False
 
-    if (
-        st.session_state.console["require_login"]
-        and not st.session_state.logged_in
-    ):
+    if st.session_state.console["require_login"] and not st.session_state.logged_in:
         sign_in = st.empty()
 
         pass_input = sign_in.text_input("Password:", type="password")
