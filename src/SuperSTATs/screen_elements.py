@@ -109,7 +109,20 @@ def display_scoreboard(matches, team, columns):
             team_id = int(str(team).split(" | ")[0])
             use_team_colors = columns[1].toggle("Use Team Colors")
             team_colors = st.session_state.team_colors[str(team_id)]
-            team_color = team_colors if use_team_colors else "#808080"
+
+            if use_team_colors:
+                if team_colors[0] == "003255" or team_colors[1] == "003255":
+                    columns[1].toggle("Use Secondary Color", disabled=True)
+                    st.warning("⚠️ Team Colors Not Found")
+                    team_color = "#ffffff"
+                else:
+                    if columns[1].toggle("Use Secondary Color"):
+                        team_color = team_colors[1]
+                    else:
+                        team_color = team_colors[0]
+            else:
+                columns[1].toggle("Use Secondary Color", disabled=True)
+                team_color = "#ffffff"
 
             team_cols = [
                 col
@@ -139,11 +152,12 @@ def display_scoreboard(matches, team, columns):
     except Exception as e:
         st.error(f"⚠️ Error processing matches: {e}")
 
+
 def display_nexus_data():
     """
     Displays Nexus data in a Streamlit application.
-    This function retrieves Nexus data from the Streamlit session state and 
-    displays it in an expandable section. It includes information about the 
+    This function retrieves Nexus data from the Streamlit session state and
+    displays it in an expandable section. It includes information about the
     currently playing item, queue status, the next match, and the alliance color.
     The displayed information includes:
     - "Now Playing": The current item being played.
@@ -217,10 +231,9 @@ def display_event_keys():
         )
         if searched_event != "All Events":
             selected_key = event_keys.get(searched_event, "")
-            st.subheader(f"[{selected_key}] {searched_event}", False)
+            st.subheader(f"[{selected_key}] {searched_event}")
         else:
             for name, key in event_keys.items():
                 st.text(f"[{key}] {name}")
             if len(event_keys) == 0:
                 st.error(f"⚠️ No keys found for {year}")
-                
