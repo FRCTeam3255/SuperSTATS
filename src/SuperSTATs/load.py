@@ -40,7 +40,8 @@ class DataInitializer:
         self.states = [
             "tba",
             "team_info",
-            "get_configs",
+            "configs",
+            "console",
             "get_console",
             "match_data",
             "matches",
@@ -79,11 +80,11 @@ class DataInitializer:
             self.display_status("team_info")
             st.session_state.team_info = self.get_team_info()
 
-            self.display_status("get_configs")
+            self.display_status("configs")
             st.session_state.configs = self.get_configs()
 
-            self.display_status("get_console")
-            st.session_state.console = self.get_console()
+            self.display_status("console")
+            self.console()
 
             self.display_status("match_data")
             st.session_state.match_data = self.get_match_data()
@@ -366,6 +367,7 @@ class DataInitializer:
         time.sleep(1)
         self.init_status.empty()
 
+
     def get_configs(self):
         """
         Retrieves the configurations from a Google Sheets document and saves them to a pickle file.
@@ -392,7 +394,7 @@ class DataInitializer:
                 pickle.dump(configs, f, pickle.HIGHEST_PROTOCOL)
             return configs
 
-    def get_console(self):
+    def console(self):
         st.session_state.console = {}
         for config in st.session_state.configs["Console"]:
             config, default_status = config.split("=")
@@ -451,7 +453,7 @@ def initialise_app():
     init.initialise_all()
     init.close()
 
-    """
+
     if (
         st.session_state.console["require_login"]
         and not st.session_state.logged_in
@@ -465,4 +467,3 @@ def initialise_app():
         else:
             st.session_state.logged_in = True
             sign_in.empty()
-    """

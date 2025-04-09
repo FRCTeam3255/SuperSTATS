@@ -237,3 +237,23 @@ def display_event_keys():
                 st.text(f"[{key}] {name}")
             if len(event_keys) == 0:
                 st.error(f"⚠️ No keys found for {year}")
+
+
+def update_button(button_name, key="update_page"):
+    """
+    Renders an "Update Page" button on the Streamlit app interface.
+    This function adds a divider above and below the button for visual separation.
+    The button is styled as a primary button and spans the full width of its container.
+    Parameters:
+        None
+    Returns:
+        None
+    """
+
+    st.divider()
+    st.button(
+        button_name,
+        type="primary",
+        use_container_width=True,
+        key=key,
+    )
