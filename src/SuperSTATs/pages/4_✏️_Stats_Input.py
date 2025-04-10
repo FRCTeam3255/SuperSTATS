@@ -110,6 +110,44 @@ def assign_scouts(scouts, matches, df_teams, all_match_scouts, scouters):
         all_match_scouts[match] = match_scouts
 
     return all_match_scouts
+
+def handle_scoutter_match_initialisation(
+    all_match_scouts,
+    input_name,
+    scout_matches,
+    unplayed_matches
+):
+    for match in all_match_scouts:
+        if input_name in all_match_scouts[match]:
+            scout_matches.append(match)
+
+    unplayed_scout_matches = []
+
+    for match in scout_matches:
+        if match in unplayed_matches:
+            unplayed_scout_matches.append(match)
+
+    if st.session_state.console["practice_mode"]:
+        unplayed_scout_matches = [f"Prac {i + 1}" for i in range(50)]
+
+        df = load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(
+            subset=["Timestamp"]
+        )
+        df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
+        df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
+        df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
+
+        df["Completed"] = df["Match Type"] + " " + df["Match"].astype(int).astype(str)
+
+        try:
+            prac_matches = df[df["Match Type"] == "Prac"]
+            match_index = (
+                unplayed_scout_matches.index(prac_matches["Completed"].iloc[-1]) + 1
+            )
+        except:
+            match_index = 0
+
+    return unplayed_scout_matches, match_index
     
 
 def main():
@@ -135,44 +173,19 @@ def main():
 
     top_columns = st.columns(2)
     bot_columns = st.columns(2)
-
-    input_name, input_sub = handle_name_selection(top_columns, bot_columns, scouters)
-
-    all_match_scouts = assign_scouts(scouters, matches, df_teams, all_match_scouts, scouters)
-
-    for match in all_match_scouts:
-        if input_name in all_match_scouts[match]:
-            scout_matches.append(match)
-
     match_selection = top_columns[1].empty()
 
-    unplayed_scout_matches = []
+    input_name, input_sub = handle_name_selection(top_columns, bot_columns, scouters)
+    all_match_scouts = assign_scouts(scouters, matches, df_teams, all_match_scouts, scouters)
 
-    for match in scout_matches:
-        if match in unplayed_matches:
-            unplayed_scout_matches.append(match)
+    unplayed_scout_matches, match_index = handle_scoutter_match_initialisation(
+        all_match_scouts,
+        input_name,
+        scout_matches,
+        unplayed_matches
+    )
 
     match_index = 0
-
-    if st.session_state.console["practice_mode"]:
-        unplayed_scout_matches = [f"Prac {i + 1}" for i in range(50)]
-
-        df = load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(
-            subset=["Timestamp"]
-        )
-        df = df.sort_values(["Match", "Timestamp"], ascending=[True, True])
-        df = df.drop_duplicates(subset=["Team", "Match Type", "Match"])
-        df = df[df["Event Key"] == st.secrets["DEFAULT_EVENT_KEY"]]
-
-        df["Completed"] = df["Match Type"] + " " + df["Match"].astype(int).astype(str)
-
-        try:
-            prac_matches = df[df["Match Type"] == "Prac"]
-            match_index = (
-                unplayed_scout_matches.index(prac_matches["Completed"].iloc[-1]) + 1
-            )
-        except:
-            match_index = 0
 
     input_match = match_selection.selectbox(
         "Match:",
