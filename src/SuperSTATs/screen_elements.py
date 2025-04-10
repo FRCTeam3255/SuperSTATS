@@ -239,22 +239,28 @@ def display_event_keys():
                 st.error(f"⚠️ No keys found for {year}")
 
 
-def update_button(button_name, key="update_page"):
+def generate_qr(contents):
     """
-    Renders an "Update Page" button on the Streamlit app interface.
-    This function adds a divider above and below the button for visual separation.
-    The button is styled as a primary button and spans the full width of its container.
-    Parameters:
-        None
+    Generates a QR code image from the given contents and returns it as a byte stream.
+    Args:
+        contents (str): The data to encode in the QR code.
     Returns:
-        None
+        bytes: The QR code image in JPEG format as a byte stream.
     """
 
-    st.divider()
-    st.button(
-        button_name,
-        type="primary",
-        use_container_width=True,
-        key=key,
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
     )
-    st.divider()
+
+    qr.add_data(contents)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="#ffffff", back_color="#141414")
+
+    byte_stream = io.BytesIO()
+
+    img.save(byte_stream, format="JPEG")
+    bytes_image = byte_stream.getvalue()
+
+    return bytes_image
