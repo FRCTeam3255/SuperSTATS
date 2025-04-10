@@ -26,7 +26,6 @@ def main():
 
     ui.display_header("⚙️ Console ⚙️")
     ui.update_button("Update Page")
-    st.divider()
 
     with st.expander("Config"):
         updated_configs = {}
@@ -42,8 +41,19 @@ def main():
             f"{key}={str(value).lower()}" for key, value in updated_configs.items()
         ]
 
-        if ui.update_button("Update Configs", "update_configs"):
-            save_console_configs(settings_raw, updated_configs)
+        if st.button(
+            "Update Configs",
+            type="primary",
+            use_container_width=True,
+            key=f"update_configs",
+        ):
+            st.session_state.configs["Console"] = settings_raw
+            st.session_state.console = updated_configs
+
+            with open("src\\pickles\\configs.pickle", "wb") as f:
+                pickle.dump(st.session_state.configs, f, pickle.HIGHEST_PROTOCOL)
+
+            st.toast("Successfully updated configs! Please refresh...", icon="✅")
 
     with st.expander("Scouts"):
         scouts = st.session_state.scouts
