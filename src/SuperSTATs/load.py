@@ -153,6 +153,23 @@ class DataInitializer:
 
         return sorted(list(set(phases)))
 
+    def get_event_year(event_key):
+        """
+        Extracts the year from the event key.
+
+        Args:
+            event_key (str): The event key.
+
+        Returns:
+            int: The year of the event.
+        """
+        try:
+            year = int(event_key[:4])
+            return year
+        except ValueError:
+            st.error("Invalid event key format")
+            return None
+
     def download_sheets_raw(self, gid):
         """
         Downloads a Google Sheets document as a pandas DataFrame.

@@ -1,6 +1,7 @@
 import SuperSTATs.load as load
 import streamlit as st
 import random
+import traceback
 import SuperSTATs.screen_elements as ui
 
 def display_random_susan():
@@ -9,6 +10,47 @@ def display_random_susan():
             "<div style='text-align: center; font-size: small; color: #808080;'>Susan was here😸</div>",
             unsafe_allow_html=True,
         )
+
+def get_match_scouts(team):
+    """
+    Get the match scouts for a given team.
+
+    Parameters:
+    - team (list): A list of scouts in the team.
+
+    Returns:
+    - scouts (dict): A dictionary mapping match names to a list of scouts for each match.
+    """
+    rotation = int(st.session_state.configs["Scouting Rotations"][0])
+    match_list = st.session_state.matches["Match"].to_list()
+    scouts = {}
+
+    processed = 0
+    count = 0
+    i = 0
+
+    while processed < len(match_list):
+        scout_1 = team[count]
+        scout_2 = team[count - 1]
+        scout_3 = team[count - 2]
+
+        if i % rotation == 0:
+            count += 1
+
+        if count == len(team):
+            count = 0
+
+        for match_type in ["Quals", "Playoffs", "Finals"]:
+            for j in range(rotation):
+                match_name = f"{match_type} {(i + 1) + j}"
+
+                if match_name in match_list:
+                    scouts[match_name] = [scout_1, scout_2, scout_3]
+                    processed += 1
+
+        i += rotation
+
+    return scouts
 
 def update_page_button():
     st.divider()
@@ -54,10 +96,13 @@ def handle_name_selection(top_columns, bottom_columns, scouters):
 
     return input_name, input_sub
 
-def assign_scouts(scouts, matches, df_teams):
+def assign_scouts(scouts, matches, df_teams, all_match_scouts, scouters):
     for match in st.session_state.matches["Match"]:
         teams = matches[matches["Match"] == match].set_index("Match").transpose()
-        df_teams.update(teams.to_dict())
+        if isinstance(df_teams, dict):
+            df_teams.update(teams.to_dict())
+        else:
+            df_teams = teams.to_dict()
 
         red_scouts = get_match_scouts(scouters[::2])[match]
         blue_scouts = get_match_scouts(scouters[1::2])[match]
@@ -84,12 +129,16 @@ def main():
     scouters = st.session_state.assigned
     matches = st.session_state.matches
 
+    df_teams = {}
+    all_match_scouts = {}
+    scout_matches = []
+
     top_columns = st.columns(2)
     bot_columns = st.columns(2)
 
-    handle_name_selection(top_columns, bot_columns, scouters)
+    input_name, input_sub = handle_name_selection(top_columns, bot_columns, scouters)
 
-    all_match_scouts = assign_scouts(scouters, matches, df_teams)
+    all_match_scouts = assign_scouts(scouters, matches, df_teams, all_match_scouts, scouters)
 
     for match in all_match_scouts:
         if input_name in all_match_scouts[match]:
@@ -269,6 +318,7 @@ def main():
     st.divider()
 
     try:
+        print("Debug: Starting to display team and color icon.")
         st.markdown(
             f'<div style="text-align: center; font-size: 2.5em;">{color_icon} {input_team} | {st.session_state.team_info[input_team]} {color_icon}</div>',
             unsafe_allow_html=True,
@@ -276,7 +326,8 @@ def main():
 
         st.divider()
 
-        load.robot_photo_dropdown(input_team)
+        print("Debug: Loading robot photo dropdown.")
+        ui.robot_photo_dropdown(input_team)
 
         set_inputs = [
             input_name,
@@ -290,16 +341,7 @@ def main():
         set_combined = {}
 
         def combine_set(entry_name, variable):
-            """
-            Combines the entry number and variable into the set_combined dictionary.
-
-            Parameters:
-            entry_name (str): The name of the entry.
-            variable: The variable to be combined with the entry number.
-
-            Returns:
-            None
-            """
+            print(f"Debug: Combining set for entry {entry_name} with variable {variable}.")
             entry_number = set_entries[entry_name]
             set_combined[entry_name] = [int(entry_number), variable]
 
@@ -317,15 +359,7 @@ def main():
         entry_responses = {}
 
         def phase_header(phase):
-            """
-            Displays a header for the given phase.
-
-            Parameters:
-                phase (str): The phase name to display.
-
-            Returns:
-                None
-            """
+            print(f"Debug: Displaying header for phase {phase}.")
             st.markdown(
                 f'<div style="text-align: center; font-size: 32px;">{phase}</div>',
                 unsafe_allow_html=True,
@@ -333,16 +367,7 @@ def main():
             st.title("")
 
         def gen_phase_input(entries):
-            """
-            Generate input fields for each entry in the given list of entries.
-
-            Parameters:
-            - entries (list): A list of entries for which input fields need to be generated.
-
-            Returns:
-            - entry_responses (dict): A dictionary containing the user responses for each entry.
-
-            """
+            print(f"Debug: Generating input fields for phase {entries}.")
             for entry in sorted_entries[entries]:
                 entry_parts = entry.split("_")
                 entry_name = entry_parts[1].title().replace("Rsl", "RSL")
@@ -353,28 +378,11 @@ def main():
                     entry_responses[entry] = st.number_input(
                         (f"{entry_name}:"), min_value=0, step=1, key=entry
                     )
-
-                    # Add css to increase button width
-                    st.markdown(
-                        """
-                        <style>
-                        .st-emotion-cache-nnubno {
-                            width: 100px;
-                        }
-                        svg {
-                            transform: scale(2);
-                            }
-                        </style>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-
                 elif entry_parts[2] == "STR":
                     selected_options = st.multiselect(
                         (f"{entry_name}:"), feature_list, key=entry
                     )
                     entry_responses[entry] = ", ".join(selected_options)
-
                 elif entry_parts[2] == "BOOL":
                     entry_responses[entry] = int(st.toggle(entry_name, key=entry))
 
@@ -415,6 +423,8 @@ def main():
 
             prefill_url = f"{st.secrets['STATS_FORM'].split('/viewform')[0]}/formResponse?usp=pp_url{entry_url}&submit=Submit"
 
+            print(f"Debug: Prefill URL generated: {prefill_url}")
+
             if input_name != "":
                 submitted = st.form_submit_button(
                     "Submit", type="primary", use_container_width=True
@@ -426,15 +436,7 @@ def main():
                 st.warning("⚠️ Required Input Missing")
 
         def gen_qr(contents):
-            """
-            Generate a QR code image from the given contents.
-
-            Parameters:
-            - contents (str): The data to be encoded in the QR code.
-
-            Returns:
-            - bytes: The byte representation of the generated QR code image.
-            """
+            print(f"Debug: Generating QR code for contents: {contents}")
             qr = qrcode.QRCode(
                 version=1,
                 error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -453,19 +455,24 @@ def main():
             return bytes_image
 
         if submitted:
+            print("Debug: Form submitted.")
             req = requests.get(prefill_url)
 
             if req.status_code == 200:
+                print("Debug: Submission successful.")
                 st.balloons()
                 st.toast("Submission successful!", icon="✅")
                 if st.session_state.console["force_qr"]:
                     with st.expander("QR Code", False):
                         st.image(gen_qr(prefill_url), use_container_width=True)
             else:
+                print("Debug: Submission unsuccessful.")
                 st.toast("Submission unsuccessful! Use QR code...", icon="⚠️")
                 st.image(gen_qr(prefill_url), use_container_width=True)
-    except:
-        st.error("⚠️ No Data...")
+    except Exception as e:
+        error_trace = traceback.format_exc()
+        print(f"Debug: Exception occurred - {e}\nTraceback:\n{error_trace}")
+        st.error(f"⚠️ An error occurred: {e}\n\nLocation:\n{error_trace}")
 
 if __name__ == "__main__":
     main()
