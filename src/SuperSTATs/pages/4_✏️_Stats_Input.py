@@ -428,7 +428,7 @@ def main():
 
         submitted = False
 
-        with st.form("Stats Input", clear_on_submit=True, border=False):
+        with st.form("Stats Input", clear_on_submit=False, border=False):
             with st.expander("Autonomous", True):
                 phase_header("Autonomous")
                 gen_phase_input("AUTO")
