@@ -153,13 +153,53 @@ def handle_scoutter_match_initialisation(
             match_index = 0
 
     return unplayed_scout_matches, match_index
-    
+
+def create_master_scout_expander(input_match, all_match_scouts, matches):
+        with st.expander("Master Scout List"):
+            st.divider()
+
+            match_search = st.text_input("Match:", f"{input_match} ").lower()
+
+            for match in all_match_scouts:
+                if match_search in f"{match.lower()} ":
+                    scouts = all_match_scouts[match]
+
+                    df_teams = (
+                        matches[matches["Match"] == match]
+                        .set_index("Match")
+                        .transpose()
+                    )
+                    teams = list(df_teams.to_dict()[match].values())
+
+                    st.divider()
+
+                    st.markdown(
+                        f"<span style='font-size: 1.5em;'><b>{match}</b></span>",
+                        unsafe_allow_html=True,
+                    )
+
+                    red_scout_columns = st.columns(3)
+                    blue_scout_columns = st.columns(3)
+
+                    for i, (scout, team) in enumerate(zip(scouts, teams)):
+                        color = "#f8312f" if i < 3 else "#0074ba"
+                        if i < 3:
+                            red_scout_columns[i].markdown(
+                                f"<span style='color:{color}'>{scout}</span> - {team}",
+                                unsafe_allow_html=True,
+                            )
+                        else:
+                            blue_scout_columns[i - 3].markdown(
+                                f"<span style='color:{color}'>{scout}</span> - {team}",
+                                unsafe_allow_html=True,
+                            )
+
+
 
 def main():
     load.initialise_app()
 
     ui.display_header("✏️ Stats Input ✏️")
-
     display_random_susan()
 
     update_page_button()
@@ -189,8 +229,6 @@ def main():
         scout_matches,
         unplayed_matches
     )
-
-    match_index = 0
 
     input_match = match_selection.selectbox(
         "Match:",
@@ -243,47 +281,8 @@ def main():
 
             input_color = prac_columns[1].radio("Color:", ["R", "B"], horizontal=True)
 
-    if st.session_state.console["practice_mode"]:
-        st.error("⚠️ Practice mode enabled")
-    else:
-        with st.expander("Master Scout List"):
-            st.divider()
-
-            match_search = st.text_input("Match:", f"{input_match} ").lower()
-
-            for match in all_match_scouts:
-                if match_search in f"{match.lower()} ":
-                    scouts = all_match_scouts[match]
-
-                    df_teams = (
-                        matches[matches["Match"] == match]
-                        .set_index("Match")
-                        .transpose()
-                    )
-                    teams = list(df_teams.to_dict()[match].values())
-
-                    st.divider()
-
-                    st.markdown(
-                        f"<span style='font-size: 1.5em;'><b>{match}</b></span>",
-                        unsafe_allow_html=True,
-                    )
-
-                    red_scout_columns = st.columns(3)
-                    blue_scout_columns = st.columns(3)
-
-                    for i, (scout, team) in enumerate(zip(scouts, teams)):
-                        color = "#f8312f" if i < 3 else "#0074ba"
-                        if i < 3:
-                            red_scout_columns[i].markdown(
-                                f"<span style='color:{color}'>{scout}</span> - {team}",
-                                unsafe_allow_html=True,
-                            )
-                        else:
-                            blue_scout_columns[i - 3].markdown(
-                                f"<span style='color:{color}'>{scout}</span> - {team}",
-                                unsafe_allow_html=True,
-                            )
+    if not st.session_state.console["practice_mode"]:
+        create_master_scout_expander(input_match, all_match_scouts, matches)
 
         if not st.session_state.console["practice_mode"]:
             try:
@@ -321,6 +320,9 @@ def main():
                     f"<div style='text-align: center'>Error fetching match time...</div>",
                     unsafe_allow_html=True,
                 )
+    else:
+        st.error("⚠️ Practice mode enabled")
+
 
     input_match = input_match.split()[1]
 
