@@ -1,3 +1,6 @@
+import io
+import qrcode
+import requests
 import SuperSTATs.load as load
 import streamlit as st
 import random
@@ -126,6 +129,8 @@ def handle_scoutter_match_initialisation(
     for match in scout_matches:
         if match in unplayed_matches:
             unplayed_scout_matches.append(match)
+
+    match_index = 0
 
     if st.session_state.console["practice_mode"]:
         unplayed_scout_matches = [f"Prac {i + 1}" for i in range(50)]
