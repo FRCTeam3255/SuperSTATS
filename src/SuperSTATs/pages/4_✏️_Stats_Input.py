@@ -1,4 +1,6 @@
+import datetime
 import io
+from bs4 import BeautifulSoup
 import qrcode
 import requests
 import SuperSTATs.load as load
@@ -114,7 +116,7 @@ def assign_scouts(scouts, matches, df_teams, all_match_scouts, scouters):
 
     return all_match_scouts
 
-def handle_scoutter_match_initialisation(
+def handle_scouter_match_initialization(
     all_match_scouts,
     input_name,
     scout_matches,
@@ -194,7 +196,21 @@ def create_master_scout_expander(input_match, all_match_scouts, matches):
                                 unsafe_allow_html=True,
                             )
 
+def name_check(value, lst):
+    """
+    Check if a value is present in the first half of a given list.
 
+    Parameters:
+    value (any): The value to be checked.
+    lst (list): The list to be searched.
+
+    Returns:
+    str: "R" if the value is present in the first half of the list, "B" otherwise.
+    """
+    mid_index = len(lst) // 2
+    if value in lst[:mid_index]:
+        return "R"
+    return "B"
 
 def main():
     load.initialise_app()
@@ -223,7 +239,7 @@ def main():
     input_name, input_sub = handle_name_selection(top_columns, bot_columns, scouters)
     all_match_scouts = assign_scouts(scouters, matches, df_teams, all_match_scouts, scouters)
 
-    unplayed_scout_matches, match_index = handle_scoutter_match_initialisation(
+    unplayed_scout_matches, match_index = handle_scouter_match_initialization(
         all_match_scouts,
         input_name,
         scout_matches,
@@ -284,42 +300,12 @@ def main():
     if not st.session_state.console["practice_mode"]:
         create_master_scout_expander(input_match, all_match_scouts, matches)
 
-        if not st.session_state.console["practice_mode"]:
-            try:
-                event_url = f"https://www.thebluealliance.com/event/{st.secrets['DEFAULT_EVENT_KEY']}"
+        ui.display_match_time(
+            unplayed_scout_matches,
+            unplayed_matches,
+            input_match
+        )
 
-                response = requests.get(event_url)
-                soup = BeautifulSoup(response.content, "html.parser")
-                output = str(soup)
-
-                match_data = st.session_state.match_data
-                match_data = match_data[match_data["Match Name"] == input_match]
-                match_key = match_data["key"].to_list()[0]
-
-                index = output.find("Scheduled at ", output.find(match_key))
-                if index != -1:
-                    closing_tag_index = output.find(" UTC", index)
-                    next_instance = output[
-                        index + len("Scheduled at ") + 4 : closing_tag_index
-                    ]
-
-                match_time = datetime.datetime.strptime(
-                    next_instance, "%I:%M%p"
-                ) - datetime.timedelta(
-                    hours=int(st.session_state.configs["UTC Offset"][0])
-                )
-
-                next_match_index = unplayed_matches.index(unplayed_scout_matches[0])
-
-                st.markdown(
-                    f"<div style='text-align: center'>Scheduled {'NOW' if next_match_index == 0 else f'in {next_match_index} matches'}...<br><i>{unplayed_scout_matches[0]} at {match_time.strftime('%I:%M %p')}</i></div>",
-                    unsafe_allow_html=True,
-                )
-            except:
-                st.markdown(
-                    f"<div style='text-align: center'>Error fetching match time...</div>",
-                    unsafe_allow_html=True,
-                )
     else:
         st.error("⚠️ Practice mode enabled")
 

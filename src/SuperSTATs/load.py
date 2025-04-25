@@ -1,7 +1,9 @@
+import datetime
 import json
 import pickle
 import random
 import time
+from bs4 import BeautifulSoup
 import requests
 import tbapy
 import pandas as pd
@@ -688,10 +690,63 @@ class DataInitializer:
             return configs
 
     def console(self):
+        """
+        Initializes the console configuration in the Streamlit session state.
+        This method processes the "Console" configurations from the session state,
+        splitting each configuration into a key-value pair. The key represents the
+        configuration name, and the value is a boolean indicating whether the
+        configuration is enabled (True) or disabled (False).
+        The processed configurations are stored in `st.session_state.console`.
+        Raises:
+            KeyError: If "Console" is not found in `st.session_state.configs`.
+        """
+
         st.session_state.console = {}
         for config in st.session_state.configs["Console"]:
             config, default_status = config.split("=")
             st.session_state.console[config] = bool(default_status == "true")
+
+    def fetch_match_time(unplayed_scout_matches, unplayed_matches, input_match):
+        """
+        Fetches the scheduled time for a specific match and calculates the adjusted match time 
+        based on the UTC offset.
+        Args:
+            unplayed_scout_matches (list): A list of unplayed scout matches.
+            unplayed_matches (list): A list of all unplayed matches.
+            input_match (str): The name of the match for which the time is being fetched.
+        Returns:
+            tuple: A tuple containing:
+                - next_match_index (int): The index of the next match in the unplayed matches list.
+                - match_time (datetime.datetime): The adjusted match time in local time.
+                - match_time (datetime.datetime): The same adjusted match time (duplicated for compatibility).
+        """
+
+        event_url = f"https://www.thebluealliance.com/event/{st.secrets['DEFAULT_EVENT_KEY']}"
+
+        response = requests.get(event_url)
+        soup = BeautifulSoup(response.content, "html.parser")
+        output = str(soup)
+
+        match_data = st.session_state.match_data
+        match_data = match_data[match_data["Match Name"] == input_match]
+        match_key = match_data["key"].to_list()[0]
+
+        index = output.find("Scheduled at ", output.find(match_key))
+        if index != -1:
+            closing_tag_index = output.find(" UTC", index)
+            next_instance = output[
+                index + len("Scheduled at ") + 4 : closing_tag_index
+            ]
+
+        match_time = datetime.datetime.strptime(
+            next_instance, "%I:%M%p"
+        ) - datetime.timedelta(
+            hours=int(st.session_state.configs["UTC Offset"][0])
+        )
+
+        next_match_index = unplayed_matches.index(unplayed_scout_matches[0])
+
+        return next_match_index, match_time, match_time
 
 
 def download_sheets_raw(gid):

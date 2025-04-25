@@ -1,5 +1,7 @@
 import datetime
+import io
 import pandas as pd
+import qrcode
 import streamlit as st
 import styles as style
 import SuperSTATs.load as load
@@ -297,3 +299,39 @@ def generate_qr(contents):
     bytes_image = byte_stream.getvalue()
 
     return bytes_image
+
+
+def display_match_time(unplayed_scout_matches, unplayed_matches, input_match):
+    """
+    Displays the scheduled time for the next match in a formatted markdown.
+    Args:
+        unplayed_scout_matches (list): A list of unplayed scout matches.
+        unplayed_matches (list): A list of all unplayed matches.
+        input_match (str): The identifier for the input match.
+    Behavior:
+        - Fetches the next match index and its scheduled time using the `fetch_match_time` method 
+          from the `load.DataInitializer` class.
+        - Displays the match time in a centered markdown format. If the next match is the current 
+          one, it shows "NOW"; otherwise, it indicates the number of matches until the next one.
+        - If an error occurs during fetching, displays an error message in the markdown.
+    Raises:
+        Exception: If there is an issue fetching the match time, it is caught and an error message 
+        is displayed instead.
+    """
+    
+    try:
+        next_match_index, next_match_index, match_time = load.DataInitializer.fetch_match_time(
+            unplayed_scout_matches,
+            unplayed_matches,
+            input_match
+        )
+
+        st.markdown(
+            f"<div style='text-align: center'>Scheduled {'NOW' if next_match_index == 0 else f'in {next_match_index} matches'}...<br><i>{unplayed_scout_matches[0]} at {match_time.strftime('%I:%M %p')}</i></div>",
+            unsafe_allow_html=True,
+        )
+    except Exception:
+        st.markdown(
+            f"<div style='text-align: center'>Error fetching match time...</div>",
+            unsafe_allow_html=True,
+        )
