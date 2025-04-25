@@ -749,6 +749,38 @@ class DataInitializer:
         return next_match_index, match_time, match_time
 
 
+def add_cols(org_df, filter):
+    """
+    Add a new column to the given DataFrame based on the specified filter.
+
+    Args:
+        org_df (pandas.DataFrame): The original DataFrame.
+        filter (str): The filter to be applied to select relevant columns.
+
+    Returns:
+        pandas.Series: The newly added column.
+    """
+    points = {}
+
+    for key, value in st.session_state.points.items():
+        points[f"{key}_{value}"] = value
+
+    relevant_columns = [
+        col
+        for col in org_df.columns
+        if col != "COMMENT_GENERAL_STR_1" and col.startswith(filter)
+    ]
+
+    org_df[filter] = org_df[relevant_columns].apply(
+        lambda row: sum(
+            [points[col] * val for col, val in row.items() if col in points]
+        ),
+        axis=1,
+    )
+
+    return org_df[filter]
+
+
 def download_sheets_raw(gid):
     """
     Downloads a Google Sheets document as a pandas DataFrame.
