@@ -13,7 +13,7 @@ from SuperSTATs.form import Form as form
 
 
 class DataInitializer:
-    def __init__(self):
+    def __init__(self) -> None:
         with open(constants.JsonPaths.LOADING_MESSAGES, "r") as file:
             self.loading_messages = json.load(file)
 
@@ -77,7 +77,7 @@ class DataInitializer:
 
         self.init_status = st.empty()
 
-    def initialise_all(self):
+    def initialise_all(self) -> None:
         with self.init_status.status(
             random.choice(self.loading_messages), expanded=True
         ) as self.status:
@@ -129,11 +129,11 @@ class DataInitializer:
             self.display_status("forms")
             st.session_state.forms = form.cache_forms(["STATS_FORM", "SCOUTING_FORM"])
 
-    def display_status(self, state):
+    def display_status(self, state: str) -> None:
         if self.status_messages[state] is not None:
             st.markdown(self.status_messages[state], unsafe_allow_html=True)
 
-    def get_phases(self, df):
+    def get_phases(self, df: pd.DataFrame) -> list:
         """
         Get a list of unique game phases from the given DataFrame.
 
@@ -155,7 +155,7 @@ class DataInitializer:
 
         return sorted(list(set(phases)))
 
-    def get_event_year(event_key):
+    def get_event_year(event_key: str) -> int:
         """
         Extracts the year from the event key.
 
@@ -172,7 +172,7 @@ class DataInitializer:
             st.error("Invalid event key format")
             return None
 
-    def download_sheets_raw(self, gid):
+    def download_sheets_raw(self, gid: str) -> pd.DataFrame:
         """
         Downloads a Google Sheets document as a pandas DataFrame.
 
@@ -196,7 +196,7 @@ class DataInitializer:
 
     def get_nexus_data(
         team_num=st.secrets["TEAM_NUMBER"], event_key=st.secrets["DEFAULT_EVENT_KEY"]
-    ):
+        ) -> dict:
         try:
             api_url = f"https://frc.nexus/api/v1/event/{event_key}"
             nexus_headers = {"Nexus-Api-Key": st.secrets["NEXUS_API"]}
@@ -244,13 +244,17 @@ class DataInitializer:
             nexus_data = None
             return nexus_data
 
-    def get_unplayed(self, df, matches):
+    def get_unplayed(
+            self,
+            df: pd.DataFrame,
+            matches: pd.DataFrame
+        ) -> list:
         """
         Get a list of unplayed matches based on the given DataFrame and matches.
 
         Args:
-            df (pandas.DataFrame): The DataFrame containing match data.
-            matches (pandas.DataFrame): The DataFrame containing match information.
+            df (pd.DataFrame): The DataFrame containing match data.
+            matches (pd.DataFrame): The DataFrame containing match information.
 
         Returns:
             list: A list of unplayed matches.
@@ -300,7 +304,7 @@ class DataInitializer:
         return unplayed_matches
 
     @st.cache_data(show_spinner=False)
-    def get_team_colors(_self):
+    def get_team_colors(_self) -> dict:
         """
         Retrieves the colors associated with each team from the FRC-Colors API
         or a pickle file if the colors are already known.
@@ -358,7 +362,7 @@ class DataInitializer:
 
         return team_colors
 
-    def organize_df(self, df):
+    def organize_df(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Organizes and processes a DataFrame containing match data.
         This function performs the following steps:
@@ -461,7 +465,7 @@ class DataInitializer:
 
         return df
 
-    def get_scouters(self):
+    def get_scouters(self) -> dict:
         """
         Retrieves the list of team scouts and their assigned status.
 
@@ -494,9 +498,7 @@ class DataInitializer:
             }
 
     @st.cache_data(show_spinner=False, persist=True)
-    def get_team_info(
-        _self,
-    ):
+    def get_team_info(_self) -> dict:
         """
         Retrieves team information from TBA API.
 
@@ -534,7 +536,7 @@ class DataInitializer:
         }
         return team_info
 
-    def get_matches(self):
+    def get_matches(self) -> pd.DataFrame:
         """
         Retrieves and processes match data to create a DataFrame of matches
         with desired alliances.
@@ -582,7 +584,7 @@ class DataInitializer:
 
         return df
 
-    def get_match_data(self):
+    def get_match_data(self) -> pd.DataFrame:
         """
         Retrieves match data from the TBA API or a custom data source if TBA is
         unavailable.
@@ -647,7 +649,7 @@ class DataInitializer:
 
             return pd.DataFrame(custom_data)
 
-    def close(self):
+    def close(self) -> None:
         elapsed_time = round(time.time() - self.start_time, 2)
 
         self.status.update(
@@ -660,7 +662,7 @@ class DataInitializer:
         time.sleep(1)
         self.init_status.empty()
 
-    def get_configs(self):
+    def get_configs(self)  -> dict:
         """
         Retrieves the configurations from a Google Sheets document and saves
         them to a pickle file.
@@ -689,7 +691,7 @@ class DataInitializer:
                 pickle.dump(configs, f, pickle.HIGHEST_PROTOCOL)
             return configs
 
-    def console(self):
+    def console(self) -> None:
         """
         Initializes the console configuration in the Streamlit session state.
         This method processes the "Console" configurations from the session state,
@@ -706,7 +708,11 @@ class DataInitializer:
             config, default_status = config.split("=")
             st.session_state.console[config] = bool(default_status == "true")
 
-    def fetch_match_time(unplayed_scout_matches, unplayed_matches, input_match):
+    def fetch_match_time(
+            unplayed_scout_matches: list,
+            unplayed_matches: list,
+            input_match: str
+        ) -> tuple:
         """
         Fetches the scheduled time for a specific match and calculates the adjusted match time 
         based on the UTC offset.
@@ -749,16 +755,16 @@ class DataInitializer:
         return next_match_index, match_time, match_time
 
 
-def add_cols(org_df, filter):
+def add_cols(org_df: pd.DataFrame, filter: str) -> pd.Series:
     """
     Add a new column to the given DataFrame based on the specified filter.
 
     Args:
-        org_df (pandas.DataFrame): The original DataFrame.
+        org_df (pd.DataFrame): The original DataFrame.
         filter (str): The filter to be applied to select relevant columns.
 
     Returns:
-        pandas.Series: The newly added column.
+        pd.Series: The newly added column.
     """
     points = {}
 
@@ -781,7 +787,7 @@ def add_cols(org_df, filter):
     return org_df[filter]
 
 
-def download_sheets_raw(gid):
+def download_sheets_raw(gid: str) -> pd.DataFrame:
     """
     Downloads a Google Sheets document as a pandas DataFrame.
 
@@ -810,7 +816,7 @@ def download_sheets_raw(gid):
     return df
 
 
-def initialise_app():
+def initialise_app() -> None:
     """
     Initializes the SuperSTATs application and is called on every page.
 

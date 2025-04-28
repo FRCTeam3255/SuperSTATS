@@ -9,7 +9,7 @@ import SuperSTATs.load as load
 
 
 @st.cache_data(show_spinner=False, persist=True)
-def robot_photo_dropdown(input_team):
+def robot_photo_dropdown(input_team: int) -> None:
     """
     Displays a dropdown with the robot photo for a given team.
     Args:
@@ -40,7 +40,7 @@ def robot_photo_dropdown(input_team):
             else:
                 st.warning("⚠️ No robot photo available")
 
-def display_header(title):
+def display_header(title: str) -> None:
     """
     Displays a styled header with a rainbow effect.
     Args:
@@ -55,7 +55,7 @@ def display_header(title):
     st.markdown(f"<div class='rainbow'>{title}</div>", unsafe_allow_html=True)
 
 
-def display_event_link(event_key):
+def display_event_link(event_key: str) -> None:
     """
     Displays a clickable link to an event on The Blue Alliance website using Streamlit's markdown.
     Args:
@@ -74,7 +74,7 @@ def display_event_link(event_key):
     )
 
 
-def get_team_selection(teams):
+def get_team_selection(teams: list) -> tuple:
     """
     Creates a Streamlit UI element for team selection.
     Parameters:
@@ -90,7 +90,11 @@ def get_team_selection(teams):
     return team, columns
 
 
-def display_scoreboard(matches, team, columns):
+def display_scoreboard(
+        matches: pd.DataFrame,
+        team: str,
+        columns: list
+    ) -> None:
     """
     Displays a scoreboard for matches with scores and optional team filtering.
     Args:
@@ -189,7 +193,7 @@ def display_scoreboard(matches, team, columns):
         st.error(f"⚠️ Error processing matches: {e}")
 
 
-def display_nexus_data():
+def display_nexus_data() -> None:
     """
     Displays Nexus data in a Streamlit application.
     This function retrieves Nexus data from the Streamlit session state and
@@ -226,7 +230,7 @@ def display_nexus_data():
                 st.write("No scheduled matches found")
 
 
-def display_event_keys():
+def display_event_keys() -> None:
     """
     Displays a Streamlit UI component for viewing and selecting event keys.
     This function creates an expandable section in a Streamlit app where users
@@ -275,7 +279,7 @@ def display_event_keys():
                 st.error(f"⚠️ No keys found for {year}")
 
 
-def generate_qr(contents):
+def generate_qr(contents: str) -> bytes:
     """
     Generates a QR code image from the given contents and returns it as a byte stream.
     Args:
@@ -302,7 +306,11 @@ def generate_qr(contents):
     return bytes_image
 
 
-def display_match_time(unplayed_scout_matches, unplayed_matches, input_match):
+def display_match_time(
+        unplayed_scout_matches: list,
+        unplayed_matches: list,
+        input_match: str
+    ) -> None:
     """
     Displays the scheduled time for the next match in a formatted markdown.
     Args:
@@ -337,14 +345,32 @@ def display_match_time(unplayed_scout_matches, unplayed_matches, input_match):
             unsafe_allow_html=True,
         )
 
-def display_random_susan():
+def display_random_susan() -> None:
+    """
+    Displays a random message "Susan was here😸" with a 10% probability.
+    This function uses Streamlit's `st.markdown` to render a styled message
+    in the center of the screen. The message is displayed in a small font
+    size and gray color.
+    Returns:
+        None
+    """
+
     if random.random() < 0.1:  # 10% chance
         st.markdown(
             "<div style='text-align: center; font-size: small; color: #808080;'>Susan was here😸</div>",
             unsafe_allow_html=True,
         )
 
-def team_number_graphic(color_icon, input_team):
+def team_number_graphic(color_icon: str, input_team: str) -> None:
+    """
+    Displays a styled team number graphic in a Streamlit application.
+    Args:
+        color_icon (str): An HTML string representing a color icon or emoji to be displayed.
+        input_team (str): The team identifier or name to be displayed.
+    Returns:
+        None: This function directly renders the styled HTML content in the Streamlit app.
+    """
+
     st.markdown(
         f'<div style="text-align: center; font-size: 2.5em;">{color_icon} {input_team} | {st.session_state.team_info[input_team]} {color_icon}</div>',
         unsafe_allow_html=True,

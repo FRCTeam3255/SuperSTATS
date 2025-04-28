@@ -397,7 +397,7 @@ def update_button(button_name, key="update_page") -> None:
     st.divider()
 
 
-def main():
+def main() -> None:
     load.initialise_app()
 
     presets_path = "src\\pickles\\presets.pickle"

@@ -3,7 +3,7 @@ import streamlit as st
 import SuperSTATs.screen_elements as ui
 
 
-def main():
+def main() -> None:
     load.initialise_app()
 
     ui.display_header("👾 Data Check 👾")

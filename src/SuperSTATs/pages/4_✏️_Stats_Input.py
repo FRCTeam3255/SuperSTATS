@@ -47,7 +47,7 @@ def get_match_scouts(team: list) -> dict:
 
     return scouts
 
-def update_page_button():
+def update_page_button() -> None:
     """
     Renders a button in the Streamlit app to update the page data and session state.
     When the "Update Page" button is clicked:
@@ -108,7 +108,7 @@ def handle_name_selection(
     return input_name, input_sub
 
 def assign_scouts(
-        matches,
+        matches: pd.DataFrame,
         df_teams: dict,
         all_match_scouts: dict,
         scouters: list
@@ -208,7 +208,7 @@ def handle_scouter_match_initialization(
 def create_master_scout_expander(
         input_match: str,
         all_match_scouts: dict,
-        matches
+        matches: pd.DataFrame
     ) -> None:
     """
     Creates an expander in a Streamlit app to display a master scout list for matches.
@@ -305,7 +305,7 @@ def combine_set(entry_name: str, variable: any) -> list:
 
     return set_combined[entry_name]
 
-def main():
+def main() -> None:
     load.initialise_app()
 
     ui.display_header("✏️ Stats Input ✏️")

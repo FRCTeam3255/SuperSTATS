@@ -4,7 +4,7 @@ import requests
 
 class Form:
     @staticmethod
-    def get_entries(url):
+    def get_entries(url: str) -> tuple:
         """
         Retrieves entries from a given form URL and returns two dictionaries: set_entries and gen_entries.
 
@@ -52,7 +52,7 @@ class Form:
 
     @staticmethod
     @st.cache_data(show_spinner=False)
-    def cache_forms(forms):
+    def cache_forms(forms: list) -> dict:
         """
         Caches form data by retrieving entries for each form and organizing them into set and gen categories.
 

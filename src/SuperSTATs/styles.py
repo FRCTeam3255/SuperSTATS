@@ -1,4 +1,4 @@
-def rainbow():
+def rainbow() -> str:
     """
     Returns a CSS style string that creates a rainbow animation effect.
 
@@ -35,7 +35,7 @@ def rainbow():
     """
 
 
-def shimmer(color):
+def shimmer(color) -> str:
     """
     Generate CSS code for a shimmer effect.
 

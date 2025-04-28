@@ -4,7 +4,7 @@ import streamlit as st
 import SuperSTATs.screen_elements as ui
 
 
-def display_match_schedule_expander():
+def display_match_schedule_expander() -> None:
     """
     Displays an expander section in the Streamlit app for viewing the match schedule.
     This function creates an expander titled "Match Schedule" that is expanded by default.
