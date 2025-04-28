@@ -1,20 +1,10 @@
-import datetime
 import io
-from bs4 import BeautifulSoup
 import qrcode
 import requests
 import SuperSTATs.load as load
 import streamlit as st
-import random
 import traceback
 import SuperSTATs.screen_elements as ui
-
-def display_random_susan():
-    if random.random() < 0.1:  # 10% chance
-        st.markdown(
-            "<div style='text-align: center; font-size: small; color: #808080;'>Susan was here😸</div>",
-            unsafe_allow_html=True,
-        )
 
 def get_match_scouts(team):
     """
@@ -216,7 +206,7 @@ def main():
     load.initialise_app()
 
     ui.display_header("✏️ Stats Input ✏️")
-    display_random_susan()
+    ui.display_random_susan()
 
     update_page_button()
 
@@ -236,8 +226,20 @@ def main():
     bot_columns = st.columns(2)
     match_selection = top_columns[1].empty()
 
-    input_name, input_sub = handle_name_selection(top_columns, bot_columns, scouters)
-    all_match_scouts = assign_scouts(scouters, matches, df_teams, all_match_scouts, scouters)
+    input_name, input_sub = handle_name_selection(
+        top_columns,
+        bot_columns,
+        scouters
+    )
+
+
+    all_match_scouts = assign_scouts(
+        scouters,
+        matches,
+        df_teams,
+        all_match_scouts,
+        scouters
+    )
 
     unplayed_scout_matches, match_index = handle_scouter_match_initialization(
         all_match_scouts,
@@ -261,8 +263,10 @@ def main():
             matches[matches["Match"] == input_match].set_index("Match").transpose()
         )
 
+        df_teams = df_teams.to_dict()[input_match].values()
+        teams = list(df_teams)
+
         match_scouts = [input_name for i in range(6)]
-        teams = list(df_teams.to_dict()[input_match].values())
 
         input_team = bot_columns[1].selectbox("Team:", teams)
         input_color = name_check(input_team, teams)
@@ -275,10 +279,11 @@ def main():
         try:
             match_scouts = all_match_scouts[input_match]
             input_color = name_check(input_name, match_scouts)
-            teams = df_teams.filter(like=input_color, axis=0)[input_match].to_list()
             match_scouts = (
                 match_scouts[0:3] if input_color == "R" else match_scouts[3:6]
             )
+
+            teams = df_teams.filter(like=input_color, axis=0)[input_match].to_list()
             input_team = teams[match_scouts.index(input_name)]
 
         except:
@@ -298,7 +303,11 @@ def main():
             input_color = prac_columns[1].radio("Color:", ["R", "B"], horizontal=True)
 
     if not st.session_state.console["practice_mode"]:
-        create_master_scout_expander(input_match, all_match_scouts, matches)
+        create_master_scout_expander(
+            input_match,
+            all_match_scouts,
+            matches
+        )
 
         ui.display_match_time(
             unplayed_scout_matches,
@@ -310,21 +319,19 @@ def main():
         st.error("⚠️ Practice mode enabled")
 
 
-    input_match = input_match.split()[1]
-
-    color_icon = "🔴" if input_color == "R" else "🔵"
     input_name = (
         f"{input_sub} [⇄] {input_name}"
         if input_sub and input_sub != input_name
         else input_name
     )
 
+    input_match = input_match.split()[1]
+    color_icon = "🔴" if input_color == "R" else "🔵"
     input_key = st.secrets["DEFAULT_EVENT_KEY"]
 
     st.divider()
 
     try:
-        print("Debug: Starting to display team and color icon.")
         st.markdown(
             f'<div style="text-align: center; font-size: 2.5em;">{color_icon} {input_team} | {st.session_state.team_info[input_team]} {color_icon}</div>',
             unsafe_allow_html=True,
@@ -332,7 +339,6 @@ def main():
 
         st.divider()
 
-        print("Debug: Loading robot photo dropdown.")
         ui.robot_photo_dropdown(input_team)
 
         set_inputs = [
@@ -347,7 +353,6 @@ def main():
         set_combined = {}
 
         def combine_set(entry_name, variable):
-            print(f"Debug: Combining set for entry {entry_name} with variable {variable}.")
             entry_number = set_entries[entry_name]
             set_combined[entry_name] = [int(entry_number), variable]
 

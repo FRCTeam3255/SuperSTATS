@@ -1,5 +1,6 @@
 import datetime
 import io
+import random
 import pandas as pd
 import qrcode
 import streamlit as st
@@ -333,5 +334,12 @@ def display_match_time(unplayed_scout_matches, unplayed_matches, input_match):
     except Exception:
         st.markdown(
             f"<div style='text-align: center'>Error fetching match time...</div>",
+            unsafe_allow_html=True,
+        )
+
+def display_random_susan():
+    if random.random() < 0.1:  # 10% chance
+        st.markdown(
+            "<div style='text-align: center; font-size: small; color: #808080;'>Susan was here😸</div>",
             unsafe_allow_html=True,
         )
