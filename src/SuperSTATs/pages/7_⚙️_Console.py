@@ -1,9 +1,13 @@
+import json
 import pickle
 import SuperSTATs.load as load
 import streamlit as st
 import SuperSTATs.screen_elements as ui
 
-def save_console_configs(settings_raw, updated_configs):
+def save_console_configs(
+        settings_raw: dict,
+        updated_configs: dict
+    ) -> None:
     """
     Updates and saves the console configuration settings.
     This function updates the Streamlit session state with the provided 
@@ -33,7 +37,10 @@ def save_console_configs(settings_raw, updated_configs):
 
     st.toast("Successfully updated configs! Please refresh...", icon="✅")
 
-def save_scouts(scout_list, scouts):
+def save_scouts(
+        scout_list: list,
+        scouts: list
+    ) -> None:
     """
     Save the list of scouts and their assignments to a pickle file and update the session state.
     Args:
@@ -54,7 +61,7 @@ def save_scouts(scout_list, scouts):
 
     st.toast("Successfully set scouters! Please refresh...", icon="✅")
 
-def save_presets():
+def save_presets(uploaded_file: str, presets_path: str) -> None:
     """
     Saves user-uploaded presets to the session state and a local file.
     This function processes a file uploaded by the user, decodes its content,
@@ -84,7 +91,7 @@ def save_presets():
 
     st.toast("Successfully updated presets! Please refresh...", icon="✅")
 
-def delete_selected_presets():
+def delete_selected_presets(deleted_presets: list, presets: dict, presets_path: str) -> None:
     """
     Deletes the selected presets from the presets dictionary and updates the
     presets file. Displays a success message upon completion.
@@ -110,7 +117,7 @@ def delete_selected_presets():
         "Successfully deleted presets! Please refresh...", icon="🗑️"
     )
 
-def set_colors():
+def set_colors(uploaded_file: str, colors_path: str) -> None:
     """
     Updates the team colors by processing an uploaded file containing color data.
     This function reads the uploaded file, decodes its content, and parses it as JSON.
@@ -140,7 +147,7 @@ def set_colors():
 
     st.toast("Successfully updated colors! Please refresh...", icon="✅")
 
-def display_config_dropdown():
+def display_config_dropdown() -> None:
     """
     Displays a dropdown interface for configuring console settings in a Streamlit app.
     This function creates an expandable section labeled "Config" where users can toggle
@@ -190,7 +197,7 @@ def display_config_dropdown():
 
             st.toast("Successfully updated configs! Please refresh...", icon="✅")
 
-def display_scout_dropdown():
+def display_scout_dropdown() -> None:
     """
     Displays a dropdown interface for selecting scouts and assigns them to a list.
     This function uses Streamlit components to create an interactive UI where users
@@ -256,26 +263,7 @@ def display_scout_dropdown():
 
             st.toast("Successfully set scouters! Please refresh...", icon="✅")
 
-def display_presets_dropdown():
-    """
-    Displays a Streamlit UI component for managing presets.
-    This function provides a dropdown interface for users to interact with
-    preset configurations. Users can upload, download, delete, or override
-    presets stored in a pickle file. The function handles file operations
-    and user interactions through Streamlit widgets.
-    Features:
-    - Upload a JSON file to override existing presets.
-    - Download the current presets as a JSON file.
-    - Delete individual or all presets using checkboxes.
-    - Delete selected presets with a button click.
-    Raises:
-        Exception: If the presets file cannot be loaded or is not found.
-    Notes:
-    - Presets are stored in a pickle file located at `src\\pickles\\presets.pickle`.
-    - The function assumes the presence of helper functions like `save_presets`
-      and `delete_selected_presets`, as well as an `analytics.button_press` callback.
-    """
-
+def display_presets_dropdown(presets_path) -> None:
     with st.expander("Presets"):
         presets_path = "src\\pickles\\presets.pickle"
 
@@ -289,6 +277,7 @@ def display_presets_dropdown():
                 type="primary",
                 use_container_width=True,
                 key=f"set_presets",
+                args=(uploaded_file, presets_path),
             ):
                 save_presets()
 
@@ -329,8 +318,7 @@ def display_presets_dropdown():
                     type="primary",
                     use_container_width=True,
                     key=f"delete_selected",
-                    on_click=analytics.button_press,
-                    args=("delete_selected",),
+                    args=(deleted_presets, presets, presets_path),
                 ):
                     delete_selected_presets()
 
@@ -340,7 +328,7 @@ def display_presets_dropdown():
         except:
             st.error("⚠️ No Presets Found")
 
-def display_colors_dropdown():
+def display_colors_dropdown(colors_path: str) -> None:
     """
     Displays a dropdown interface for managing team colors in a Streamlit application.
     This function provides an expandable section labeled "Colors" where users can:
@@ -370,8 +358,7 @@ def display_colors_dropdown():
                 type="primary",
                 use_container_width=True,
                 key=f"set_colors",
-                on_click=analytics.button_press,
-                args=("set_colors",),
+                args=(uploaded_file, colors_path),
             ):
                 set_colors()
 
@@ -389,7 +376,7 @@ def display_colors_dropdown():
         except:
             pass
 
-def update_button(button_name, key="update_page"):
+def update_button(button_name, key="update_page") -> None:
     """
     Renders an "Update Page" button on the Streamlit app interface.
     This function adds a divider above and below the button for visual separation.
@@ -413,13 +400,16 @@ def update_button(button_name, key="update_page"):
 def main():
     load.initialise_app()
 
+    presets_path = "src\\pickles\\presets.pickle"
+    colors_path = "src\\pickles\\colors.pickle"
+
     ui.display_header("⚙️ Console ⚙️")
     update_button("Update Page")
 
     display_config_dropdown()
     display_scout_dropdown()
-    display_presets_dropdown()
-    display_colors_dropdown()
+    display_presets_dropdown(presets_path)
+    display_colors_dropdown(colors_path)
 
 if __name__ == "__main__":
     main()

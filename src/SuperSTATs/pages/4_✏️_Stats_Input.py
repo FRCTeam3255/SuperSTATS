@@ -6,7 +6,7 @@ import streamlit as st
 import traceback
 import SuperSTATs.screen_elements as ui
 
-def get_match_scouts(team):
+def get_match_scouts(team: list) -> dict:
     """
     Get the match scouts for a given team.
 
@@ -48,6 +48,18 @@ def get_match_scouts(team):
     return scouts
 
 def update_page_button():
+    """
+    Renders a button in the Streamlit app to update the page data and session state.
+    When the "Update Page" button is clicked:
+    - Initializes a `DataInitializer` object to handle data processing.
+    - Downloads raw data from Google Sheets using the `GID_RAW` secret.
+    - Cleans the data by removing rows with missing "Timestamp" values.
+    - Updates the `st.session_state.df` with the organized DataFrame.
+    - Updates the `st.session_state.unplayed_matches` with unplayed matches
+      derived from the updated DataFrame and existing matches in the session state.
+    The function also adds visual dividers before and after the button for UI separation.
+    """
+
     st.divider()
 
     if st.button(
@@ -67,7 +79,11 @@ def update_page_button():
 
     st.divider()
 
-def handle_name_selection(top_columns, bottom_columns, scouters):
+def handle_name_selection(
+        top_columns: list,
+        bottom_columns: list,
+        scouters: list
+    ) -> tuple:
     """
     Handles the selection of the scout's name and substitute.
 
@@ -91,13 +107,31 @@ def handle_name_selection(top_columns, bottom_columns, scouters):
 
     return input_name, input_sub
 
-def assign_scouts(scouts, matches, df_teams, all_match_scouts, scouters):
+def assign_scouts(
+        matches,
+        df_teams: dict,
+        all_match_scouts: dict,
+        scouters: list
+    ) -> dict:
+    """
+    Assigns scouts to matches and updates team data.
+    Args:
+        matches (pd.DataFrame): A DataFrame containing match information, 
+            where each row represents a match and includes a "Match" column.
+        df_teams (dict): A dictionary containing team data to be updated 
+            with match-specific information.
+        all_match_scouts (dict): A dictionary to store the scouts assigned 
+            to each match, with match identifiers as keys.
+        scouters (list): A list of scouters to be assigned to matches. 
+            The list is split into two groups for red and blue teams.
+    Returns:
+        dict: Updated dictionary of all_match_scouts with scouts assigned 
+        to each match.
+    """
+
     for match in st.session_state.matches["Match"]:
         teams = matches[matches["Match"] == match].set_index("Match").transpose()
-        if isinstance(df_teams, dict):
-            df_teams.update(teams.to_dict())
-        else:
-            df_teams = teams.to_dict()
+        df_teams.update(teams.to_dict())
 
         red_scouts = get_match_scouts(scouters[::2])[match]
         blue_scouts = get_match_scouts(scouters[1::2])[match]
@@ -107,11 +141,36 @@ def assign_scouts(scouts, matches, df_teams, all_match_scouts, scouters):
     return all_match_scouts
 
 def handle_scouter_match_initialization(
-    all_match_scouts,
-    input_name,
-    scout_matches,
-    unplayed_matches
-):
+        all_match_scouts: dict,
+        input_name: str,
+        scout_matches: list,
+        unplayed_matches: list
+    ) -> tuple:
+    """
+    Handles the initialization of scouter matches by determining which matches
+    are associated with a given scouter and identifying unplayed matches.
+    Args:
+        all_match_scouts (dict): A dictionary where keys are match identifiers 
+            and values are lists of scouter names associated with each match.
+        input_name (str): The name of the scouter to filter matches for.
+        scout_matches (list): A list to be populated with matches associated 
+            with the given scouter.
+        unplayed_matches (list): A list of matches that have not yet been played.
+    Returns:
+        tuple: A tuple containing:
+            - unplayed_scout_matches (list): A list of unplayed matches 
+            associated with the given scouter.
+            - match_index (int): The index of the next match to be played 
+            in the unplayed matches list. Defaults to 0 if no matches 
+            are found or in practice mode.
+    Notes:
+        - If practice mode is enabled (`st.session_state.console["practice_mode"]`), 
+        the function generates a list of practice matches and determines the 
+        match index based on completed practice matches.
+        - The function uses data from Google Sheets to identify completed 
+        practice matches when in practice mode.
+    """
+    
     for match in all_match_scouts:
         if input_name in all_match_scouts[match]:
             scout_matches.append(match)
@@ -146,47 +205,72 @@ def handle_scouter_match_initialization(
 
     return unplayed_scout_matches, match_index
 
-def create_master_scout_expander(input_match, all_match_scouts, matches):
-        with st.expander("Master Scout List"):
-            st.divider()
+def create_master_scout_expander(
+        input_match: str,
+        all_match_scouts: dict,
+        matches
+    ) -> None:
+    """
+    Creates an expander in a Streamlit app to display a master scout list for matches.
+    Args:
+        input_match (str): The match identifier to pre-fill the search input.
+        all_match_scouts (dict): A dictionary where keys are match identifiers and values are lists of scouts.
+        matches (pd.DataFrame): A pandas DataFrame containing match data, where each row represents a match and 
+                                includes columns such as "Match" and team information.
+    Functionality:
+        - Displays an expander titled "Master Scout List".
+        - Allows users to search for matches using a text input field.
+        - Filters and displays scouts and their associated teams for matches that match the search query.
+        - Teams are displayed in two groups: red and blue, with corresponding colors.
+        - Uses Streamlit components such as `st.expander`, `st.text_input`, `st.markdown`, and `st.columns` 
+          for layout and interactivity.
+    Notes:
+        - The function assumes that the `matches` DataFrame contains a "Match" column and team information 
+          that can be transposed for display.
+        - The red team scouts are displayed in the first three columns, and the blue team scouts are displayed 
+          in the next three columns.
+    """
+    
+    with st.expander("Master Scout List"):
+        st.divider()
 
-            match_search = st.text_input("Match:", f"{input_match} ").lower()
+        match_search = st.text_input("Match:", f"{input_match} ").lower()
 
-            for match in all_match_scouts:
-                if match_search in f"{match.lower()} ":
-                    scouts = all_match_scouts[match]
+        for match in all_match_scouts:
+            if match_search in f"{match.lower()} ":
+                scouts = all_match_scouts[match]
 
-                    df_teams = (
-                        matches[matches["Match"] == match]
-                        .set_index("Match")
-                        .transpose()
-                    )
-                    teams = list(df_teams.to_dict()[match].values())
+                df_teams = (
+                    matches[matches["Match"] == match]
+                    .set_index("Match")
+                    .transpose()
+                )
+                teams = list(df_teams.to_dict()[match].values())
 
-                    st.divider()
+                st.divider()
 
-                    st.markdown(
-                        f"<span style='font-size: 1.5em;'><b>{match}</b></span>",
-                        unsafe_allow_html=True,
-                    )
+                st.markdown(
+                    f"<span style='font-size: 1.5em;'><b>{match}</b></span>",
+                    unsafe_allow_html=True,
+                )
 
-                    red_scout_columns = st.columns(3)
-                    blue_scout_columns = st.columns(3)
+                red_scout_columns = st.columns(3)
+                blue_scout_columns = st.columns(3)
 
-                    for i, (scout, team) in enumerate(zip(scouts, teams)):
-                        color = "#f8312f" if i < 3 else "#0074ba"
-                        if i < 3:
-                            red_scout_columns[i].markdown(
-                                f"<span style='color:{color}'>{scout}</span> - {team}",
-                                unsafe_allow_html=True,
-                            )
-                        else:
-                            blue_scout_columns[i - 3].markdown(
-                                f"<span style='color:{color}'>{scout}</span> - {team}",
-                                unsafe_allow_html=True,
-                            )
+                for i, (scout, team) in enumerate(zip(scouts, teams)):
+                    color = "#f8312f" if i < 3 else "#0074ba"
+                    if i < 3:
+                        red_scout_columns[i].markdown(
+                            f"<span style='color:{color}'>{scout}</span> - {team}",
+                            unsafe_allow_html=True,
+                        )
+                    else:
+                        blue_scout_columns[i - 3].markdown(
+                            f"<span style='color:{color}'>{scout}</span> - {team}",
+                            unsafe_allow_html=True,
+                        )
 
-def name_check(value, lst):
+def name_check(value: any, lst: list) -> str:
     """
     Check if a value is present in the first half of a given list.
 
@@ -201,6 +285,25 @@ def name_check(value, lst):
     if value in lst[:mid_index]:
         return "R"
     return "B"
+
+def combine_set(entry_name: str, variable: any) -> list:
+    """
+    Combines an entry name and a variable into a structured format and updates the global `set_combined` dictionary.
+    Args:
+        entry_name (str): The key representing the entry in the `set_entries` dictionary.
+        variable (Any): The variable to associate with the entry.
+    Returns:
+        list: A list containing the integer value of the entry from `set_entries` and the provided variable.
+    Notes:
+        - This function assumes the existence of two global dictionaries: `set_entries` and `set_combined`.
+        - `set_entries` should contain `entry_name` as a key with a value that can be converted to an integer.
+        - `set_combined` is updated with the new combined entry.
+    """
+
+    entry_number = set_entries[entry_name]
+    set_combined[entry_name] = [int(entry_number), variable]
+
+    return set_combined[entry_name]
 
 def main():
     load.initialise_app()
@@ -314,7 +417,6 @@ def main():
             unplayed_matches,
             input_match
         )
-
     else:
         st.error("⚠️ Practice mode enabled")
 
@@ -332,9 +434,9 @@ def main():
     st.divider()
 
     try:
-        st.markdown(
-            f'<div style="text-align: center; font-size: 2.5em;">{color_icon} {input_team} | {st.session_state.team_info[input_team]} {color_icon}</div>',
-            unsafe_allow_html=True,
+        ui.team_number_graphic(
+            color_icon,
+            input_team
         )
 
         st.divider()
@@ -352,12 +454,8 @@ def main():
 
         set_combined = {}
 
-        def combine_set(entry_name, variable):
-            entry_number = set_entries[entry_name]
-            set_combined[entry_name] = [int(entry_number), variable]
-
         for i in range(len(set_entries)):
-            combine_set(list(set_entries.keys())[i], set_inputs[i])
+            set_combined[list(set_entries.keys())[i]] = combine_set(list(set_entries.keys())[i], set_inputs[i])
 
         sorted_entries = {"AUTO": [], "TELE": [], "END": [], "INFO": [], "COMMENT": []}
 

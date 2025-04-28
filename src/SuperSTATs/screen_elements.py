@@ -343,3 +343,9 @@ def display_random_susan():
             "<div style='text-align: center; font-size: small; color: #808080;'>Susan was here😸</div>",
             unsafe_allow_html=True,
         )
+
+def team_number_graphic(color_icon, input_team):
+    st.markdown(
+        f'<div style="text-align: center; font-size: 2.5em;">{color_icon} {input_team} | {st.session_state.team_info[input_team]} {color_icon}</div>',
+        unsafe_allow_html=True,
+    )
