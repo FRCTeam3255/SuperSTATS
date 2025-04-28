@@ -6,6 +6,7 @@ import streamlit as st
 import traceback
 import SuperSTATs.screen_elements as ui
 
+
 def get_match_scouts(team: list) -> dict:
     """
     Get the match scouts for a given team.
@@ -47,6 +48,7 @@ def get_match_scouts(team: list) -> dict:
 
     return scouts
 
+
 def update_page_button() -> None:
     """
     Renders a button in the Streamlit app to update the page data and session state.
@@ -79,6 +81,7 @@ def update_page_button() -> None:
 
     st.divider()
 
+
 def handle_name_selection(
         top_columns: list,
         bottom_columns: list,
@@ -106,6 +109,7 @@ def handle_name_selection(
         input_sub = None
 
     return input_name, input_sub
+
 
 def assign_scouts(
         matches: "pd.DataFrame",
@@ -139,6 +143,7 @@ def assign_scouts(
         all_match_scouts[match] = match_scouts
 
     return all_match_scouts
+
 
 def handle_scouter_match_initialization(
         all_match_scouts: dict,
@@ -205,6 +210,7 @@ def handle_scouter_match_initialization(
 
     return unplayed_scout_matches, match_index
 
+
 def create_master_scout_expander(
         input_match: str,
         all_match_scouts: dict,
@@ -270,6 +276,7 @@ def create_master_scout_expander(
                             unsafe_allow_html=True,
                         )
 
+
 def name_check(value: any, lst: list) -> str:
     """
     Check if a value is present in the first half of a given list.
@@ -285,6 +292,7 @@ def name_check(value: any, lst: list) -> str:
     if value in lst[:mid_index]:
         return "R"
     return "B"
+
 
 def combine_set(entry_name: str, variable: any, set_entries: dict, set_combined: dict) -> list:
     """
@@ -306,6 +314,7 @@ def combine_set(entry_name: str, variable: any, set_entries: dict, set_combined:
 
     return set_combined[entry_name]
 
+
 def sort_entries_by_prefix(gen_entries: dict, sorted_entries: dict) -> dict:
     """
     Sorts entries from the `gen_entries` dictionary into the `sorted_entries` dictionary
@@ -326,6 +335,59 @@ def sort_entries_by_prefix(gen_entries: dict, sorted_entries: dict) -> dict:
                 break
 
     return sorted_entries
+
+
+def combine_entries(gen_entries: dict, entry_responses: dict) -> dict:
+    """
+    Combines two dictionaries, `gen_entries` and `entry_responses`, by matching their keys.
+    For each matching key, the values from both dictionaries are grouped into a list.
+    Args:
+        gen_entries (dict): A dictionary containing general entries.
+        entry_responses (dict): A dictionary containing entry responses.
+    Returns:
+        dict: A new dictionary where keys are the matching keys from both input dictionaries,
+                and values are lists containing the corresponding values from `gen_entries` and `entry_responses`.
+    Note:
+        - If a key exists in `gen_entries` but not in `entry_responses`, it will not be included in the result.
+        - The function assumes that the input dictionaries have hashable keys.
+    """
+
+    gen_combined = {}
+
+    for key in gen_entries.keys():
+        if key in entry_responses:
+            gen_combined[key] = [gen_entries[key], entry_responses[key]]
+    
+    return gen_combined
+
+
+def generate_entry_url() -> str:
+    """
+    Constructs a URL query string by iterating over the values of the `entries_combined` dictionary.
+    Each key-value pair in the dictionary is appended to the query string in the format:
+    "&entry.<key>=<value>".
+    Returns:
+        str: The constructed URL query string.
+    """
+
+    entry_url = ""
+    for result in entries_combined.values():
+        entry_url += f"&entry.{result[0]}={result[1]}"
+    
+    return entry_url
+
+
+def generate_qr_expander(prefill_url: str) -> None:
+    """
+    Creates an expandable section in the Streamlit app to display a QR code.
+    Args:
+        prefill_url (str): The URL to be encoded into the QR code.
+    Returns:
+        None: This function does not return a value. It renders the QR code in the Streamlit app.
+    """
+
+    with st.expander("QR Code", False):
+        st.image(ui.generate_qr(prefill_url), use_container_width=True)
 
 def main() -> None:
     load.initialise_app()
@@ -492,8 +554,29 @@ def main() -> None:
 
         entry_responses = {}
 
-        def gen_phase_input(entries):
-            print(f"Debug: Generating input fields for phase {entries}.")
+        def gen_phase_input(entries: str) -> None:
+            """
+            Generates input fields dynamically based on the provided entries and their types.
+            Args:
+                entries (str): A key used to retrieve a list of entries from the `sorted_entries` dictionary. 
+                               Each entry is expected to follow a naming convention with parts separated by underscores.
+            Behavior:
+                - Iterates through the entries retrieved from `sorted_entries[entries]`.
+                - Splits each entry into parts to determine its name and type.
+                - Dynamically generates input fields in the Streamlit app based on the type of the entry:
+                    - "INT": Creates a number input field with a minimum value of 0 and step size of 1.
+                    - "STR": Creates a multi-select dropdown populated with options from the "Features" list in 
+                             `st.session_state.configs`.
+                    - "BOOL": Creates a toggle switch that returns an integer (0 or 1).
+                - Stores the user responses in the `entry_responses` dictionary, keyed by the entry name.
+            Notes:
+                - The function assumes the existence of global variables `sorted_entries`, `entry_responses`, 
+                  and `st.session_state.configs`.
+                - The entry name is formatted to title case, with "Rsl" replaced by "RSL".
+            Returns:
+                None
+            """
+            
             for entry in sorted_entries[entries]:
                 entry_parts = entry.split("_")
                 entry_name = entry_parts[1].title().replace("Rsl", "RSL")
@@ -516,85 +599,50 @@ def main() -> None:
 
         with st.form("Stats Input", clear_on_submit=True, border=False):
             with st.expander("Autonomous", True):
-                phase_header("Autonomous")
+                ui.phase_header("Autonomous")
                 gen_phase_input("AUTO")
 
             with st.expander("Teleop", True):
-                phase_header("Teleop")
+                ui.phase_header("Teleop")
                 gen_phase_input("TELE")
 
             with st.expander("Endgame", True):
-                phase_header("Endgame")
+                ui.phase_header("Endgame")
                 gen_phase_input("END")
 
             with st.expander("Info & Comments", True):
-                phase_header("Info & Comments")
+                ui.phase_header("Info & Comments")
                 gen_phase_input("INFO")
                 gen_phase_input("COMMENT")
 
             st.divider()
 
-            gen_combined = {}
-
-            for key in gen_entries.keys():
-                if key in entry_responses:
-                    gen_combined[key] = [gen_entries[key], entry_responses[key]]
-
+            gen_combined = combine_entries(gen_entries, entry_responses)
             entries_combined = set_combined.copy()
             entries_combined.update(gen_combined)
 
-            entry_url = ""
-            for result in entries_combined.values():
-                entry_url += f"&entry.{result[0]}={result[1]}"
-
+            entry_url = generate_entry_url()
             prefill_url = f"{st.secrets['STATS_FORM'].split('/viewform')[0]}/formResponse?usp=pp_url{entry_url}&submit=Submit"
 
-            print(f"Debug: Prefill URL generated: {prefill_url}")
-
-            if input_name != "":
-                submitted = st.form_submit_button(
-                    "Submit", type="primary", use_container_width=True
-                )
-            else:
-                st.form_submit_button(
-                    "Submit", type="primary", use_container_width=True, disabled=True
-                )
-                st.warning("⚠️ Required Input Missing")
-
-        def gen_qr(contents):
-            print(f"Debug: Generating QR code for contents: {contents}")
-            qr = qrcode.QRCode(
-                version=1,
-                error_correction=qrcode.constants.ERROR_CORRECT_L,
+            submitted = st.form_submit_button(
+                "Submit", type="primary", use_container_width=True, disabled=bool(input_name is not "")
             )
 
-            qr.add_data(contents)
-            qr.make(fit=True)
-
-            img = qr.make_image(fill_color="#ffffff", back_color="#141414")
-
-            byte_stream = io.BytesIO()
-
-            img.save(byte_stream, format="JPEG")
-            bytes_image = byte_stream.getvalue()
-
-            return bytes_image
+            if not input_name:
+                st.error("Required input missing!")
 
         if submitted:
-            print("Debug: Form submitted.")
             req = requests.get(prefill_url)
 
             if req.status_code == 200:
                 print("Debug: Submission successful.")
                 st.balloons()
                 st.toast("Submission successful!", icon="✅")
-                if st.session_state.console["force_qr"]:
-                    with st.expander("QR Code", False):
-                        st.image(gen_qr(prefill_url), use_container_width=True)
             else:
-                print("Debug: Submission unsuccessful.")
                 st.toast("Submission unsuccessful! Use QR code...", icon="⚠️")
-                st.image(gen_qr(prefill_url), use_container_width=True)
+
+            generate_qr_expander()
+
     except Exception as e:
         error_trace = traceback.format_exc()
         print(f"Debug: Exception occurred - {e}\nTraceback:\n{error_trace}")
