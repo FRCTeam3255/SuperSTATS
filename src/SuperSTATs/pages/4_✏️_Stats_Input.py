@@ -108,7 +108,7 @@ def handle_name_selection(
     return input_name, input_sub
 
 def assign_scouts(
-        matches: pd.DataFrame,
+        matches: "pd.DataFrame",
         df_teams: dict,
         all_match_scouts: dict,
         scouters: list
@@ -208,7 +208,7 @@ def handle_scouter_match_initialization(
 def create_master_scout_expander(
         input_match: str,
         all_match_scouts: dict,
-        matches: pd.DataFrame
+        matches: "pd.DataFrame"
     ) -> None:
     """
     Creates an expander in a Streamlit app to display a master scout list for matches.
@@ -286,24 +286,46 @@ def name_check(value: any, lst: list) -> str:
         return "R"
     return "B"
 
-def combine_set(entry_name: str, variable: any) -> list:
+def combine_set(entry_name: str, variable: any, set_entries: dict, set_combined: dict) -> list:
     """
-    Combines an entry name and a variable into a structured format and updates the global `set_combined` dictionary.
+    Combines an entry name, its corresponding variable, and a set of entries into a list.
     Args:
-        entry_name (str): The key representing the entry in the `set_entries` dictionary.
-        variable (Any): The variable to associate with the entry.
+        entry_name (str): The name of the entry to combine.
+        variable (any): The variable to associate with the entry.
+        set_entries (dict): A dictionary containing entry names as keys and their corresponding values.
+        set_combined (dict): A dictionary to store the combined entry.
     Returns:
-        list: A list containing the integer value of the entry from `set_entries` and the provided variable.
-    Notes:
-        - This function assumes the existence of two global dictionaries: `set_entries` and `set_combined`.
-        - `set_entries` should contain `entry_name` as a key with a value that can be converted to an integer.
-        - `set_combined` is updated with the new combined entry.
+        list: A list containing the entry number (as an integer) and the associated variable.
+    Note:
+        This function assumes that `set_combined` is a predefined global dictionary where the combined
+        entry is stored. Ensure `set_combined` is defined before calling this function.
     """
 
     entry_number = set_entries[entry_name]
     set_combined[entry_name] = [int(entry_number), variable]
 
     return set_combined[entry_name]
+
+def sort_entries_by_prefix(gen_entries: dict, sorted_entries: dict) -> dict:
+    """
+    Sorts entries from the `gen_entries` dictionary into the `sorted_entries` dictionary
+    based on matching prefixes.
+    Args:
+        gen_entries (dict): A dictionary where the keys are the entries to be sorted.
+        sorted_entries (dict): A dictionary where the keys are prefixes and the values
+            are lists. Entries from `gen_entries` that start with a prefix in `sorted_entries`
+            are appended to the corresponding list.
+    Returns:
+        dict: The updated `sorted_entries` dictionary with entries sorted into their respective lists.
+    """
+
+    for entry in gen_entries.keys():
+        for prefix, entries in sorted_entries.items():
+            if entry.startswith(prefix):
+                entries.append(entry)
+                break
+
+    return sorted_entries
 
 def main() -> None:
     load.initialise_app()
@@ -337,7 +359,6 @@ def main() -> None:
 
 
     all_match_scouts = assign_scouts(
-        scouters,
         matches,
         df_teams,
         all_match_scouts,
@@ -455,25 +476,21 @@ def main() -> None:
         set_combined = {}
 
         for i in range(len(set_entries)):
-            set_combined[list(set_entries.keys())[i]] = combine_set(list(set_entries.keys())[i], set_inputs[i])
+            entry_key = list(set_entries.keys())[i]
+            entry_value = set_inputs[i]
+
+            set_combined[entry_key] = combine_set(
+                entry_key,
+                entry_value,
+                set_entries,
+                set_combined
+            )
 
         sorted_entries = {"AUTO": [], "TELE": [], "END": [], "INFO": [], "COMMENT": []}
 
-        for entry in gen_entries.keys():
-            for prefix, entries in sorted_entries.items():
-                if entry.startswith(prefix):
-                    entries.append(entry)
-                    break
+        sorted_entries = sort_entries_by_prefix(gen_entries, sorted_entries)
 
         entry_responses = {}
-
-        def phase_header(phase):
-            print(f"Debug: Displaying header for phase {phase}.")
-            st.markdown(
-                f'<div style="text-align: center; font-size: 32px;">{phase}</div>',
-                unsafe_allow_html=True,
-            )
-            st.title("")
 
         def gen_phase_input(entries):
             print(f"Debug: Generating input fields for phase {entries}.")

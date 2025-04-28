@@ -13,21 +13,27 @@ def robot_photo_dropdown(input_team: int) -> None:
     """
     Displays a dropdown with the robot photo for a given team.
     Args:
-        input_team (int): The team number for which the robot photo is to be displayed.
-    Retrieves the robot photo URL for the specified team and competition year using The Blue Alliance API.
-    If a photo is available, it is displayed in an expander with the caption "Team {input_team} Robot".
-    If no photo is available, a warning message is shown.
+        input_team (int): The team number for which the robot photo is to be
+        displayed.
+    Retrieves the robot photo URL for the specified team and competition year
+    using The Blue Alliance API. If a photo is available, it is displayed in
+    an expander with the caption "Team {input_team} Robot". If no photo is
+    available, a warning message is shown.
     Note:
-        The function assumes that `st` (Streamlit) and `tba` (The Blue Alliance API client) are already imported and configured.
-        The function also assumes that `get_event_year` is a predefined function that retrieves the event year.
+        The function assumes that `st` (Streamlit) and `tba` (The Blue
+        Alliance API client) are already imported and configured. The function
+        also assumes that `get_event_year` is a predefined function that
+        retrieves the event year.
     Raises:
         KeyError: If the "DEFAULT_EVENT_KEY" is not found in `st.secrets`.
         IndexError: If the media list does not contain at least two elements.
     """
     team_key = f"frc{input_team}"
-    competition_year = load.DataInitializer.get_event_year(st.secrets["DEFAULT_EVENT_KEY"])
+    competition_year = load.DataInitializer.get_event_year(
+        st.secrets["DEFAULT_EVENT_KEY"]
+    )
 
-    if competition_year != None:
+    if competition_year is not None:
         media = st.session_state.tba.team_media(team_key, competition_year)
         robot_photo_url = media[1]["direct_url"] if len(media) > 1 else None
         with st.expander("Robot Image", False):
@@ -345,6 +351,7 @@ def display_match_time(
             unsafe_allow_html=True,
         )
 
+
 def display_random_susan() -> None:
     """
     Displays a random message "Susan was here😸" with a 10% probability.
@@ -361,6 +368,7 @@ def display_random_susan() -> None:
             unsafe_allow_html=True,
         )
 
+
 def team_number_graphic(color_icon: str, input_team: str) -> None:
     """
     Displays a styled team number graphic in a Streamlit application.
@@ -375,3 +383,21 @@ def team_number_graphic(color_icon: str, input_team: str) -> None:
         f'<div style="text-align: center; font-size: 2.5em;">{color_icon} {input_team} | {st.session_state.team_info[input_team]} {color_icon}</div>',
         unsafe_allow_html=True,
     )
+
+
+def phase_header(phase: str) -> None:
+    """
+    Displays a styled header for the given phase in a Streamlit application.
+    Args:
+        phase (str): The name or title of the phase to display as a header.
+    Notes:
+        - The header is displayed in the center of the page with a font size of 32px.
+        - This function uses Streamlit's `st.markdown` to render HTML and `st.title` to add spacing.
+    """
+
+    print(f"Debug: Displaying header for phase {phase}.")
+    st.markdown(
+        f'<div style="text-align: center; font-size: 32px;">{phase}</div>',
+        unsafe_allow_html=True,
+    )
+    st.title("")
