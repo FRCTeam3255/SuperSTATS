@@ -361,11 +361,13 @@ def combine_entries(gen_entries: dict, entry_responses: dict) -> dict:
     return gen_combined
 
 
-def generate_entry_url() -> str:
+def generate_entry_url(entries_combined: dict) -> str:
     """
     Constructs a URL query string by iterating over the values of the `entries_combined` dictionary.
     Each key-value pair in the dictionary is appended to the query string in the format:
     "&entry.<key>=<value>".
+    Args:
+        entries_combined (dict): A dictionary containing key-value pairs to be included in the URL query string.
     Returns:
         str: The constructed URL query string.
     """
@@ -388,6 +390,7 @@ def generate_qr_expander(prefill_url: str) -> None:
 
     with st.expander("QR Code", False):
         st.image(ui.generate_qr(prefill_url), use_container_width=True)
+
 
 def main() -> None:
     load.initialise_app()
@@ -621,11 +624,11 @@ def main() -> None:
             entries_combined = set_combined.copy()
             entries_combined.update(gen_combined)
 
-            entry_url = generate_entry_url()
+            entry_url = generate_entry_url(entries_combined)
             prefill_url = f"{st.secrets['STATS_FORM'].split('/viewform')[0]}/formResponse?usp=pp_url{entry_url}&submit=Submit"
 
             submitted = st.form_submit_button(
-                "Submit", type="primary", use_container_width=True, disabled=bool(input_name is not "")
+                "Submit", type="primary", use_container_width=True, disabled=bool(input_name is "")
             )
 
             if not input_name:
