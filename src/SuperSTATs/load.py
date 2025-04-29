@@ -8,14 +8,13 @@ import requests
 import tbapy
 import pandas as pd
 import streamlit as st
-from SuperSTATs import constants
 from SuperSTATs.form import Form as form
 
 
 class DataInitializer:
     def __init__(self) -> None:
-        with open(constants.JsonPaths.LOADING_MESSAGES, "r") as file:
-            self.loading_messages = json.load(file)
+        with open("src/SuperSTATs/assets/loading_messages.json", "r") as file:
+            st.session_state.loading_messages = json.load(file)
 
         self.ascii_SN = [
             "     yyyyyyyyyyyyyyyyyyyyyyyyyy     ",
@@ -56,6 +55,11 @@ class DataInitializer:
             "scouts",
             "phases",
             "forms",
+            "picked",
+            "tba_ranks",
+            "presets",
+            "points",
+            "scouting",
         ]
 
         self.start_time = time.time()
@@ -79,7 +83,7 @@ class DataInitializer:
 
     def initialise_all(self) -> None:
         with self.init_status.status(
-            random.choice(self.loading_messages), expanded=True
+            random.choice(st.session_state.loading_messages), expanded=True
         ) as self.status:
             st.divider()
 
@@ -129,11 +133,96 @@ class DataInitializer:
             self.display_status("forms")
             st.session_state.forms = form.cache_forms(["STATS_FORM", "SCOUTING_FORM"])
 
+            self.display_status("picked")
+            st.session_state.picked = self.get_picked()
+
+            self.display_status("tba_ranks")
+            st.session_state.tba_ranks = self.get_tba_ranks()
+
+            self.display_status("presets")
+            st.session_state.presets = self.get_presets()
+
+            self.display_status("points")
+            st.session_state.points = self.get_point_values()
+
+            self.display_status("scouting")
+            st.session_state.scouting = self.download_sheets_raw(st.secrets["GID_SCOUTING"])
+
+    def get_point_values(self) -> dict:
+        """
+        Calculates the point values for each column in the dataframe based on the values within the column names.
+
+        Returns:
+            dict: A dictionary containing the calculated point values for each column.
+        """
+        points = {
+            f"{value[0]}_{value[1]}_{value[2]}": int(value[3])
+            for value in self.df.columns.str.split("_")
+            if len(value) > 1
+        }
+
+        for col, point in points.items():
+            self.df[f"{col}_{point}"] *= point
+
+        return points
+
+    def get_tba_ranks(_self) -> dict:
+        """
+        Retrieves the rankings of teams from TBA for a specific event.
+
+        Returns:
+            dict: A dictionary containing team rankings, where the keys are team numbers (without the "frc" prefix) and the values are the corresponding ranks.
+        """
+        tba_ranks = {}
+
+        try:
+            event_rankings = tba.event_rankings(st.secrets["DEFAULT_EVENT_KEY"])["rankings"]
+
+            for team in event_rankings:
+                tba_ranks[team["team_key"].split("frc")[1]] = team["rank"]
+
+            return tba_ranks
+        except Exception as e:
+            print(f"Error fetching TBA rankings: {e}")
+        finally:
+            return tba_ranks
+
     def display_status(self, state: str) -> None:
         if self.status_messages[state] is not None:
             st.markdown(self.status_messages[state], unsafe_allow_html=True)
 
-    def get_phases(self, df: pd.DataFrame) -> list:
+    def get_presets(self) -> dict:
+        """
+        Retrieves the presets from the presets pickle file.
+
+        If the file exists, it loads the presets from the file and returns them otherwise if
+        the file does not exist, it creates an empty presets file and returns an empty dictionary.
+
+        Returns:
+            dict: The presets loaded from the file or an empty dictionary if the file does not exist.
+        """
+        presets_path = "src\\pickles\\presets.pickle"
+
+        try:
+            with open(presets_path, "rb") as f:
+                presets = pickle.load(f)
+            return presets
+        except:
+            with open(presets_path, "wb") as f:
+                pickle.dump({}, f, pickle.HIGHEST_PROTOCOL)
+            return {}
+
+    def get_picked(_self) -> "pd.DataFrame":
+        """
+        Retrieves the picked teams data from the downloaded sheet.
+
+        Returns:
+            pandas.DataFrame: The picked data containing rows where the "Unavailable" column contains an "x".
+        """
+        picked = download_sheets_raw(st.secrets["GID_PICKED"])
+        return picked[picked["Unavailable"].str.contains("x", case=False, na=False)]
+
+    def get_phases(self, df: "pd.DataFrame") -> list:
         """
         Get a list of unique game phases from the given DataFrame.
 
@@ -362,7 +451,7 @@ class DataInitializer:
 
         return team_colors
 
-    def organize_df(self, df: pd.DataFrame) -> pd.DataFrame:
+    def organize_df(_self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Organizes and processes a DataFrame containing match data.
         This function performs the following steps:
