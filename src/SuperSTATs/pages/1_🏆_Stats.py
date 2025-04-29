@@ -1,8 +1,360 @@
+import json
+import math
+import pickle
+import time
+import altair as alt
+from matplotlib import pyplot as plt
+import numpy as np
 import streamlit as st
 import SuperSTATs.load as load
 import SuperSTATs.styles as style
 import SuperSTATs.screen_elements as ui
 import pandas as pd
+
+def gen_match_comp(df, team_num, match_name, not_preview=True):
+    """
+    Generates a match comparison for a specific team in a given match for comparisons.
+
+    Parameters:
+    - df (pandas.DataFrame): The DataFrame containing the match data.
+    - team_num (int): The team number for which the match comparison is generated.
+    - match_name (str): The name of the match for which the comparison is generated.
+    - not_preview (bool, optional): Flag indicating whether the comparison is a preview or not.
+
+    Returns:
+    None
+    """
+    team_df = df[df["Team"] == team_num]
+    match_count = len(team_df)
+
+    config_columns = st.columns(3)
+
+    if not_preview:
+        show_ungrouped = config_columns[0].toggle("Ungroup", False)
+    else:
+        show_ungrouped = False
+
+    team_df = calc_projected([team_num], show_ungrouped, return_row=True)
+
+    phases = team_df["phases"]
+    team_df = team_df["score"]
+
+    if not_preview and show_ungrouped:
+        selected_phase = st.selectbox(
+            "Phase:", ["AUTO", "TELE", "END", "INFO"], index=1
+        )
+
+        if selected_phase:
+            if any("_" in phase for phase in phases):
+                phases = [
+                    phase for phase in phases if phase.startswith(f"{selected_phase}_")
+                ]
+
+    team_scores = team_df.drop(columns=["Match Name"]).sum()
+
+    if not_preview:
+        st.divider()
+
+    columns = st.columns(len(phases))
+
+    use_phases = []
+    if not_preview:
+        for i, phase in enumerate(phases):
+            phase_name = phase.split("_")[1] if show_ungrouped else phase
+            use = columns[i].toggle(phase_name.title(), True)
+            if use:
+                use_phases.append(phase)
+
+        st.divider()
+    else:
+        use_phases = ["AUTO", "TELE", "END"]
+
+    alt_size = st.columns(len(use_phases) + 1)
+    team_averages = {}
+
+    try:
+        for phase, score in team_scores.items():
+            team_averages[phase] = round(score / match_count)
+
+        if not_preview:
+            match_scores = team_df.loc[team_df["Match Name"] == match_name]
+        else:
+            team_df = team_df.sort_index()
+
+            match_scores = (
+                team_df.reset_index(drop=True).loc[len(team_df) - 1].to_frame().T
+            )
+            match_name = match_scores["Match Name"].to_list()[0]
+
+            query_url = f"Tracker/?team_num={team_num}&match_name={match_name.replace(' ', '_')}"
+
+            button_style = (
+                "background-color: #141414; border: 1px solid #424242; border-radius: 8px;"
+                "color: #ffffff; text-align: center; text-decoration: none;"
+                "display: block; width: 100%; padding: 8px 0;"
+            )
+
+            st.markdown(
+                f"<a href='{query_url}' target='_self' style='{button_style}'>Send To Team Tracker</a>",
+                unsafe_allow_html=True,
+            )
+    except:
+        match_scores = team_df.loc[team_df["Match Name"] == match_name]
+
+    team_scores = match_scores.drop(columns=["Match Name"])
+
+    if team_scores.empty:
+        st.error(f"⚠️ No data collected for team {team_num} in {match_name}")
+
+    team_scores = team_scores.sum()
+    team_scores["TOTAL"] = team_scores.sum()
+
+    match_score = {}
+
+    for phase, score in team_scores.items():
+        match_score[phase] = score
+
+    default_colors = ["#0074ba", "#f8312f"]
+
+    if not_preview:
+        use_team_colors = config_columns[1].toggle("Use Team Colors")
+        team_colors = st.session_state.team_colors[str(team_num)]
+
+        if use_team_colors:
+            if team_colors[0] == "003255" or team_colors[1] == "003255":
+                config_columns[2].toggle("Swap Colors", disabled=True)
+                use_colors = default_colors
+                st.toast(
+                    f"Team colors not found for {st.session_state.team_info[team_num]} (Team {team_num})",
+                    icon="⚠️",
+                )
+            else:
+                if config_columns[2].toggle("Swap Colors"):
+                    use_colors = [team_colors[1], team_colors[0]]
+                else:
+                    use_colors = [team_colors[0], team_colors[1]]
+        else:
+            config_columns[2].toggle("Swap Colors", disabled=True)
+            use_colors = default_colors
+
+        try:
+            for i, phase in enumerate(phases):
+                delta = match_score[phase] - team_averages[phase]
+                columns[i].metric(
+                    label=phase,
+                    value=match_score[phase],
+                    delta=delta,
+                    delta_color="off" if delta == 0 else "normal",
+                    label_visibility="hidden",
+                )
+        except:
+            pass
+    else:
+        use_colors = default_colors
+
+    try:
+        df = pd.DataFrame(
+            {
+                "Phase": use_phases,
+                "Average": [team_averages[phase] for phase in use_phases],
+                "Match": [match_score[phase] for phase in use_phases],
+            }
+        )
+    except:
+        df = pd.DataFrame.from_dict(
+            {
+                "Phase": [],
+                "Average": [],
+                "Match": [],
+            }
+        )
+        df["Phase"] = df["Phase"].astype(str)
+        df["Average"] = df["Average"].astype(int)
+        df["Match"] = df["Match"].astype(int)
+
+    if show_ungrouped:
+        df["Phase"] = df["Phase"].apply(lambda x: x.split("_")[1])
+
+    chart = (
+        alt.Chart(df.melt("Phase"))
+        .mark_bar()
+        .encode(
+            alt.X(
+                "variable:N",
+                axis=alt.Axis(title=""),
+                sort=["Match", "Average"],
+            ),
+            alt.Y(
+                "value:Q",
+                axis=alt.Axis(title=f"{match_name} vs {team_num} Average", grid=False),
+            ),
+            color=alt.Color(
+                "variable:N",
+                scale=alt.Scale(
+                    domain=["Match", "Average"],
+                    range=[use_colors[0], use_colors[1]],
+                ),
+                legend=alt.Legend(
+                    title=None,
+                    orient=("right" if not_preview else "bottom"),
+                    symbolType="circle",
+                ),
+            ),
+            stroke=alt.value("#ffffff"),
+            strokeWidth=alt.value(2),
+            column="Phase:O",
+        )
+        .properties(height=200, width=225)
+        .configure_axis(labelAngle=0)
+    )
+
+    with alt_size[0].container():
+        st.altair_chart(chart, use_container_width=True)
+
+    if not_preview:
+        try:
+            match_progress = team_df
+            match_progress["Match Name"] = match_progress["Match Name"].apply(
+                lambda x: f"{x} ⭐" if x == match_name else x
+            )
+
+            column_config = {}
+
+            for phase in ["AUTO", "TELE", "END", "INFO"]:
+                column_config[phase] = st.column_config.ProgressColumn(
+                    phase.title(),
+                    format=f"%f/{int(max(match_progress[phase]))}",
+                    min_value=math.floor(min(match_progress[phase])) - 0.5,
+                    max_value=math.ceil(max(match_progress[phase])),
+                )
+
+            st.divider()
+
+            st.dataframe(
+                match_progress,
+                column_config=column_config,
+                column_order=("Match Name", "AUTO", "TELE", "END", "INFO"),
+                hide_index=True,
+                use_container_width=True,
+            )
+        except:
+            pass
+
+
+def scouting_expander(
+    df,
+    team_num,
+    team_features=[],
+    match_name=None,
+    rank_info=[],
+    start_expanded=False,
+    calc_bumpers=False,
+    column=st,
+) -> None:
+    """
+    Displays a scouting expander for a specific team, showing relevant data and features.
+    - df (pd.DataFrame): The dataframe containing scouting data.
+    - team_num (int): The team number to display data for.
+    - team_features (list, optional): A list of additional features to display for the team. Defaults to an empty list.
+    - match_name (str, optional): The name of the match to display. Defaults to None.
+    - rank_info (list, optional): A list containing two rank values (e.g., SN Rank and TBA Rank). Defaults to an empty list.
+    - start_expanded (bool, optional): Whether the expander should start expanded. Defaults to False.
+    - calc_bumpers (bool, optional): Whether to include bumper size in the calculations. Defaults to False.
+    - column (Streamlit column): The Streamlit column object where the expander will be displayed.
+    - None
+    """
+    team_name = st.session_state.team_info[team_num]
+
+    expander_name = f"[{team_num}] {team_name}"
+
+    sorted_df = df.loc[df["Team #"] == int(team_num)]
+    sorted_df = sorted_df.sort_values(by="Timestamp")
+    sorted_df = sorted_df.drop_duplicates(keep="last", subset="Team #")
+
+    time_logged = str(sorted_df["Timestamp"].max())
+    has_data = False if time_logged == "nan" else True
+
+    if len(rank_info) == 2:
+        expander_name = f"[🦸{rank_info[0]}/🚨{rank_info[1]}] " + expander_name
+
+    with column.expander(
+        f"{expander_name} {'⚠️' if not has_data else ''}", start_expanded
+    ):
+        with st.container(border=True):
+            gen_match_comp(st.session_state.df, team_num, match_name, False)
+
+        if has_data:
+            with st.container(border=True):
+                if len(rank_info) == 2:
+                    st.text(f"SN Rank: {rank_info[0]} | TBA Rank: {rank_info[1]}")
+
+                if st.secrets["TEAM_NUMBER"] not in df["Team #"].values:
+                    team_data = {"Frame Size LENGTH": 0, "Frame Size WIDTH": 0}
+                else:
+                    team_data = df.loc[
+                        df["Team #"] == st.secrets["TEAM_NUMBER"],
+                        ["Frame Size LENGTH", "Frame Size WIDTH"],
+                    ].iloc[0]
+
+                added_length = team_data["Frame Size LENGTH"]
+                added_width = team_data["Frame Size WIDTH"]
+
+                length = sorted_df["Frame Size LENGTH"].max()
+                width = sorted_df["Frame Size WIDTH"].max()
+
+                bumper_size = 5
+
+                added_length += bumper_size * calc_bumpers
+                added_width += bumper_size * calc_bumpers
+
+                length += bumper_size * calc_bumpers
+                width += bumper_size * calc_bumpers
+
+                added_length = length + added_length
+                added_width = width + added_width
+
+                st.text(f"Length: {length} in ({added_length} in)")
+                st.text(f"Width: {width} in ({added_width} in)")
+                st.text(f"Area: {length * width} in²")
+                st.text(f"Weight: {sorted_df['Weight'].max()} lb")
+
+                def check_nan(var_name, var_value, column):
+                    """
+                    Checks if a variable value is NaN and updates the column text accordingly.
+
+                    Parameters:
+                    - var_name (str): The name of the variable.
+                    - var_value (float): The value of the variable.
+                    - column (Column): The column object to update the text.
+
+                    Returns:
+                    None
+                    """
+                    try:
+                        if np.isnan(var_value):
+                            column.text(f"{var_name}: No Data Collected")
+                    except:
+                        column.text(f"{var_name}: {var_value}")
+
+                check_nan("Drivetrain", sorted_df["Drivetrain Type"].max(), st)
+                check_nan("Scouting Comments", sorted_df["Comments"].max(), st)
+
+                st.markdown(
+                    f"<span style='font-size: small; color: #808080;'>Time Logged: {time_logged}</span>",
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.error("⚠️ No scouting data")
+
+        if team_features != []:
+            with st.container(border=True):
+                for feature in team_features:
+                    st.markdown(
+                        f"<span style='font-size: small;'>- {feature}</span>",
+                        unsafe_allow_html=True,
+                    )
+        else:
+            st.error("⚠️ No features")
 
 
 def gen_bar(
@@ -552,8 +904,6 @@ def gen_bar(
             "Generate JSON",
             use_container_width=True,
             key=f"gen_json",
-            on_click=analytics.button_press,
-            args=("gen_json",),
         ):
             if preset_choice != "None":
                 preset_data = preset
@@ -611,12 +961,12 @@ def main() -> None:
         key="update_page",
     ):
         st.session_state.df = load.organize_df(
-            load.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
+            load.DataInitializer.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
         )
 
-        st.session_state.picked = load.get_picked()
-        st.session_state.tba_ranks = load.get_tba_ranks()
-        st.session_state.presets = load.get_presets()
+        st.session_state.picked = load.DataInitializer.get_picked()
+        st.session_state.tba_ranks = load.DataInitializer.get_tba_ranks()
+        st.session_state.presets = load.DataInitializer.get_presets()
 
     st.divider()
 
