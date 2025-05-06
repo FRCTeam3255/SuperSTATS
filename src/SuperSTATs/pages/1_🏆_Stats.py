@@ -1016,8 +1016,7 @@ def main() -> None:
 
     data_initializer = load.DataInitializer()
 
-    st.markdown(style.shimmer("#ffe8ad"), unsafe_allow_html=True)
-    st.markdown("<div class='shimmer'>🏆 NURD Stats 🏆</div>", unsafe_allow_html=True)
+    ui.display_header("🏆 NURD Stats 🏆")
 
     st.title("")
 
