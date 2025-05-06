@@ -11,6 +11,70 @@ import SuperSTATs.styles as style
 import SuperSTATs.screen_elements as ui
 import pandas as pd
 
+def calc_projected(teams: dict, df, prediction_weight=1, include_prac=False) -> float:
+    """
+    Calculates the projected score for a given set of teams based on the provided DataFrame.
+
+    Parameters:
+    - teams (dict): A dictionary containing team numbers as keys and their respective scores as values.
+    - df (pandas.DataFrame): The DataFrame containing the match data.
+    - prediction_weight (float): The weight to apply to the prediction. Default is 1.
+    - include_prac (bool): Flag indicating whether to include practice data in the calculation. Default is False.
+
+    Returns:
+    - float: The projected score for the given teams.
+    """
+
+    projected_score = 0.0
+
+    phases = [
+        phase
+        for phase in st.session_state.phases
+        if phase != "COMMENT" and phase != "INFO"
+    ]
+
+    st.write(phases)
+
+    """
+
+    multiplied_data = df.copy()
+    phase_multipliers = get_phase_multipliers(multiplied_data)
+
+    for col in multiplied_data.columns:
+        if col in phase_multipliers.keys():
+            multiplier = phase_multipliers[col]
+            for index, row_value in multiplied_data[col].items():
+                multiplied_data.loc[index, col] = row_value * multiplier
+
+    for team in team_df:
+        team_score = multiplied_data[multiplied_data["Team"] == team]
+
+        if show_ungrouped:
+            phases = [
+                col
+                for col in team_score.columns
+                if any(col.startswith(f"{phase}_") for phase in phases)
+                and col != "COMMENT_GENERAL_STR_1"
+            ]
+
+        for i in range(len(phases)):
+            team_score.loc[:, phases[i]] = load.add_cols(
+                team_score,
+                phases[i],
+            )
+
+        if return_row:
+            team_score["Match Name"] = (
+                team_score["Match Type"]
+                + " "
+                + team_score["Match"].astype(int).astype(str)
+            )
+            return {"score": team_score[["Match Name"] + phases], "phases": phases} 
+
+    """
+
+    return int(projected_score * prediction_weight)
+
 def gen_match_comp(df, team_num, match_name, not_preview=True):
     """
     Generates a match comparison for a specific team in a given match for comparisons.
@@ -358,9 +422,9 @@ def scouting_expander(
 
 
 def gen_bar(
-    df=st.session_state.df,
-    picked=st.session_state.picked,
-    tba_ranks=st.session_state.tba_ranks,
+    df,
+    picked,
+    tba_ranks,
     key=0,
     use_presets=True,
     use_group_filters=True,
@@ -376,7 +440,7 @@ def gen_bar(
     compared_teams=[],
     x_range=[],
     expanders=True,
-):
+) -> None:
     """
     Generates a bar chart based on the given parameters.
 
@@ -946,13 +1010,18 @@ def gen_bar(
 
     return ranked_data
 
+
 def main() -> None:
     load.initialise_app()
+
+    data_initializer = load.DataInitializer()
 
     st.markdown(style.shimmer("#ffe8ad"), unsafe_allow_html=True)
     st.markdown("<div class='shimmer'>🏆 NURD Stats 🏆</div>", unsafe_allow_html=True)
 
     st.title("")
+
+    st.session_state.df = data_initializer.organize_df()
 
     if st.button(
         "Update Page",
@@ -960,9 +1029,7 @@ def main() -> None:
         use_container_width=True,
         key="update_page",
     ):
-        st.session_state.df = load.organize_df(
-            load.DataInitializer.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
-        )
+        st.session_state.df = data_initializer.organize_df()
 
         st.session_state.picked = load.DataInitializer.get_picked()
         st.session_state.tba_ranks = load.DataInitializer.get_tba_ranks()

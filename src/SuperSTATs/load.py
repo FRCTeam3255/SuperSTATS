@@ -9,7 +9,7 @@ import tbapy
 import pandas as pd
 import streamlit as st
 from SuperSTATs.form import Form as form
-
+import tbapy as tba
 
 class DataInitializer:
     def __init__(self) -> None:
@@ -103,10 +103,10 @@ class DataInitializer:
             st.session_state.match_data = self.get_match_data()
 
             self.display_status("df_raw")
-            self.df = self.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
+            st.session_state.df_raw = self.download_sheets_raw(st.secrets["GID_RAW"]).dropna(subset=["Timestamp"])
 
             self.display_status("df")
-            st.session_state.df = self.organize_df(self.df)
+            st.session_state.df = self.organize_df()
 
             self.display_status("matches")
             st.session_state.matches = self.get_matches()
@@ -157,12 +157,12 @@ class DataInitializer:
         """
         points = {
             f"{value[0]}_{value[1]}_{value[2]}": int(value[3])
-            for value in self.df.columns.str.split("_")
+            for value in st.session_state.df_raw.columns.str.split("_")
             if len(value) > 1
         }
 
         for col, point in points.items():
-            self.df[f"{col}_{point}"] *= point
+            st.session_state.df_raw[f"{col}_{point}"] *= point
 
         return points
 
@@ -451,7 +451,7 @@ class DataInitializer:
 
         return team_colors
 
-    def organize_df(_self, df: pd.DataFrame) -> pd.DataFrame:
+    def organize_df(_self) -> pd.DataFrame:
         """
         Organizes and processes a DataFrame containing match data.
         This function performs the following steps:
