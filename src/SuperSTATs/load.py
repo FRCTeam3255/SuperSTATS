@@ -356,7 +356,8 @@ def get_match_data():
 
         for color in ["red", "blue"]:
             df[f"{color}.team_keys"] = df[f"{color}.team_keys"].apply(
-                lambda teams: [int(x.replace("frc", "")) for x in teams]
+                # TODO: remove all alpha chars
+                lambda teams: [int(x.replace("frc", "").replace('B','')) for x in teams]
             )
 
         def set_match_name(row):
