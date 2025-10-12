@@ -7,7 +7,6 @@ import datetime
 import requests
 
 
-
 def display_header():
     st.markdown(style.rainbow(), unsafe_allow_html=True)
     st.markdown("<div class='rainbow'>🤖 SuperSTATs 🤖</div>", unsafe_allow_html=True)
@@ -110,7 +109,8 @@ def display_matches(matches, team, columns):
 
 
 def display_nexus_data():
-    nexus_data = st.session_state.nexus_data
+    # nexus_data = st.session_state.nexus_data
+    nexus_data = None
 
     if nexus_data:
         with st.expander("Nexus Data", st.session_state.console["practice_mode"]):
