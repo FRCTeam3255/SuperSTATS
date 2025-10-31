@@ -177,11 +177,17 @@ def calc_projected(
     multiplied_data = score_df.copy()
     phase_multipliers = get_phase_multipliers(multiplied_data)
 
+    # Safely apply multipliers only to numeric-like columns;
+    # avoid touching text/comment columns and avoid None * int errors.
     for col in multiplied_data.columns:
-        if col in phase_multipliers.keys():
+        if col in phase_multipliers:
             multiplier = phase_multipliers[col]
-            for index, row_value in multiplied_data[col].items():
-                multiplied_data.loc[index, col] = row_value * multiplier
+            if multiplier != 1:
+                # Coerce to numeric, treat non-numeric/None as 0, then scale
+                multiplied_data[col] = (
+                    pd.to_numeric(multiplied_data[col], errors="coerce").fillna(0)
+                    * multiplier
+                )
 
     for team in team_df:
         team_score = multiplied_data[multiplied_data["Team"] == team]
@@ -229,7 +235,7 @@ def gen_match_comp(df, team_num, match_name, not_preview=True):
     team_df = df[df["Team"] == team_num]
     match_count = len(team_df)
 
-    config_columns = st.columns(3)
+    config_columns = st.columns(load.ALLIANCE_SIZE)
 
     if not_preview:
         show_ungrouped = config_columns[0].toggle("Ungroup", False)
