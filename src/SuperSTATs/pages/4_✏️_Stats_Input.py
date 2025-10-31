@@ -30,9 +30,9 @@ def get_match_scouts(team):
     i = 0
 
     while processed < len(match_list):
-        scout_1 = team[count]
-        scout_2 = team[count - 1]
-        scout_3 = team[count - 2]
+        # Dynamically select scouts for the alliance size
+        scout_indices = [(count - i) % len(team) for i in range(load.ALLIANCE_SIZE)]
+        scout_group = [team[idx] for idx in scout_indices]
 
         if i % rotation == 0:
             count += 1
@@ -45,7 +45,7 @@ def get_match_scouts(team):
                 match_name = f"{match_type} {(i + 1) + j}"
 
                 if match_name in match_list:
-                    scouts[match_name] = [scout_1, scout_2, scout_3]
+                    scouts[match_name] = scout_group
                     processed += 1
 
         i += rotation
@@ -188,7 +188,7 @@ def main():
             matches[matches["Match"] == input_match].set_index("Match").transpose()
         )
 
-        match_scouts = [input_name for i in range(6)]
+        match_scouts = [input_name for i in range(load.ALLIANCE_SIZE * 2)]
         teams = list(df_teams.to_dict()[input_match].values())
 
         input_team = bot_columns[1].selectbox("Team:", teams)
@@ -202,14 +202,18 @@ def main():
         try:
             match_scouts = all_match_scouts[input_match]
             input_color = name_check(input_name, match_scouts)
-            teams = df_teams.filter(like=input_color, axis=0)[input_match].to_list()
-            match_scouts = (
-                match_scouts[0:3] if input_color == "R" else match_scouts[3:6]
+            # Get teams for the selected color
+            color_slice = (
+                slice(0, load.ALLIANCE_SIZE) # example: 0:3
+                if input_color == "R" # example: Red alliance
+                else slice(load.ALLIANCE_SIZE, load.ALLIANCE_SIZE * 2) # example: 3:6
             )
+            teams = df_teams.filter(like=input_color, axis=0)[input_match].to_list()
+            match_scouts = match_scouts[color_slice]
             input_team = teams[match_scouts.index(input_name)]
 
         except:
-            match_scouts = [input_name for i in range(6)]
+            match_scouts = [input_name for i in range(load.ALLIANCE_SIZE * 2)]
 
             prac_columns = st.columns(2)
 
@@ -250,18 +254,18 @@ def main():
                         unsafe_allow_html=True,
                     )
 
-                    red_scout_columns = st.columns(3)
-                    blue_scout_columns = st.columns(3)
+                    red_scout_columns = st.columns(load.ALLIANCE_SIZE)
+                    blue_scout_columns = st.columns(load.ALLIANCE_SIZE)
 
                     for i, (scout, team) in enumerate(zip(scouts, teams)):
-                        color = "#f8312f" if i < 3 else "#0074ba"
-                        if i < 3:
+                        color = "#f8312f" if i < load.ALLIANCE_SIZE else "#0074ba"
+                        if i < load.ALLIANCE_SIZE:
                             red_scout_columns[i].markdown(
                                 f"<span style='color:{color}'>{scout}</span> - {team}",
                                 unsafe_allow_html=True,
                             )
                         else:
-                            blue_scout_columns[i - 3].markdown(
+                            blue_scout_columns[i - load.ALLIANCE_SIZE].markdown(
                                 f"<span style='color:{color}'>{scout}</span> - {team}",
                                 unsafe_allow_html=True,
                             )
@@ -514,6 +518,7 @@ def main():
                 st.image(gen_qr(prefill_url), use_container_width=True)
     except:
         st.error("⚠️ No Data...")
+
 
 if __name__ == "__main__":
     main()

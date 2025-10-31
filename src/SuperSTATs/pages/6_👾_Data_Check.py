@@ -256,7 +256,9 @@ def main():
                 missing_teams = list(set(sorted_tba_teams).difference(sorted_team_nums))
 
                 if sorted_team_nums != sorted_tba_teams:
-                    st.subheader(f"Team Count: {len(team_nums)}/6", False)
+                    st.subheader(
+                        f"Team Count: {len(team_nums)}/{load.ALLIANCE_SIZE * 2}", False
+                    )
 
                     columns = st.columns(3)
 
@@ -311,8 +313,8 @@ def main():
 
                                 for tba, col in tba_columns.items():
                                     tba_counts[tba] = score_breakdown.get(
-f"{calc_teams[team]['color'].lower()}_{tba}", 0
-)
+                                        f"{calc_teams[team]['color'].lower()}_{tba}", 0
+                                    )
 
                                 team_color = calc_teams[team]["color"]
 
