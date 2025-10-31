@@ -24,8 +24,6 @@ Purpose: Make AI coding agents immediately productive in this repo by documentin
   - Lightweight event logging to Google Forms via prefill URL. Controlled by `st.session_state.console["collect_analytics"]` and per-event toggles.
 - `form.py`
   - Scrapes Google Form field entry IDs, caches mappings for `STATS_FORM` and `SCOUTING_FORM` so pages can submit responses programmatically.
-- `styles.py`
-  - Small CSS helpers for headings/effects.
 - `pages/*`
   - Feature pages that compose the above: stats, match previews, tracker, input UIs, data check, console/admin.
 

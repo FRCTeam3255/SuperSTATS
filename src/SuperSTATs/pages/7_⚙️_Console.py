@@ -12,12 +12,7 @@ def main():
     presets_path = "src\\pickles\\presets.pickle"
     colors_path = "src\\pickles\\colors.pickle"
 
-    import SuperSTATs.styles as style
-
-    st.markdown(style.shimmer("#b9b9b9"), unsafe_allow_html=True)
-    st.markdown("<div class='shimmer'>⚙️ Console ⚙️</div>", unsafe_allow_html=True)
-
-    st.title("")
+    st.title("⚙️ Console ⚙️")
 
     st.button(
         "Update Page",

@@ -10,14 +10,8 @@ def main():
     load.app_init()
     analytics.collect_analytics("page_change", "scouting_input")
 
-    import SuperSTATs.styles as style
 
-    st.markdown(style.shimmer("#ffb8e5"), unsafe_allow_html=True)
-    st.markdown(
-        "<div class='shimmer'>📝 Scouting Input 📝</div>", unsafe_allow_html=True
-    )
-
-    st.title("")
+    st.title("📝 Scouting Input 📝")
 
     if st.button(
         "Update Page",

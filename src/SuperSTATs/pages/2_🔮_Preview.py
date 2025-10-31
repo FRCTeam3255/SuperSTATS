@@ -230,11 +230,7 @@ def main():
 
     import SuperSTATs.styles as style
 
-    st.markdown(style.shimmer("#d9adff"), unsafe_allow_html=True)
-    st.markdown(
-        "<div class='shimmer'>🔮 Match Preview 🔮</div>", unsafe_allow_html=True
-    )
-    st.title("")
+    st.title("🔮 Match Preview 🔮")
 
     if st.button(
         "Update Page",

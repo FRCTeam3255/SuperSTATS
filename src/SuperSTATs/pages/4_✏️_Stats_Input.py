@@ -74,18 +74,7 @@ def main():
     load.app_init()
     analytics.collect_analytics("page_change", "stats_input")
 
-    import SuperSTATs.styles as style
-
-    st.markdown(style.shimmer("#ffc1ad"), unsafe_allow_html=True)
-    st.markdown("<div class='shimmer'>✏️ Stats Input ✏️</div>", unsafe_allow_html=True)
-
-    if random.random() < 0.1:  # 10% chance
-        st.markdown(
-            "<div style='text-align: center; font-size: small; color: #808080;'>Susan was here😸</div>",
-            unsafe_allow_html=True,
-        )
-
-    st.title("")
+    st.title("✏️ Stats Input ✏️")
 
     if st.button(
         "Update Page",

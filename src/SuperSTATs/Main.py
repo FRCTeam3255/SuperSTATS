@@ -1,15 +1,9 @@
 import SuperSTATs.analytics as analytics
 import SuperSTATs.load as load
-import SuperSTATs.styles as style
 import streamlit as st
 import pandas as pd
 import datetime
 import requests
-
-
-def display_header():
-    st.markdown(style.rainbow(), unsafe_allow_html=True)
-    st.markdown("<div class='rainbow'>🤖 SuperSTATs 🤖</div>", unsafe_allow_html=True)
 
 
 def display_event_link(event_key):
@@ -152,7 +146,7 @@ def display_event_keys():
 def main():
     load.app_init()
     analytics.collect_analytics("page_change", "main")
-    display_header()
+    st.title('🦾 SuperSTATs 🦾')
     event_key = st.secrets["DEFAULT_EVENT_KEY"]
     display_event_link(event_key)
     with st.expander("Match Schedule", True):

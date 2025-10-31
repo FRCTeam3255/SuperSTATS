@@ -60,12 +60,7 @@ def main():
     load.app_init()
     analytics.collect_analytics("page_change", "data_check")
 
-    import SuperSTATs.styles as style
-
-    st.markdown(style.shimmer("#c18aff"), unsafe_allow_html=True)
-    st.markdown("<div class='shimmer'>👾 Data Check 👾</div>", unsafe_allow_html=True)
-
-    st.title("")
+    st.title("👾 Data Check 👾")
 
     if st.button(
         "Update Page",
