@@ -161,7 +161,7 @@ def main():
         team, columns = get_team_selection(teams)
         matches = update_match_scores(matches)
         display_matches(matches, team, columns)
-    display_nexus_data()
+    # display_nexus_data()
     display_event_keys()
 
 
