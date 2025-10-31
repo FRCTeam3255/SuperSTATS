@@ -31,7 +31,7 @@ def show_raw(match_num, match_info, match_key):
         pass
 
 
-def flatten_dict(d, parent_key='', sep='_'):
+def flatten_dict(d, parent_key="", sep="_"):
     """
     Flatten a nested dictionary, preserving the first key.
 
@@ -310,7 +310,9 @@ def main():
                                 calc_values = {}
 
                                 for tba, col in tba_columns.items():
-                                    tba_counts[tba] = score_breakdown.get(f"{calc_teams[team]['color'].lower()}_{tba}", 0)
+                                    tba_counts[tba] = score_breakdown.get(
+f"{calc_teams[team]['color'].lower()}_{tba}", 0
+)
 
                                 team_color = calc_teams[team]["color"]
 

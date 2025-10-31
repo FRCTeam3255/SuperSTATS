@@ -7,6 +7,7 @@ import pickle
 import tbapy
 import time
 
+ALLIANCE_SIZE = 3
 
 def download_sheets_raw(gid):
     """
@@ -357,7 +358,9 @@ def get_match_data():
         for color in ["red", "blue"]:
             df[f"{color}.team_keys"] = df[f"{color}.team_keys"].apply(
                 # TODO: remove all alpha chars
-                lambda teams: [int(x.replace("frc", "").replace('3255B','9975')) for x in teams]
+                lambda teams: [
+                    int(x.replace("frc", "").replace("3255B", "9975")) for x in teams
+                ]
             )
 
         def set_match_name(row):
@@ -467,7 +470,7 @@ def get_unplayed(df, matches):
         df_counts = df["Completed"].value_counts()
 
         df["Completed"] = df["Completed"].apply(
-            lambda x: x if df_counts[x] >= 3 else None
+            lambda x: x if df_counts[x] >= ALLIANCE_SIZE else None
         )
 
         tba_played_matches = []
@@ -687,6 +690,7 @@ def robot_photo_dropdown(input_team):
             else:
                 st.warning("⚠️ No robot photo available")
 
+
 def app_init():
     """
     Initializes the SuperSTATs application and is called on every page.
@@ -745,10 +749,10 @@ def app_init():
         "Calculating PI...",
         "Ducktaping notes...",
         "Overclocking the power supply...",
-        "Shallow climbing on the reef..."
+        "Shallow climbing on the reef...", 
         "Why does Susan have a pet turtle?",
         "OHH MY GOD ITS TEJ!!!",
-        "Tuning PID again..."
+        "Tuning PID again...",
     ]
 
     ascii_SN = [
