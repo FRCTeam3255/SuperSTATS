@@ -62,7 +62,7 @@ df = download_sheets_raw(st.secrets["GID_RAW"])
 tba = tbapy.TBA(st.secrets["TBA_API"])
 
 
-def add_cols(org_df, filter):
+def add_cols(org_df, filter, include_cols=None):
     """
     Add a new column to the given DataFrame based on the specified filter.
 
@@ -81,8 +81,15 @@ def add_cols(org_df, filter):
     relevant_columns = [
         col
         for col in org_df.columns
-        if col != "COMMENT_GENERAL_STR_1" and col.startswith(filter)
+        if col != "COMMENT_GENERAL_STR_1"
+        and col.startswith(filter)
+        and (include_cols is None or col in include_cols)
     ]
+
+    # If nothing selected (or nothing matches), produce zeros deterministically
+    if len(relevant_columns) == 0:
+        org_df[filter] = 0
+        return org_df[filter]
 
     org_df[filter] = org_df[relevant_columns].apply(
         lambda row: sum(

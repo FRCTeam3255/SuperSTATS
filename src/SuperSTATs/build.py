@@ -497,8 +497,8 @@ def gen_bar(
     """
     phases = st.session_state.phases
 
+    # Always group by phases; keep other toggles
     variables = [
-        "group_filters" if use_group_filters else None,
         "inline_legend" if use_inline_legend else None,
         "show_available" if use_show_available else None,
         "show_nums" if use_show_nums else None,
@@ -583,18 +583,13 @@ def gen_bar(
             "features", var_count, "Features", False, key, False
         )
 
-
-        group_filters, var_count = gen_toggle(
-            "group_filters", var_count, "Group Filters", True, key, False
-        )
-
         inline_legend, var_count = gen_toggle(
             "inline_legend",
             var_count,
             "Inline Legend",
-            not group_filters,
+            True,
             key,
-            group_filters,
+            False,
         )
 
         if use_agg_type:
@@ -603,35 +598,65 @@ def gen_bar(
             ).lower()
         else:
             agg_type = "mean"
-
-        if not group_filters:
-            selected_phases = st.multiselect("Phases:", phases, default=phases, key=key)
-            phases = [
-                col
-                for col in df.columns
-                if any(col.startswith(f"{phase}_") for phase in selected_phases)
-            ]
-            selected_filters = phases
-            filter_choices = phases
-        else:
-            filter_choices = phases
+        # Always group by phases, but allow selecting which phases to display
+        selected_phases = st.multiselect("Phases:", phases, default=phases, key=key)
+        # Underlying detailed metrics for the selected phases
+        filter_choices = [
+            col
+            for col in df.columns
+            if any(col.startswith(f"{phase}_") for phase in selected_phases)
+            and col != "COMMENT_GENERAL_STR_1"
+        ]
     else:
         show_nums = preset["show_nums"]
         show_available = preset["show_available"]
         features = preset["use_features"]
-        group_filters = preset["group_filters"]
-        filter_choices = preset["selected_filters"]
         inline_legend = preset["inline_legend"]
         agg_type = preset["agg_type"]
-        phases = preset["phases"]
+        # Preset compatibility: phases are always the grouping
+        phases = preset.get("phases", phases)
+        selected_phases = phases
+        # Determine whether preset selected_filters are detailed or phases
+        preset_sel = preset.get("selected_filters", [])
+        if all([isinstance(x, str) and "_" in x for x in preset_sel]) and len(preset_sel) > 0:
+            filter_choices = preset_sel
+        else:
+            # If preset saved only phases, include all detailed metrics under those phases
+            filter_choices = [
+                col
+                for col in df.columns
+                if any(col.startswith(f"{phase}_") for phase in selected_phases)
+                and col != "COMMENT_GENERAL_STR_1"
+            ]
 
     comment_df = df
     df = df.drop("COMMENT_GENERAL_STR_1", axis=1)
 
+    # Underlying detailed filters selection (always available)
+    if preset_choice == "None":
+        selected_detail_filters = (
+            st.multiselect(
+                "Underlying metrics:",
+                filter_choices,
+                default=filter_choices,
+                key=f"selected_detail_filters_{key}",
+            )
+            if use_filter_selection
+            else filter_choices
+        )
+    else:
+        # Use preset's selected_filters when they look like detailed metrics
+        if all([isinstance(x, str) and "_" in x for x in filter_choices]) and len(filter_choices) > 0:
+            selected_detail_filters = filter_choices
+        else:
+            selected_detail_filters = filter_choices
+
+    # Compute aggregated phase columns using only selected detailed metrics
     for i in range(len(phases)):
         df.loc[:, phases[i]] = load.add_cols(
             df,
             phases[i],
+            include_cols=selected_detail_filters,
         )
 
     if not use_inline_legend:
@@ -733,25 +758,8 @@ def gen_bar(
 
     df = df[df["Team"].isin(kept_teams)]
 
-    if preset_choice == "None":
-        if use_filter_selection:
-            selected_filters = st.multiselect(
-                "Filters:",
-                filter_choices,
-                default=filter_choices,
-                key=f"selected_filters_{key}",
-            )
-        else:
-            selected_filters = filter_choices
-    else:
-        selected_filters = preset["selected_filters"]
-
-    selected_filters = (
-        preset["selected_filters"] if preset_choice != "None" else selected_filters
-    )
-
-    if "COMMENT_GENERAL_STR_1" in selected_filters:
-        selected_filters.remove("COMMENT_GENERAL_STR_1")
+    # Variables to plot are the selected phases (grouped view)
+    selected_filters = selected_phases
 
     rank_df = df.groupby("Team")[
         [
@@ -939,18 +947,14 @@ def gen_bar(
                 ),
                 legend=alt.Legend(
                     title=None,
-                    orient=(
-                        "bottom-right"
-                        if inline_legend and not group_filters
-                        else "bottom"
-                    ),
+                    orient=("bottom-right" if inline_legend else "bottom"),
                     symbolType="circle",
                     labelBaseline="alphabetic",
                     labelLimit=0,
                     offset=5,
                     padding=0,
                     rowPadding=0,
-                    labelFontSize=(10.5 if inline_legend and not group_filters else 14),
+                    labelFontSize=(10.5 if inline_legend else 14),
                 ),
             ),
             stroke=alt.value("#141414"),
@@ -982,11 +986,11 @@ def gen_bar(
 
             preset_data = {
                 "agg_type": agg_type,
-                "group_filters": group_filters,
                 "inline_legend": inline_legend,
-                "phases": phases,
+                "phases": selected_phases,
                 "selected_features": selected_features,
-                "selected_filters": selected_filters,
+                # Save detailed filters for reproducibility
+                "selected_filters": selected_detail_filters,
                 "size_limit": size_limit,
                 "show_available": show_available,
                 "show_nums": show_nums,
