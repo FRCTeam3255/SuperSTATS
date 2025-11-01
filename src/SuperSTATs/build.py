@@ -58,8 +58,8 @@ def scouting_expander(
     with column.expander(
         f"{expander_name} {'⚠️' if not has_data else ''}", start_expanded
     ):
-        with st.container(border=True):
-            gen_match_comp(st.session_state.df, team_num, match_name, False)
+        # with st.container(border=True):
+        #     gen_match_comp(st.session_state.df, team_num, match_name, False)
 
         if has_data:
             with st.container(border=True):
@@ -116,6 +116,32 @@ def scouting_expander(
 
                 check_nan("Drivetrain", sorted_df["Drivetrain Type"].max(), st)
                 check_nan("Scouting Comments", sorted_df["Comments"].max(), st)
+                st.divider()
+                try:
+                    stats_df = st.session_state.df
+                    bool_columns = [col for col in stats_df.columns if "_BOOL_" in col]
+
+                    if bool_columns:
+                        team_stats = stats_df[stats_df["Team"] == int(team_num)]
+
+                        if len(team_stats) == 0:
+                            st.warning("No stats collected for this team yet.")
+                        else:
+                            total_matches = len(team_stats)
+                            # Build a dict of pretty name -> formatted percentage string
+                            bool_stats = {}
+                            for col in bool_columns:
+                                series = pd.to_numeric(team_stats[col], errors="coerce").fillna(0)
+                                true_count = int(series.sum())
+                                percentage = (true_count / total_matches * 100) if total_matches > 0 else 0
+                                display_name = col.replace("_BOOL_", " - ").replace("_", " ")
+                                bool_stats[display_name] = f"{percentage:.1f}% ({true_count}/{total_matches})"
+
+                            for name, val in sorted(bool_stats.items()):
+                                st.text(f"{name}: {val}")
+                except Exception:
+                    # Keep UI resilient; failure here shouldn't break the expander
+                    pass
 
                 st.markdown(
                     f"<span style='font-size: small; color: #808080;'>Time Logged: {time_logged}</span>",
@@ -133,6 +159,8 @@ def scouting_expander(
                     )
         else:
             st.error("⚠️ No features")
+
+        
 
 
 def calc_projected(
