@@ -6,6 +6,7 @@ import random
 import pickle
 import tbapy
 import time
+import os
 
 ALLIANCE_SIZE = 3
 
