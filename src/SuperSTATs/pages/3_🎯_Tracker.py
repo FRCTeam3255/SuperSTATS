@@ -7,13 +7,9 @@ def main():
     load.app_init()
     analytics.collect_analytics("page_change", "tracker")
 
-    import SuperSTATs.styles as style
     import SuperSTATs.build as build
 
-    st.markdown(style.shimmer("#ff5b5a"), unsafe_allow_html=True)
-    st.markdown("<div class='shimmer'>🎯 Team Tracker 🎯</div>", unsafe_allow_html=True)
-
-    st.title("")
+    st.title("🎯 Team Tracker 🎯")
 
     if st.button(
         "Update Page",

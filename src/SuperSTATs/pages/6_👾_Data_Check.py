@@ -31,7 +31,7 @@ def show_raw(match_num, match_info, match_key):
         pass
 
 
-def flatten_dict(d, parent_key='', sep='_'):
+def flatten_dict(d, parent_key="", sep="_"):
     """
     Flatten a nested dictionary, preserving the first key.
 
@@ -60,12 +60,7 @@ def main():
     load.app_init()
     analytics.collect_analytics("page_change", "data_check")
 
-    import SuperSTATs.styles as style
-
-    st.markdown(style.shimmer("#c18aff"), unsafe_allow_html=True)
-    st.markdown("<div class='shimmer'>👾 Data Check 👾</div>", unsafe_allow_html=True)
-
-    st.title("")
+    st.title("👾 Data Check 👾")
 
     if st.button(
         "Update Page",
@@ -256,7 +251,9 @@ def main():
                 missing_teams = list(set(sorted_tba_teams).difference(sorted_team_nums))
 
                 if sorted_team_nums != sorted_tba_teams:
-                    st.subheader(f"Team Count: {len(team_nums)}/6", False)
+                    st.subheader(
+                        f"Team Count: {len(team_nums)}/{load.ALLIANCE_SIZE * 2}", False
+                    )
 
                     columns = st.columns(3)
 
@@ -310,7 +307,9 @@ def main():
                                 calc_values = {}
 
                                 for tba, col in tba_columns.items():
-                                    tba_counts[tba] = score_breakdown.get(f"{calc_teams[team]['color'].lower()}_{tba}", 0)
+                                    tba_counts[tba] = score_breakdown.get(
+                                        f"{calc_teams[team]['color'].lower()}_{tba}", 0
+                                    )
 
                                 team_color = calc_teams[team]["color"]
 

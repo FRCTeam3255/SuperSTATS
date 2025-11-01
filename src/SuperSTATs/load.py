@@ -6,7 +6,34 @@ import random
 import pickle
 import tbapy
 import time
+import os
 
+ALLIANCE_SIZE = 3
+
+# Cross-platform cache directory for pickles
+PICKLES_DIR = os.path.join("src", "pickles")
+os.makedirs(PICKLES_DIR, exist_ok=True)
+
+def pickle_path(filename: str) -> str:
+    """Return absolute path for a pickle file under the app's cache directory."""
+    return os.path.join(PICKLES_DIR, filename)
+
+def load_pickle(filename: str, default=None):
+    """Safely load a pickle from the cache directory; return default on failure."""
+    try:
+        with open(pickle_path(filename), "rb") as f:
+            return pickle.load(f)
+    except Exception:
+        return default
+
+def save_pickle(filename: str, data) -> bool:
+    """Safely save data as a pickle to the cache directory; return True on success."""
+    try:
+        with open(pickle_path(filename), "wb") as f:
+            pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
+        return True
+    except Exception:
+        return False
 
 def download_sheets_raw(gid):
     """
@@ -35,7 +62,7 @@ df = download_sheets_raw(st.secrets["GID_RAW"])
 tba = tbapy.TBA(st.secrets["TBA_API"])
 
 
-def add_cols(org_df, filter):
+def add_cols(org_df, filter, include_cols=None):
     """
     Add a new column to the given DataFrame based on the specified filter.
 
@@ -54,8 +81,15 @@ def add_cols(org_df, filter):
     relevant_columns = [
         col
         for col in org_df.columns
-        if col != "COMMENT_GENERAL_STR_1" and col.startswith(filter)
+        if col != "COMMENT_GENERAL_STR_1"
+        and col.startswith(filter)
+        and (include_cols is None or col in include_cols)
     ]
+
+    # If nothing selected (or nothing matches), produce zeros deterministically
+    if len(relevant_columns) == 0:
+        org_df[filter] = 0
+        return org_df[filter]
 
     org_df[filter] = org_df[relevant_columns].apply(
         lambda row: sum(
@@ -205,16 +239,11 @@ def get_configs():
         value = row["Value"]
         configs[config] = value.split(", ")
 
-    configs_path = "src\\pickles\\configs.pickle"
-
-    try:
-        with open(configs_path, "rb") as f:
-            configs = pickle.load(f)
-        return configs
-    except:
-        with open(configs_path, "wb") as f:
-            pickle.dump(configs, f, pickle.HIGHEST_PROTOCOL)
-        return configs
+    existing = load_pickle("configs.pickle")
+    if isinstance(existing, dict) and existing:
+        return existing
+    save_pickle("configs.pickle", configs)
+    return configs
 
 
 def get_tba_ranks():
@@ -282,8 +311,7 @@ def get_team_colors():
     unrecorded = []
 
     try:
-        with open("src\\pickles\\colors.pickle", "rb") as f:
-            recorded = pickle.load(f)
+        recorded = load_pickle("colors.pickle", default={})
 
         for team in team_info.keys():
             try:
@@ -323,8 +351,7 @@ def get_team_colors():
             else:
                 team_colors[str(team)] = ["003255", "003255"]
 
-        with open("src\\pickles\\colors.pickle", "wb") as f:
-            pickle.dump(team_colors, f, pickle.HIGHEST_PROTOCOL)
+        save_pickle("colors.pickle", team_colors)
 
     else:
         for team in unrecorded:
@@ -357,7 +384,9 @@ def get_match_data():
         for color in ["red", "blue"]:
             df[f"{color}.team_keys"] = df[f"{color}.team_keys"].apply(
                 # TODO: remove all alpha chars
-                lambda teams: [int(x.replace("frc", "").replace('3255B','9975')) for x in teams]
+                lambda teams: [
+                    int(x.replace("frc", "").replace("3255B", "9975")) for x in teams
+                ]
             )
 
         def set_match_name(row):
@@ -467,7 +496,7 @@ def get_unplayed(df, matches):
         df_counts = df["Completed"].value_counts()
 
         df["Completed"] = df["Completed"].apply(
-            lambda x: x if df_counts[x] >= 3 else None
+            lambda x: x if df_counts[x] >= ALLIANCE_SIZE else None
         )
 
         tba_played_matches = []
@@ -577,19 +606,14 @@ def get_scouters():
         dict: A dictionary with two keys: 'scouts' and 'assigned'. The 'scouts' key contains a list of
         all scout names, and the 'assigned' key contains a list of scout names that are assigned.
     """
-    try:
-        with open("src\\pickles\\scouts.pickle", "rb") as f:
-            scouts = pickle.load(f)
-
+    scouts = load_pickle("scouts.pickle")
+    if isinstance(scouts, list) and len(scouts) == 2:
         return {"scouts": scouts[0], "assigned": scouts[1]}
-
-    except:
-        scouts_df = download_sheets_raw(st.secrets["GID_SCOUTS"]).sort_values(by="Name")
-
-        return {
-            "scouts": scouts_df["Name"].tolist(),
-            "assigned": scouts_df.loc[scouts_df["Assigned"] == "x", "Name"].tolist(),
-        }
+    scouts_df = download_sheets_raw(st.secrets["GID_SCOUTS"]).sort_values(by="Name")
+    return {
+        "scouts": scouts_df["Name"].tolist(),
+        "assigned": scouts_df.loc[scouts_df["Assigned"] == "x", "Name"].tolist(),
+    }
 
 
 def get_phases(df):
@@ -625,16 +649,11 @@ def get_presets():
     Returns:
         dict: The presets loaded from the file or an empty dictionary if the file does not exist.
     """
-    presets_path = "src\\pickles\\presets.pickle"
-
-    try:
-        with open(presets_path, "rb") as f:
-            presets = pickle.load(f)
+    presets = load_pickle("presets.pickle", default=None)
+    if isinstance(presets, dict):
         return presets
-    except:
-        with open(presets_path, "wb") as f:
-            pickle.dump({}, f, pickle.HIGHEST_PROTOCOL)
-        return {}
+    save_pickle("presets.pickle", {})
+    return {}
 
 
 def get_event_year(event_key):
@@ -686,6 +705,7 @@ def robot_photo_dropdown(input_team):
                 )
             else:
                 st.warning("⚠️ No robot photo available")
+
 
 def app_init():
     """
@@ -745,10 +765,10 @@ def app_init():
         "Calculating PI...",
         "Ducktaping notes...",
         "Overclocking the power supply...",
-        "Shallow climbing on the reef..."
+        "Shallow climbing on the reef...", 
         "Why does Susan have a pet turtle?",
         "OHH MY GOD ITS TEJ!!!",
-        "Tuning PID again..."
+        "Tuning PID again...",
     ]
 
     ascii_SN = [

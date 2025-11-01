@@ -58,8 +58,8 @@ def scouting_expander(
     with column.expander(
         f"{expander_name} {'⚠️' if not has_data else ''}", start_expanded
     ):
-        with st.container(border=True):
-            gen_match_comp(st.session_state.df, team_num, match_name, False)
+        # with st.container(border=True):
+        #     gen_match_comp(st.session_state.df, team_num, match_name, False)
 
         if has_data:
             with st.container(border=True):
@@ -116,6 +116,32 @@ def scouting_expander(
 
                 check_nan("Drivetrain", sorted_df["Drivetrain Type"].max(), st)
                 check_nan("Scouting Comments", sorted_df["Comments"].max(), st)
+                st.divider()
+                try:
+                    stats_df = st.session_state.df
+                    bool_columns = [col for col in stats_df.columns if "_BOOL_" in col]
+
+                    if bool_columns:
+                        team_stats = stats_df[stats_df["Team"] == int(team_num)]
+
+                        if len(team_stats) == 0:
+                            st.warning("No stats collected for this team yet.")
+                        else:
+                            total_matches = len(team_stats)
+                            # Build a dict of pretty name -> formatted percentage string
+                            bool_stats = {}
+                            for col in bool_columns:
+                                series = pd.to_numeric(team_stats[col], errors="coerce").fillna(0)
+                                true_count = int(series.sum())
+                                percentage = (true_count / total_matches * 100) if total_matches > 0 else 0
+                                display_name = col.replace("_BOOL_", " - ").replace("_", " ")
+                                bool_stats[display_name] = f"{percentage:.1f}% ({true_count}/{total_matches})"
+
+                            for name, val in sorted(bool_stats.items()):
+                                st.text(f"{name}: {val}")
+                except Exception:
+                    # Keep UI resilient; failure here shouldn't break the expander
+                    pass
 
                 st.markdown(
                     f"<span style='font-size: small; color: #808080;'>Time Logged: {time_logged}</span>",
@@ -133,6 +159,8 @@ def scouting_expander(
                     )
         else:
             st.error("⚠️ No features")
+
+        
 
 
 def calc_projected(
@@ -177,11 +205,17 @@ def calc_projected(
     multiplied_data = score_df.copy()
     phase_multipliers = get_phase_multipliers(multiplied_data)
 
+    # Safely apply multipliers only to numeric-like columns;
+    # avoid touching text/comment columns and avoid None * int errors.
     for col in multiplied_data.columns:
-        if col in phase_multipliers.keys():
+        if col in phase_multipliers:
             multiplier = phase_multipliers[col]
-            for index, row_value in multiplied_data[col].items():
-                multiplied_data.loc[index, col] = row_value * multiplier
+            if multiplier != 1:
+                # Coerce to numeric, treat non-numeric/None as 0, then scale
+                multiplied_data[col] = (
+                    pd.to_numeric(multiplied_data[col], errors="coerce").fillna(0)
+                    * multiplier
+                )
 
     for team in team_df:
         team_score = multiplied_data[multiplied_data["Team"] == team]
@@ -229,7 +263,7 @@ def gen_match_comp(df, team_num, match_name, not_preview=True):
     team_df = df[df["Team"] == team_num]
     match_count = len(team_df)
 
-    config_columns = st.columns(3)
+    config_columns = st.columns(load.ALLIANCE_SIZE)
 
     if not_preview:
         show_ungrouped = config_columns[0].toggle("Ungroup", False)
@@ -491,13 +525,12 @@ def gen_bar(
     """
     phases = st.session_state.phases
 
+    # Always group by phases; keep other toggles
     variables = [
-        "group_filters" if use_group_filters else None,
         "inline_legend" if use_inline_legend else None,
         "show_available" if use_show_available else None,
         "show_nums" if use_show_nums else None,
         "features" if use_features else None,
-        "local_rank" if use_local_rank else None,
     ]
 
     variables = [var for var in variables if var != None]
@@ -578,21 +611,13 @@ def gen_bar(
             "features", var_count, "Features", False, key, False
         )
 
-        use_local_rank, var_count = gen_toggle(
-            "local_rank", var_count, "Local Rank", False, key, False
-        )
-
-        group_filters, var_count = gen_toggle(
-            "group_filters", var_count, "Group Filters", True, key, False
-        )
-
         inline_legend, var_count = gen_toggle(
             "inline_legend",
             var_count,
             "Inline Legend",
-            not group_filters,
+            True,
             key,
-            group_filters,
+            False,
         )
 
         if use_agg_type:
@@ -601,36 +626,65 @@ def gen_bar(
             ).lower()
         else:
             agg_type = "mean"
-
-        if not group_filters:
-            selected_phases = st.multiselect("Phases:", phases, default=phases, key=key)
-            phases = [
-                col
-                for col in df.columns
-                if any(col.startswith(f"{phase}_") for phase in selected_phases)
-            ]
-            selected_filters = phases
-            filter_choices = phases
-        else:
-            filter_choices = phases
+        # Always group by phases, but allow selecting which phases to display
+        selected_phases = st.multiselect("Phases:", phases, default=phases, key=key)
+        # Underlying detailed metrics for the selected phases
+        filter_choices = [
+            col
+            for col in df.columns
+            if any(col.startswith(f"{phase}_") for phase in selected_phases)
+            and col != "COMMENT_GENERAL_STR_1"
+        ]
     else:
         show_nums = preset["show_nums"]
         show_available = preset["show_available"]
         features = preset["use_features"]
-        use_local_rank = preset["use_local_rank"]
-        group_filters = preset["group_filters"]
-        filter_choices = preset["selected_filters"]
         inline_legend = preset["inline_legend"]
         agg_type = preset["agg_type"]
-        phases = preset["phases"]
+        # Preset compatibility: phases are always the grouping
+        phases = preset.get("phases", phases)
+        selected_phases = phases
+        # Determine whether preset selected_filters are detailed or phases
+        preset_sel = preset.get("selected_filters", [])
+        if all([isinstance(x, str) and "_" in x for x in preset_sel]) and len(preset_sel) > 0:
+            filter_choices = preset_sel
+        else:
+            # If preset saved only phases, include all detailed metrics under those phases
+            filter_choices = [
+                col
+                for col in df.columns
+                if any(col.startswith(f"{phase}_") for phase in selected_phases)
+                and col != "COMMENT_GENERAL_STR_1"
+            ]
 
     comment_df = df
     df = df.drop("COMMENT_GENERAL_STR_1", axis=1)
 
+    # Underlying detailed filters selection (always available)
+    if preset_choice == "None":
+        selected_detail_filters = (
+            st.multiselect(
+                "Underlying metrics:",
+                filter_choices,
+                default=filter_choices,
+                key=f"selected_detail_filters_{key}",
+            )
+            if use_filter_selection
+            else filter_choices
+        )
+    else:
+        # Use preset's selected_filters when they look like detailed metrics
+        if all([isinstance(x, str) and "_" in x for x in filter_choices]) and len(filter_choices) > 0:
+            selected_detail_filters = filter_choices
+        else:
+            selected_detail_filters = filter_choices
+
+    # Compute aggregated phase columns using only selected detailed metrics
     for i in range(len(phases)):
         df.loc[:, phases[i]] = load.add_cols(
             df,
             phases[i],
+            include_cols=selected_detail_filters,
         )
 
     if not use_inline_legend:
@@ -732,25 +786,8 @@ def gen_bar(
 
     df = df[df["Team"].isin(kept_teams)]
 
-    if preset_choice == "None":
-        if use_filter_selection:
-            selected_filters = st.multiselect(
-                "Filters:",
-                filter_choices,
-                default=filter_choices,
-                key=f"selected_filters_{key}",
-            )
-        else:
-            selected_filters = filter_choices
-    else:
-        selected_filters = preset["selected_filters"]
-
-    selected_filters = (
-        preset["selected_filters"] if preset_choice != "None" else selected_filters
-    )
-
-    if "COMMENT_GENERAL_STR_1" in selected_filters:
-        selected_filters.remove("COMMENT_GENERAL_STR_1")
+    # Variables to plot are the selected phases (grouped view)
+    selected_filters = selected_phases
 
     rank_df = df.groupby("Team")[
         [
@@ -881,14 +918,26 @@ def gen_bar(
         else:
             picked = ""
 
-        if use_local_rank:
-            rank = str(calc_df.loc[calc_df["Team"] == team, "rank"].to_list()[0]).zfill(
-                2
-            )
-        else:
-            rank = str(tba_ranks.get(str(int(team)), "NA")).zfill(2)
+        # Helper to zero-pad only numeric strings
+        def zpad(val):
+            s = str(val)
+            return s.zfill(2) if s.isdigit() else s
 
-        return f"{picked} {str(int(team)).rjust(5)} [{rank}]"
+        # Compute both local (SuperSTATs) and TBA ranks
+        try:
+            local_rank_val = calc_df.loc[calc_df["Team"] == team, "rank"].to_list()[0]
+        except Exception:
+            local_rank_val = "NA"
+
+        tba_rank_val = tba_ranks.get(str(int(team)), "NA")
+
+        local_rank = zpad(local_rank_val)
+        tba_rank = zpad(tba_rank_val)
+
+        # Always display both ranks in fixed order Local/TBA
+        # rank_label = f"🚨{tba_rank} 🦸‍♂️{local_rank}"
+        rank_label = f"| T{tba_rank} | S{local_rank}"
+        return f"{picked} {str(int(team)).rjust(5)} {rank_label}"
 
     ranked_data = data.copy()
 
@@ -903,48 +952,65 @@ def gen_bar(
     else:
         chart_height = 37 * len(ranked_data["Team"].unique())
 
-    chart = (
-        alt.Chart(
-            ranked_data,
-            height=chart_height,
-        )
-        .mark_bar()
-        .encode(
-            x=alt.X("value:Q", title=" ", scale=alt.Scale(domain=[x_min, x_max])),
-            y=alt.Y(
-                "Team:N",
-                sort=alt.EncodingSortField(field="rank", order="ascending"),
-                title="",
-                axis=alt.Axis(labels=show_nums),
-            ),
-            color=alt.Color(
-                "variable:N",
-                title=" ",
-                scale=alt.Scale(
-                    domain=selected_filters,
-                    range=gen_cmap(len(data["variable"].unique())),
-                ),
-                legend=alt.Legend(
-                    title=None,
-                    orient=(
-                        "bottom-right"
-                        if inline_legend and not group_filters
-                        else "bottom"
-                    ),
-                    symbolType="circle",
-                    labelBaseline="alphabetic",
-                    labelLimit=0,
-                    offset=5,
-                    padding=0,
-                    rowPadding=0,
-                    labelFontSize=(10.5 if inline_legend and not group_filters else 14),
-                ),
-            ),
-            stroke=alt.value("#141414"),
-            strokeWidth=alt.value(2),
-            tooltip=["value:Q", "variable:N"],
-        )
+    # Final display option: toggle grouped vs stacked bars
+    group_bars = st.toggle("Side by side bars", value=False, key=f"group_bars_{key}")
+
+    x_enc = alt.X(
+        "value:Q",
+        title=" ",
+        scale=alt.Scale(domain=[x_min, x_max]),
+        stack=None if group_bars else "zero",
     )
+
+    y_enc = alt.Y(
+        "Team:N",
+        sort=alt.EncodingSortField(field="rank", order="ascending"),
+        title="",
+        axis=alt.Axis(labels=show_nums, labelLimit=0, labelPadding=6),
+    )
+
+    color_enc = alt.Color(
+        "variable:N",
+        title=" ",
+        scale=alt.Scale(
+            domain=selected_filters,
+            range=gen_cmap(len(data["variable"].unique())),
+        ),
+        legend=alt.Legend(
+            title=None,
+            orient=("bottom-right" if inline_legend else "top"),
+            symbolType="square",
+            symbolStrokeWidth=1,
+            labelLimit=0,
+            offset=5,
+            padding=0,
+            rowPadding=0,
+            labelFontSize=(10.5 if inline_legend else 14),
+        ),
+    )
+
+    encodings = {
+        "x": x_enc,
+        "y": y_enc,
+        "color": color_enc,
+        "stroke": alt.value("#141414"),
+        "strokeWidth": alt.value(2),
+        "tooltip": ["value:Q", "variable:N"],
+    }
+
+    if group_bars:
+        # Offset bars by variable to show side-by-side groups per team
+        encodings["yOffset"] = alt.YOffset("variable:N")
+
+    chart = alt.Chart(ranked_data, height=chart_height).mark_bar().encode(**encodings)
+
+    # Ensure long y-axis labels (with emojis and ranks) are not cut off by adding left padding
+    try:
+        max_label_len = max(len(str(s)) for s in ranked_data["Team"].unique())
+    except Exception:
+        max_label_len = 0
+    left_padding = min(320, max(100, int(max_label_len * 7)))
+    chart = chart.configure(padding={"left": left_padding})
 
     if selected_filters:
         if not no_data:
@@ -961,13 +1027,12 @@ def gen_bar(
 
             preset_data = {
                 "agg_type": agg_type,
-                "group_filters": group_filters,
                 "inline_legend": inline_legend,
-                "phases": phases,
+                "phases": selected_phases,
                 "selected_features": selected_features,
-                "selected_filters": selected_filters,
+                # Save detailed filters for reproducibility
+                "selected_filters": selected_detail_filters,
                 "size_limit": size_limit,
-                "use_local_rank": use_local_rank,
                 "show_available": show_available,
                 "show_nums": show_nums,
                 "use_features": features,
@@ -980,8 +1045,7 @@ def gen_bar(
                 elif preset_name not in presets.keys():
                     presets[preset_name] = preset_data
 
-                    with open("src\\pickles\\presets.pickle", "wb") as f:
-                        pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
+                    load.save_pickle("presets.pickle", presets)
                     st.toast("Successfully added preset!", icon="✅")
                 else:
                     st.toast("Preset name already exists!", icon="⚠️")

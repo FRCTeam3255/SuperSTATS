@@ -2,6 +2,7 @@ import SuperSTATs.analytics as analytics
 import SuperSTATs.build as build
 import SuperSTATs.load as load
 import streamlit as st
+import pandas as pd
 
 
 def display_team(
@@ -126,7 +127,6 @@ def display_team(
 
     column.markdown("""---""")
 
-
     if not combined_chart:
         with column.container():
             ranked_df = build.gen_bar(
@@ -228,13 +228,8 @@ def main():
     load.app_init()
     analytics.collect_analytics("page_change", "preview")
 
-    import SuperSTATs.styles as style
 
-    st.markdown(style.shimmer("#d9adff"), unsafe_allow_html=True)
-    st.markdown(
-        "<div class='shimmer'>🔮 Match Preview 🔮</div>", unsafe_allow_html=True
-    )
-    st.title("")
+    st.title("🔮 Match Preview 🔮")
 
     if st.button(
         "Update Page",
@@ -262,12 +257,17 @@ def main():
 
     team = columns[0].selectbox("Team Selection:", [show_all] + teams)
 
+    # Determine relevant alliance columns without assuming alliance size yet
+    alliance_cols_in_df = [
+        col
+        for col in df.columns
+        if (col.startswith("Red ") or col.startswith("Blue "))
+    ]
+
     if team != show_all:
         team_number = int(team.split(" | ")[0])
-        team_cols = [f"Red {i}" for i in range(1, 4)] + [
-            f"Blue {i}" for i in range(1, 4)
-        ]
-        df = df[df[team_cols].isin([team_number]).any(axis=1)]
+        # Filter matches where the selected team appears in any alliance slot
+        df = df[df[alliance_cols_in_df].isin([team_number]).any(axis=1)]
 
     try:
         last_match = int(st.session_state.df["Match"].max())
@@ -275,42 +275,99 @@ def main():
         st.error("⚠️ No Played Matches")
         st.stop()
 
+    # Determine a reasonable default selected match and build options
+    selected_match = None
     if team == show_all:
-        while True:
-            occurrences = len(
-                st.session_state.df.loc[st.session_state.df["Match"] == last_match]
-            )
-            if occurrences >= 6:
-                break
-            else:
-                last_match -= 1
+        # Try to default to the last played or last listed match
+        try:
+            while True:
+                occurrences = len(
+                    st.session_state.df.loc[
+                        st.session_state.df["Match"] == last_match
+                    ]
+                )
+                if occurrences >= 6:
+                    break
+                else:
+                    last_match -= 1
+        except Exception:
+            pass
+        selected_match = (
+            df["Match"].to_list()[-1] if len(df["Match"].to_list()) > 0 else None
+        )
     else:
-        last_match = 0
+        selected_match = (
+            df["Match"].to_list()[0] if len(df["Match"].to_list()) > 0 else None
+        )
+
+    match_options = df["Match"].to_list() + ["Custom"]
+    if selected_match in df["Match"].to_list():
+        default_index = match_options.index(selected_match)
+    else:
+        default_index = 0
 
     match_choice = columns[1].selectbox(
-        "Match:", df["Match"].to_list() + ["Custom"], last_match
+        "Match:", match_options, index=default_index
     )
 
     if match_choice == "Custom":
         alliance_columns = st.columns(2)
 
         red_alliance = alliance_columns[0].multiselect(
-            "Red Alliance:", st.session_state.team_info, []
+            "🔴 Red Alliance teams:", 
+            st.session_state.team_info,
+            []
         )
         blue_alliance = alliance_columns[1].multiselect(
-            "Blue Alliance:", st.session_state.team_info, []
+            "🔵 Blue Alliance teams:", 
+            st.session_state.team_info, 
+            []
         )
 
-        if len(red_alliance) < 3 or len(blue_alliance) < 3:
-            st.error("⚠️ Must select 3 teams for each alliance")
-            st.stop()
+        if len(red_alliance) < load.ALLIANCE_SIZE:
+            alliance_columns[0].warning(f"⚠️ Select {load.ALLIANCE_SIZE} teams for red alliance")
+
+        if len(blue_alliance) < load.ALLIANCE_SIZE:
+            alliance_columns[1].warning(f"⚠️ Select {load.ALLIANCE_SIZE} teams for blue alliance")
 
     else:
         df_sort = df[df["Match"] == match_choice]
         df_sort = df_sort.set_index("Match").transpose()[match_choice]
 
-        red_alliance = df_sort.filter(like="Red", axis=0).to_list()
-        blue_alliance = df_sort.filter(like="Blue", axis=0).to_list()
+        # Collect alliance members, dropping blanks/NaN, and cap to requested size
+        red_series = df_sort.filter(like="Red", axis=0)
+        blue_series = df_sort.filter(like="Blue", axis=0)
+
+        red_alliance = [
+            int(x) if isinstance(x, (int, float)) and not pd.isna(x) else x
+            for x in red_series.dropna().tolist()
+        ]
+        blue_alliance = [
+            int(x) if isinstance(x, (int, float)) and not pd.isna(x) else x
+            for x in blue_series.dropna().tolist()
+        ]
+
+    # If an alliance has 4 robots, allow selecting one to ignore for projections.
+    # Otherwise, use whatever robots are listed (typically 3) with no ignore UI.
+    ignore_columns = st.columns(2)
+    
+    if len(red_alliance) >= 4:
+        ignore_columns[0].caption("Red alliance has 4 robots. Pick one to ignore for projections.")
+        red_ignore = ignore_columns[0].selectbox(
+            "Ignore Red Robot:", red_alliance, key="ignore_red"
+        )
+        red_alliance_display = [team for team in red_alliance if team != red_ignore]
+    else:
+        red_alliance_display = red_alliance
+    
+    if len(blue_alliance) >= 4:
+        ignore_columns[1].caption("Blue alliance has 4 robots. Pick one to ignore for projections.")
+        blue_ignore = ignore_columns[1].selectbox(
+            "Ignore Blue Robot:", blue_alliance, key="ignore_blue"
+        )
+        blue_alliance_display = [team for team in blue_alliance if team != blue_ignore]
+    else:
+        blue_alliance_display = blue_alliance
 
     columns = st.columns(4)
 
@@ -329,7 +386,15 @@ def main():
 
         match_count = int(st.session_state.configs["Error Calc Count"][0])
         match_list = df["Match"].to_list()
-        match_index = match_list.index(match_choice)
+
+        # Resolve index safely even when using Custom
+        try:
+            effective_match = (
+                match_choice if match_choice != "Custom" else selected_match
+            )
+            match_index = match_list.index(effective_match)
+        except Exception:
+            match_index = 0
 
         prev_matches = match_list[match_index - match_count : match_index]
 
@@ -351,11 +416,36 @@ def main():
 
             all_match_teams[match_name] = {"Red": red_teams, "Blue": blue_teams}
 
+        # Lightweight helper to compute a projected alliance score without drawing charts
+        def _projected_for_teams(team_list, weight):
+            try:
+                df_points = st.session_state.df.copy()
+                # Use scoring phases only
+                phases = [
+                    phase
+                    for phase in st.session_state.phases
+                    if phase not in ("COMMENT", "INFO")
+                ]
+
+                for phase in phases:
+                    df_points.loc[:, phase] = load.add_cols(df_points, phase)
+
+                calc_df = (
+                    df_points[df_points["Team"].isin(team_list)]
+                    .groupby("Team")[phases]
+                    .mean()
+                )
+
+                projected = int(calc_df.sum(axis=1).sum() * weight)
+                return projected
+            except Exception:
+                return 0
+
         for match in all_match_teams:
             for alliance in all_match_teams[match]:
                 team_df = all_match_teams[match][alliance]
 
-                projected_score = build.calc_projected(team_df, prediction_weight)
+                projected_score = _projected_for_teams(team_df, prediction_weight)
 
                 match_df = st.session_state.match_data
                 match_df = match_df.loc[match_df["Match Name"] == match]
@@ -387,8 +477,8 @@ def main():
     display_team(
         ["🔴", "Red"],
         columns[0],
-        red_alliance,
-        blue_alliance,
+        red_alliance_display,
+        blue_alliance_display,
         prediction_weight,
         start_expanded,
         calc_bumpers,
@@ -399,8 +489,8 @@ def main():
     display_team(
         ["🔵", "Blue"],
         columns[1],
-        blue_alliance,
-        red_alliance,
+        blue_alliance_display,
+        red_alliance_display,
         prediction_weight,
         start_expanded,
         calc_bumpers,
@@ -409,7 +499,7 @@ def main():
     )
 
     if combined_chart:
-        match_teams = red_alliance + blue_alliance
+        match_teams = red_alliance_display + blue_alliance_display
         toggled_teams = []
 
         with st.expander("Toggle Teams", True):
@@ -419,7 +509,7 @@ def main():
                 toggled_state = columns[i].toggle(
                     (
                         f":red[{str(team)}]"
-                        if team in red_alliance
+                        if team in red_alliance_display
                         else f":blue[{str(team)}]"
                     ),
                     True,
@@ -430,7 +520,7 @@ def main():
                     toggled_teams.append(team)
 
         if len(toggled_teams) == 0:
-            toggled_teams = red_alliance + blue_alliance
+            toggled_teams = red_alliance_display + blue_alliance_display
 
         build.gen_bar(
             use_presets=False,

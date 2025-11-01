@@ -8,12 +8,7 @@ def main():
     load.app_init()
     analytics.collect_analytics("page_change", "stats")
 
-    import SuperSTATs.styles as style
-
-    st.markdown(style.shimmer("#ffe8ad"), unsafe_allow_html=True)
-    st.markdown("<div class='shimmer'>🏆 NURD Stats 🏆</div>", unsafe_allow_html=True)
-
-    st.title("")
+    st.title("🏆 NURD Stats 🏆")
 
     if st.button(
         "Update Page",
