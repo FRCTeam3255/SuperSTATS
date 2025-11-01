@@ -924,44 +924,57 @@ def gen_bar(
     else:
         chart_height = 37 * len(ranked_data["Team"].unique())
 
-    chart = (
-        alt.Chart(
-            ranked_data,
-            height=chart_height,
-        )
-        .mark_bar()
-        .encode(
-            x=alt.X("value:Q", title=" ", scale=alt.Scale(domain=[x_min, x_max])),
-            y=alt.Y(
-                "Team:N",
-                sort=alt.EncodingSortField(field="rank", order="ascending"),
-                title="",
-                axis=alt.Axis(labels=show_nums, labelLimit=0, labelPadding=6),
-            ),
-            color=alt.Color(
-                "variable:N",
-                title=" ",
-                scale=alt.Scale(
-                    domain=selected_filters,
-                    range=gen_cmap(len(data["variable"].unique())),
-                ),
-                legend=alt.Legend(
-                    title=None,
-                    orient=("bottom-right" if inline_legend else "bottom"),
-                    symbolType="circle",
-                    labelBaseline="alphabetic",
-                    labelLimit=0,
-                    offset=5,
-                    padding=0,
-                    rowPadding=0,
-                    labelFontSize=(10.5 if inline_legend else 14),
-                ),
-            ),
-            stroke=alt.value("#141414"),
-            strokeWidth=alt.value(2),
-            tooltip=["value:Q", "variable:N"],
-        )
+    # Final display option: toggle grouped vs stacked bars
+    group_bars = st.toggle("Grouped bars", value=True, key=f"group_bars_{key}")
+
+    x_enc = alt.X(
+        "value:Q",
+        title=" ",
+        scale=alt.Scale(domain=[x_min, x_max]),
+        stack=None if group_bars else "zero",
     )
+
+    y_enc = alt.Y(
+        "Team:N",
+        sort=alt.EncodingSortField(field="rank", order="ascending"),
+        title="",
+        axis=alt.Axis(labels=show_nums, labelLimit=0, labelPadding=6),
+    )
+
+    color_enc = alt.Color(
+        "variable:N",
+        title=" ",
+        scale=alt.Scale(
+            domain=selected_filters,
+            range=gen_cmap(len(data["variable"].unique())),
+        ),
+        legend=alt.Legend(
+            title=None,
+            orient=("bottom-right" if inline_legend else "top"),
+            symbolType="square",
+            symbolStrokeWidth=1,
+            labelLimit=0,
+            offset=5,
+            padding=0,
+            rowPadding=0,
+            labelFontSize=(10.5 if inline_legend else 14),
+        ),
+    )
+
+    encodings = {
+        "x": x_enc,
+        "y": y_enc,
+        "color": color_enc,
+        "stroke": alt.value("#141414"),
+        "strokeWidth": alt.value(2),
+        "tooltip": ["value:Q", "variable:N"],
+    }
+
+    if group_bars:
+        # Offset bars by variable to show side-by-side groups per team
+        encodings["yOffset"] = alt.YOffset("variable:N")
+
+    chart = alt.Chart(ranked_data, height=chart_height).mark_bar().encode(**encodings)
 
     # Ensure long y-axis labels (with emojis and ranks) are not cut off by adding left padding
     try:
