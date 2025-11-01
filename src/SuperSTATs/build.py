@@ -615,7 +615,7 @@ def gen_bar(
             "inline_legend",
             var_count,
             "Inline Legend",
-            True,
+            False,
             key,
             False,
         )
