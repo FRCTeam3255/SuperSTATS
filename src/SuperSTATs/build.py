@@ -986,8 +986,7 @@ def gen_bar(
                 elif preset_name not in presets.keys():
                     presets[preset_name] = preset_data
 
-                    with open("src\\pickles\\presets.pickle", "wb") as f:
-                        pickle.dump(presets, f, pickle.HIGHEST_PROTOCOL)
+                    load.save_pickle("presets.pickle", presets)
                     st.toast("Successfully added preset!", icon="✅")
                 else:
                     st.toast("Preset name already exists!", icon="⚠️")

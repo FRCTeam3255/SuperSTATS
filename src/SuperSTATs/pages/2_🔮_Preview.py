@@ -126,7 +126,6 @@ def display_team(
 
     column.markdown("""---""")
 
-
     if not combined_chart:
         with column.container():
             ranked_df = build.gen_bar(
@@ -228,7 +227,6 @@ def main():
     load.app_init()
     analytics.collect_analytics("page_change", "preview")
 
-    import SuperSTATs.styles as style
 
     st.title("🔮 Match Preview 🔮")
 

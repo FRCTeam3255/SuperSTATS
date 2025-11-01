@@ -9,6 +9,31 @@ import time
 
 ALLIANCE_SIZE = 3
 
+# Cross-platform cache directory for pickles
+PICKLES_DIR = os.path.join("src", "pickles")
+os.makedirs(PICKLES_DIR, exist_ok=True)
+
+def pickle_path(filename: str) -> str:
+    """Return absolute path for a pickle file under the app's cache directory."""
+    return os.path.join(PICKLES_DIR, filename)
+
+def load_pickle(filename: str, default=None):
+    """Safely load a pickle from the cache directory; return default on failure."""
+    try:
+        with open(pickle_path(filename), "rb") as f:
+            return pickle.load(f)
+    except Exception:
+        return default
+
+def save_pickle(filename: str, data) -> bool:
+    """Safely save data as a pickle to the cache directory; return True on success."""
+    try:
+        with open(pickle_path(filename), "wb") as f:
+            pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
+        return True
+    except Exception:
+        return False
+
 def download_sheets_raw(gid):
     """
     Downloads a Google Sheets document as a pandas DataFrame.
@@ -206,16 +231,11 @@ def get_configs():
         value = row["Value"]
         configs[config] = value.split(", ")
 
-    configs_path = "src\\pickles\\configs.pickle"
-
-    try:
-        with open(configs_path, "rb") as f:
-            configs = pickle.load(f)
-        return configs
-    except:
-        with open(configs_path, "wb") as f:
-            pickle.dump(configs, f, pickle.HIGHEST_PROTOCOL)
-        return configs
+    existing = load_pickle("configs.pickle")
+    if isinstance(existing, dict) and existing:
+        return existing
+    save_pickle("configs.pickle", configs)
+    return configs
 
 
 def get_tba_ranks():
@@ -283,8 +303,7 @@ def get_team_colors():
     unrecorded = []
 
     try:
-        with open("src\\pickles\\colors.pickle", "rb") as f:
-            recorded = pickle.load(f)
+        recorded = load_pickle("colors.pickle", default={})
 
         for team in team_info.keys():
             try:
@@ -324,8 +343,7 @@ def get_team_colors():
             else:
                 team_colors[str(team)] = ["003255", "003255"]
 
-        with open("src\\pickles\\colors.pickle", "wb") as f:
-            pickle.dump(team_colors, f, pickle.HIGHEST_PROTOCOL)
+        save_pickle("colors.pickle", team_colors)
 
     else:
         for team in unrecorded:
@@ -580,19 +598,14 @@ def get_scouters():
         dict: A dictionary with two keys: 'scouts' and 'assigned'. The 'scouts' key contains a list of
         all scout names, and the 'assigned' key contains a list of scout names that are assigned.
     """
-    try:
-        with open("src\\pickles\\scouts.pickle", "rb") as f:
-            scouts = pickle.load(f)
-
+    scouts = load_pickle("scouts.pickle")
+    if isinstance(scouts, list) and len(scouts) == 2:
         return {"scouts": scouts[0], "assigned": scouts[1]}
-
-    except:
-        scouts_df = download_sheets_raw(st.secrets["GID_SCOUTS"]).sort_values(by="Name")
-
-        return {
-            "scouts": scouts_df["Name"].tolist(),
-            "assigned": scouts_df.loc[scouts_df["Assigned"] == "x", "Name"].tolist(),
-        }
+    scouts_df = download_sheets_raw(st.secrets["GID_SCOUTS"]).sort_values(by="Name")
+    return {
+        "scouts": scouts_df["Name"].tolist(),
+        "assigned": scouts_df.loc[scouts_df["Assigned"] == "x", "Name"].tolist(),
+    }
 
 
 def get_phases(df):
@@ -628,16 +641,11 @@ def get_presets():
     Returns:
         dict: The presets loaded from the file or an empty dictionary if the file does not exist.
     """
-    presets_path = "src\\pickles\\presets.pickle"
-
-    try:
-        with open(presets_path, "rb") as f:
-            presets = pickle.load(f)
+    presets = load_pickle("presets.pickle", default=None)
+    if isinstance(presets, dict):
         return presets
-    except:
-        with open(presets_path, "wb") as f:
-            pickle.dump({}, f, pickle.HIGHEST_PROTOCOL)
-        return {}
+    save_pickle("presets.pickle", {})
+    return {}
 
 
 def get_event_year(event_key):
