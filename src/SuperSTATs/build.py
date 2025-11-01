@@ -925,7 +925,7 @@ def gen_bar(
         chart_height = 37 * len(ranked_data["Team"].unique())
 
     # Final display option: toggle grouped vs stacked bars
-    group_bars = st.toggle("Grouped bars", value=True, key=f"group_bars_{key}")
+    group_bars = st.toggle("Side by side bars", value=False, key=f"group_bars_{key}")
 
     x_enc = alt.X(
         "value:Q",
