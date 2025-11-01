@@ -497,6 +497,10 @@ def get_unplayed(df, matches):
                 if match in tba_played_matches:
                     unplayed_matches.remove(match)
 
+        if st.session_state.console["practice_mode"]:
+            practice_matches = df[df["Match Type"].str.startswith("Prac")]["Completed"].unique()
+            unplayed_matches.extend(practice_matches)
+
         unplayed_matches = [
             match for match in unplayed_matches if not match.startswith("Prac")
         ]
