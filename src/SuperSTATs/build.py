@@ -503,7 +503,6 @@ def gen_bar(
         "show_available" if use_show_available else None,
         "show_nums" if use_show_nums else None,
         "features" if use_features else None,
-        "local_rank" if use_local_rank else None,
     ]
 
     variables = [var for var in variables if var != None]
@@ -584,9 +583,6 @@ def gen_bar(
             "features", var_count, "Features", False, key, False
         )
 
-        use_local_rank, var_count = gen_toggle(
-            "local_rank", var_count, "Local Rank", False, key, False
-        )
 
         group_filters, var_count = gen_toggle(
             "group_filters", var_count, "Group Filters", True, key, False
@@ -623,7 +619,6 @@ def gen_bar(
         show_nums = preset["show_nums"]
         show_available = preset["show_available"]
         features = preset["use_features"]
-        use_local_rank = preset["use_local_rank"]
         group_filters = preset["group_filters"]
         filter_choices = preset["selected_filters"]
         inline_legend = preset["inline_legend"]
@@ -887,14 +882,26 @@ def gen_bar(
         else:
             picked = ""
 
-        if use_local_rank:
-            rank = str(calc_df.loc[calc_df["Team"] == team, "rank"].to_list()[0]).zfill(
-                2
-            )
-        else:
-            rank = str(tba_ranks.get(str(int(team)), "NA")).zfill(2)
+        # Helper to zero-pad only numeric strings
+        def zpad(val):
+            s = str(val)
+            return s.zfill(2) if s.isdigit() else s
 
-        return f"{picked} {str(int(team)).rjust(5)} [{rank}]"
+        # Compute both local (SuperSTATs) and TBA ranks
+        try:
+            local_rank_val = calc_df.loc[calc_df["Team"] == team, "rank"].to_list()[0]
+        except Exception:
+            local_rank_val = "NA"
+
+        tba_rank_val = tba_ranks.get(str(int(team)), "NA")
+
+        local_rank = zpad(local_rank_val)
+        tba_rank = zpad(tba_rank_val)
+
+        # Always display both ranks in fixed order Local/TBA
+        # rank_label = f"🚨{tba_rank} 🦸‍♂️{local_rank}"
+        rank_label = f"| T{tba_rank} | S{local_rank}"
+        return f"{picked} {str(int(team)).rjust(5)} {rank_label}"
 
     ranked_data = data.copy()
 
@@ -921,7 +928,7 @@ def gen_bar(
                 "Team:N",
                 sort=alt.EncodingSortField(field="rank", order="ascending"),
                 title="",
-                axis=alt.Axis(labels=show_nums),
+                axis=alt.Axis(labels=show_nums, labelLimit=0, labelPadding=6),
             ),
             color=alt.Color(
                 "variable:N",
@@ -952,6 +959,14 @@ def gen_bar(
         )
     )
 
+    # Ensure long y-axis labels (with emojis and ranks) are not cut off by adding left padding
+    try:
+        max_label_len = max(len(str(s)) for s in ranked_data["Team"].unique())
+    except Exception:
+        max_label_len = 0
+    left_padding = min(320, max(100, int(max_label_len * 7)))
+    chart = chart.configure(padding={"left": left_padding})
+
     if selected_filters:
         if not no_data:
             st.divider()
@@ -973,7 +988,6 @@ def gen_bar(
                 "selected_features": selected_features,
                 "selected_filters": selected_filters,
                 "size_limit": size_limit,
-                "use_local_rank": use_local_rank,
                 "show_available": show_available,
                 "show_nums": show_nums,
                 "use_features": features,
