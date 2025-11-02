@@ -225,9 +225,12 @@ def organize_df(df):
     if "Team" in df.columns:
         # Convert to numeric first, coercing errors to NaN, then to int
         # This handles cases where Team might be stored as float in CSV
-        df["Team"] = pd.to_numeric(df["Team"], errors="coerce").astype("Int64")
+        df["Team"] = pd.to_numeric(df["Team"], errors="coerce")
         # Drop any rows where Team conversion failed (resulted in NaN)
+        initial_count = len(df)
         df = df.dropna(subset=["Team"])
+        if len(df) < initial_count:
+            st.warning(f"Dropped {initial_count - len(df)} row(s) with invalid team numbers")
         df["Team"] = df["Team"].astype(int)
 
     return df
@@ -426,12 +429,17 @@ def get_match_data():
             match_level = match_name.split()[0]
             match_num = int(match_name.split()[1])
 
+            red_team = []
+            blue_team = []
             try:
-                red_team = [int(row["Red 1"]), int(row["Red 2"]), int(row["Red 3"])]
-                blue_team = [int(row["Blue 1"]), int(row["Blue 2"]), int(row["Blue 3"])]
+                for i, pos in enumerate(["Red 1", "Red 2", "Red 3"], 1):
+                    red_team.append(int(row[pos]))
+                for i, pos in enumerate(["Blue 1", "Blue 2", "Blue 3"], 1):
+                    blue_team.append(int(row[pos]))
             except (ValueError, TypeError) as e:
                 # If team numbers can't be converted to int, it's a data issue
-                raise ValueError(f"Invalid team number in match '{match_name}': {e}") from e
+                team_field = pos  # pos contains the last field that was being processed
+                raise ValueError(f"Invalid team number in match '{match_name}' field '{team_field}': {row[team_field]} - {e}") from e
 
             data = {
                 "comp_level": match_level,
