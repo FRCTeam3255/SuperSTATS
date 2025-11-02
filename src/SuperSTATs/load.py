@@ -223,6 +223,11 @@ def organize_df(df):
     
     # Ensure Team column is integer, not float
     if "Team" in df.columns:
+        # Convert to numeric first, coercing errors to NaN, then to int
+        # This handles cases where Team might be stored as float in CSV
+        df["Team"] = pd.to_numeric(df["Team"], errors="coerce").astype("Int64")
+        # Drop any rows where Team conversion failed (resulted in NaN)
+        df = df.dropna(subset=["Team"])
         df["Team"] = df["Team"].astype(int)
 
     return df
@@ -421,8 +426,12 @@ def get_match_data():
             match_level = match_name.split()[0]
             match_num = int(match_name.split()[1])
 
-            red_team = [int(row["Red 1"]), int(row["Red 2"]), int(row["Red 3"])]
-            blue_team = [int(row["Blue 1"]), int(row["Blue 2"]), int(row["Blue 3"])]
+            try:
+                red_team = [int(row["Red 1"]), int(row["Red 2"]), int(row["Red 3"])]
+                blue_team = [int(row["Blue 1"]), int(row["Blue 2"]), int(row["Blue 3"])]
+            except (ValueError, TypeError) as e:
+                # If team numbers can't be converted to int, it's a data issue
+                raise ValueError(f"Invalid team number in match '{match_name}': {e}") from e
 
             data = {
                 "comp_level": match_level,
@@ -481,8 +490,11 @@ def get_matches():
     df = df[["Match", "Red 1", "Red 2", "Red 3", "Blue 1", "Blue 2", "Blue 3"]]
     
     # Ensure team numbers are integers, not floats
+    # Team numbers should already be integers from get_match_data(), but this ensures
+    # they remain integers after any DataFrame operations
     for col in ["Red 1", "Red 2", "Red 3", "Blue 1", "Blue 2", "Blue 3"]:
-        df[col] = df[col].astype(int)
+        # Use pd.to_numeric to handle any edge cases, then convert to int
+        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
 
     return df
 
