@@ -220,6 +220,10 @@ def organize_df(df):
                 fake_data[key] = [0]
 
         df = pd.DataFrame(fake_data)
+    
+    # Ensure Team column is integer, not float
+    if "Team" in df.columns:
+        df["Team"] = df["Team"].astype(int)
 
     return df
 
@@ -417,8 +421,8 @@ def get_match_data():
             match_level = match_name.split()[0]
             match_num = int(match_name.split()[1])
 
-            red_team = [row["Red 1"], row["Red 2"], row["Red 3"]]
-            blue_team = [row["Blue 1"], row["Blue 2"], row["Blue 3"]]
+            red_team = [int(row["Red 1"]), int(row["Red 2"]), int(row["Red 3"])]
+            blue_team = [int(row["Blue 1"]), int(row["Blue 2"]), int(row["Blue 3"])]
 
             data = {
                 "comp_level": match_level,
@@ -475,6 +479,10 @@ def get_matches():
     ).reset_index(drop=True)
 
     df = df[["Match", "Red 1", "Red 2", "Red 3", "Blue 1", "Blue 2", "Blue 3"]]
+    
+    # Ensure team numbers are integers, not floats
+    for col in ["Red 1", "Red 2", "Red 3", "Blue 1", "Blue 2", "Blue 3"]:
+        df[col] = df[col].astype(int)
 
     return df
 
