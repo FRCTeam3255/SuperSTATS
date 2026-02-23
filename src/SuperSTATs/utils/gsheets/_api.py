@@ -3,7 +3,7 @@ import pandas as pd
 from SuperSTATs.utils.constants import DEFAULT_GSHEET_DOC_ID
 
 
-def get_data(doc_id=DEFAULT_GSHEET_DOC_ID, sheet_id=None):
+def get_data(sheet_id: str, doc_id: str = DEFAULT_GSHEET_DOC_ID):
     """
     Downloads a Google Sheets document as a pandas DataFrame.
 
