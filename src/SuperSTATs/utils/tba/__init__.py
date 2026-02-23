@@ -4,9 +4,10 @@ from SuperSTATs.utils.tba._api import get_data
 import pandas as pd
 import streamlit as st
 
+DEFAULT_EVENT_KEY = st.secrets["DEFAULT_EVENT_KEY"]
 
-def current_event(as_simple=False):
-    event_key = st.secrets["DEFAULT_EVENT_KEY"]
+
+def get_matches(event_key=DEFAULT_EVENT_KEY, as_simple=False):
     endpoint = f"/event/{event_key}/matches" + ("/simple" if as_simple else "")
     df = get_data(endpoint, as_dataframe=True)
     if not df.empty:
