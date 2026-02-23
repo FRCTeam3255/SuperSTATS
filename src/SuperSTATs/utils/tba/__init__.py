@@ -5,6 +5,21 @@ from SuperSTATs.utils.tba._api import get_data
 import pandas as pd
 
 
+def _set_match_name(row):
+    """
+    Sets the name for a match based on the given row.
+
+    Parameters:
+    - row: A dictionary representing a row of match data.
+
+    Returns:
+    - match_name: A string representing the name of the match.
+    """
+    if row["comp_level"] == "Playoffs":
+        return row["comp_level"] + " " + str(int(row["set_number"]))
+    return row["comp_level"] + " " + str(int(row["match_number"]))
+
+
 def get_matches(event_key: str = DEFAULT_EVENT_KEY, as_simple: bool = False):
     endpoint = f"/event/{event_key}/matches" + ("/simple" if as_simple else "")
     print("endpoint", endpoint)
@@ -30,21 +45,7 @@ def get_matches(event_key: str = DEFAULT_EVENT_KEY, as_simple: bool = False):
             {"qm": "Quals", "sf": "Playoffs", "f": "Finals"}
         )
 
-        def set_match_name(row):
-            """
-            Sets the name for a match based on the given row.
-
-            Parameters:
-            - row: A dictionary representing a row of match data.
-
-            Returns:
-            - match_name: A string representing the name of the match.
-            """
-            if row["comp_level"] == "Playoffs":
-                return row["comp_level"] + " " + str(int(row["set_number"]))
-            return row["comp_level"] + " " + str(int(row["match_number"]))
-
-        df["Match Name"] = df.apply(set_match_name, axis=1)
+        df["Match Name"] = df.apply(_set_match_name, axis=1)
 
         # Convert team keys to integers for easier filtering later
         for color in ["red", "blue"]:
