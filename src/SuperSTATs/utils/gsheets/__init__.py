@@ -24,15 +24,12 @@ def get_stats_inputs(as_points: bool = True):
     prac = df.loc[~df["Team"].isin(teams_w_non_prac)]
     df = pd.concat([non_prac, prac], axis=0).reset_index(drop=True)
 
-    # Apply points multiplier to matching columns
     if as_points:
-        points = {
-            "_".join(value): int(value[3])
-            for value in df.columns.str.split("_")
-            if len(value) > 1
-        }
-        for col, point in points.items():
-            if col in df.columns:
-                df[col] *= point
+        # Apply points multiplier to matching columns
+        for col in df.columns:
+            parts = col.split("_")
+            if len(parts) > 3 and parts[-1].isdigit():
+                multiplier = int(parts[-1])
+                df[col] = df[col] * multiplier
 
     return df
