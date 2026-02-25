@@ -1,4 +1,5 @@
 from SuperSTATs.utils.constants import DEFAULT_EVENT_KEY
+from SuperSTATs.utils import df_utils
 from SuperSTATs.utils.tba._api import get_data
 
 
@@ -26,9 +27,7 @@ def get_matches(event_key: str = DEFAULT_EVENT_KEY, as_simple: bool = False):
     df = get_data(endpoint, as_dataframe=True)
     if not df.empty:
         # Normalize nested JSON columns and clean up the DataFrame
-        df = pd.concat([df, pd.json_normalize(df["alliances"])], axis=1).drop(
-            columns="alliances"
-        )
+        df = df_utils.normalize_column(df, "alliances")
         if "score_breakdown" in df.columns:
             df = pd.concat(
                 [
@@ -71,3 +70,12 @@ def get_matches(event_key: str = DEFAULT_EVENT_KEY, as_simple: bool = False):
 
         return df.sort_values("time")
     return pd.DataFrame()
+
+
+def get_rankings(event_key: str = DEFAULT_EVENT_KEY):
+    endpoint = f"/event/{event_key}/rankings"
+    data = get_data(endpoint, as_dataframe=False)
+    df = pd.DataFrame().from_dict(data["rankings"])
+    df = df_utils.normalize_column(df, "record")
+    df["Team"] = df["team_key"].apply(lambda x: int("".join(filter(str.isdigit, x))))
+    return df.sort_values("rank")
