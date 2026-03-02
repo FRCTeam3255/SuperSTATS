@@ -1,11 +1,11 @@
-from SuperSTATs.utils import gsheets, tba
+from SuperSTATs.utils import gsheets, tba, constants
 import streamlit as st
 import plotly.express as px
 
 points = gsheets.get_stats_inputs(as_points=True)
 r = tba.get_rankings()
 
-meanpoints = (
+df = (
     points[gsheets.PHASES]
     .T.groupby(level=0)
     .sum()
@@ -17,31 +17,24 @@ meanpoints = (
         )
     )
 )
-meanpoints = meanpoints.join(r, how="left")
-meanpoints["team_num_ranks"] = (
-    meanpoints.index.astype(str)
+df = df.join(r, how="left")
+df["team_num_ranks"] = (
+    df.index.astype(str)
     + " | T"
-    + meanpoints["rank"].astype(str).str.zfill(2)
+    + df["rank"].astype(str).str.zfill(2)
     + " | S"
-    + meanpoints["sn_rank"].astype(str).str.zfill(2)
+    + df["sn_rank"].astype(str).str.zfill(2)
 )
-meanpoints = meanpoints.set_index("team_num_ranks").sort_values(
-    "sn_rank", ascending=False
-)
-
+df = df.set_index("team_num_ranks").sort_values("sn_rank", ascending=False)
+df = df[gsheets.PHASES]
+df
 # ==== CHART 2: RANKINGS VS POINTS ====
-fig = px.bar(
-    meanpoints.reset_index(),
-    x=gsheets.PHASES,
-    y="team_num_ranks",
-    orientation="h",
-)
+fig = px.bar(df, orientation="h")
 
 fig.layout.xaxis.fixedrange = True
 fig.layout.yaxis.fixedrange = True
 
-num_teams = meanpoints.index.nunique()
-chart_height = num_teams * 30
+chart_height = len(df) * constants.PIXEL_PER_TEAM
 
 fig.update_traces(
     hovertemplate=None,
@@ -52,10 +45,12 @@ fig.update_layout(
     legend=dict(
         orientation="h",
         yanchor="top",
-        y=1.02,
+        y=1.025,
         xanchor="left",
         title=None,
         x=0,
     ),
+    xaxis_title=None,
+    yaxis_title=None,
 )
 st.plotly_chart(fig)
