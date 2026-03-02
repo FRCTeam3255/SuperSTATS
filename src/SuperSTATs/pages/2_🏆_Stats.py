@@ -5,6 +5,11 @@ import pandas as pd
 import streamlit as st
 from SuperSTATs.utils import gsheets, plots, tba
 
+st.title("🏆 NURD Stats 🏆")
+if st.button("Update Page", type="primary", width="stretch"):
+    st.rerun()
+st.divider()
+print("NURD Stats Page loaded")
 # ==== DATA PREP ====
 raw_sn_df = gsheets.get_stats_inputs(as_points=True)
 tba_rank = tba.get_rankings()
@@ -25,6 +30,8 @@ selected_phases = st.multiselect("Phase:", gsheets.PHASES, default=gsheets.PHASE
 metrics = raw_sn_df[selected_phases].columns.get_level_values("Metric").unique()
 selected_metrics = st.multiselect("Metric:", metrics, default=metrics)
 selected_phases_and_metrics = pd.IndexSlice[selected_phases, selected_metrics]
+
+st.divider()
 
 sn_df = raw_sn_df.loc[:, selected_phases_and_metrics]
 
