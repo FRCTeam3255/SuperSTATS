@@ -34,6 +34,7 @@ def get_stats_inputs(as_points: bool = True) -> pd.DataFrame:
     # Add column level based on phase prefix (text before first underscore)
     df.columns = pd.MultiIndex.from_tuples(
         [(col.split("_")[0] if "_" in col else "METADATA", col) for col in df.columns],
+        names=["Phase", "Metric"],
     )
     if as_points:
         # Apply points multiplier to matching columns
