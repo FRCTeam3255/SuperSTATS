@@ -59,7 +59,7 @@ def get_available() -> pd.DataFrame:
     df = df.replace({"x": "🚫"})
     df.loc[df["Team"] == 3255, "Unavailable"] = "💎"
     df = df.astype({"Team": int})
-    return df.set_index("Team")
+    return df.set_index("Team").rename(columns={"Unavailable": "emoji"})
 
 
 # ===========================================================
@@ -87,11 +87,11 @@ def aggregate_team_performance(
 def add_team_num_ranks(
     df: pd.DataFrame,
     tba_rank: pd.DataFrame,
-    sn_avail: pd.DataFrame,
+    emoji: pd.DataFrame,
 ) -> pd.DataFrame:
-    df = df.join(tba_rank["rank"], how="left").join(sn_avail, how="left").fillna("🟢")
+    df = df.join(tba_rank["rank"], how="left").join(emoji, how="left").fillna("🟢")
     df["team_num_ranks"] = (
-        df["Unavailable"]
+        df["emoji"]
         + " "
         + df.index.astype(str)
         + " | T"
@@ -103,5 +103,5 @@ def add_team_num_ranks(
     return (
         df.set_index("team_num_ranks")
         .sort_values("sn_rank", ascending=False)
-        .drop(columns=["rank", "sn_rank", "Unavailable"])
+        .drop(columns=["rank", "sn_rank", "emoji"])
     )
