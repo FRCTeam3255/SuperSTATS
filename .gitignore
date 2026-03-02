@@ -163,3 +163,7 @@ cython_debug/
 .streamlit/secrets.toml
 src/pickles/*
 src/setup/streamlit/secrets.toml
+
+# Cache
+*_cache/
+*_cache.sqlite
