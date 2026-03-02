@@ -2,12 +2,14 @@ import pandas as pd
 
 import streamlit as st
 from SuperSTATs.utils import gsheets, plots, tba
+from pathlib import Path
 
-st.title("🏆 NURD Stats 🏆")
+page_name = Path(__file__).stem.split("_", 1)[1].replace("_", " ")
+st.title(page_name)
 if st.button("Update Page", type="primary", width="stretch"):
     st.rerun()
 st.divider()
-print("NURD Stats Page loaded")
+print(f"{page_name} loaded:")
 
 # === Page Specific Data ===
 sn_avail = gsheets.get_available()
