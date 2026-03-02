@@ -4,6 +4,7 @@ from SuperSTATs.utils import constants
 from SuperSTATs.utils.gsheets import _api
 
 PHASES = ["INFO", "AUTO", "TELE", "END"]
+COLUMN_LEVELS = ["Phase", "Metric"]
 
 
 def _get_raw_sheet() -> pd.DataFrame:
@@ -32,9 +33,10 @@ def get_stats_inputs(as_points: bool = True) -> pd.DataFrame:
     df = df.set_index(["Team", "Match Name"])
 
     # Add column level based on phase prefix (text before first underscore)
+
     df.columns = pd.MultiIndex.from_tuples(
         [(col.split("_")[0] if "_" in col else "METADATA", col) for col in df.columns],
-        names=["Phase", "Metric"],
+        names=COLUMN_LEVELS,
     )
     if as_points:
         # Apply points multiplier to matching columns
