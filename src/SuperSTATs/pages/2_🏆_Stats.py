@@ -1,3 +1,4 @@
+from re import U
 from typing import Literal
 
 import pandas as pd
@@ -13,18 +14,16 @@ print("NURD Stats Page loaded")
 # ==== DATA PREP ====
 raw_sn_df = gsheets.get_stats_inputs(as_points=True)
 tba_rank = tba.get_rankings()
+sn_avail = gsheets.get_available()
 
 # ==== UI for filtering =====
 col1, col2, col3 = st.columns(3)
 show_team_numbers = col1.toggle("Show Team Numbers", True)
-chart_type = col2.segmented_control(
-    "View by:", gsheets.COLUMN_LEVELS, default=gsheets.COLUMN_LEVELS[0]
-)
-agg_type = col3.segmented_control(
+chart_type = col2.radio("View by:", gsheets.COLUMN_LEVELS, horizontal=True)
+agg_type = col3.selectbox(
     "Aggregation Type:",
     ["mean", "sum", "median"],
     format_func=str.capitalize,
-    default="mean",
 )
 selected_phases = st.multiselect("Phase:", gsheets.PHASES, default=gsheets.PHASES)
 metrics = raw_sn_df[selected_phases].columns.get_level_values("Metric").unique()
@@ -55,10 +54,12 @@ def aggregate_team_performance(
     return grouped
 
 
-def add_team_num_ranks(tba_rank, df):
-    df = df.join(tba_rank["rank"], how="left")
+def add_team_num_ranks(tba_rank, sn_avail, df):
+    df = df.join(tba_rank["rank"], how="left").join(sn_avail, how="left").fillna("🟢")
     df["team_num_ranks"] = (
-        df.index.astype(str)
+        df["Unavailable"]
+        + " "
+        + df.index.astype(str)
         + " | T"
         + df["rank"].astype(str).str.zfill(2)
         + " | S"
@@ -68,12 +69,16 @@ def add_team_num_ranks(tba_rank, df):
     return (
         df.set_index("team_num_ranks")
         .sort_values("sn_rank", ascending=False)
-        .drop(columns=["rank", "sn_rank"])
+        .drop(columns=["rank", "sn_rank", "Unavailable"])
     )
 
 
 agg_data = aggregate_team_performance(sn_df, level=chart_type, agg_type=agg_type)
-agg_data_w_rank = add_team_num_ranks(tba_rank, agg_data)
+agg_data_w_rank = add_team_num_ranks(
+    tba_rank=tba_rank,
+    sn_avail=sn_avail,
+    df=agg_data,
+)
 
 
 # ==== CHART ====

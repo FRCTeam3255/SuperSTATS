@@ -46,3 +46,12 @@ def get_stats_inputs(as_points: bool = True) -> pd.DataFrame:
                 df[(col, subcol)] = df[(col, subcol)] * multiplier
 
     return df
+
+
+def get_available() -> pd.DataFrame:
+    df = _api.get_data(constants.RAW_PICKED_SHEET_ID)
+    df["Unavailable"] = df["Unavailable"].str.lower()
+    df = df.replace({"x": "🚫"})
+    df.loc[df["Team"] == 3255, "Unavailable"] = "💎"
+    df = df.astype({"Team": int})
+    return df.set_index("Team")
