@@ -1,21 +1,40 @@
+import json
+
 import requests
 import requests_cache
 import pandas as pd
 
 from SuperSTATs.utils.constants import ROOT_TBA_URL, TBA_API_KEY
 
-# Create cached session with TBA API best practices
-# - Respects ETag/If-None-Match headers for 304 responses
-# - Honors Cache-Control/max-age from TBA
-# - In-memory cache (no file persistence)
-# - With cache_control=True, 304 responses are handled transparently
+
+def _cache_non_empty(response):
+    # Only cache successful responses with non-empty bodies
+    if response is None or not response.ok:
+        return False
+
+    body = response.content or b""
+    if not body.strip():
+        return False
+
+    # For JSON responses, skip common "empty" JSON payloads
+    content_type = (response.headers.get("Content-Type") or "").lower()
+    if "application/json" in content_type:
+        try:
+            data = response.json()
+            if data in ({}, [], "", None):
+                return False
+        except (ValueError, json.JSONDecodeError):
+            pass
+
+    return True
+
+
 session = requests_cache.CachedSession(
     cache_name="tba_cache",
-    backend="memory",
-    expire_after=None,  # Respect Cache-Control headers from TBA
     cache_control=True,  # Honor Cache-Control/max-age - handles 304s transparently
     allowable_codes=(200, 304, 404),  # Cache these status codes
     stale_if_error=True,  # Return stale cache on error instead of None
+    filter_fn=_cache_non_empty,
 )
 session.headers["X-TBA-Auth-Key"] = TBA_API_KEY
 

@@ -76,7 +76,7 @@ def get_rankings(event_key: str = DEFAULT_EVENT_KEY) -> pd.DataFrame:
     endpoint = f"/event/{event_key}/rankings"
     data = get_data(endpoint, as_dataframe=False)
     if data is None:
-        return pd.DataFrame()  # Return empty DataFrame on error
+        return pd.DataFrame(columns=["Team", "rank"]).set_index("Team")
     df = pd.DataFrame().from_dict(data["rankings"])
     df = df_utils.normalize_column(df, "record")
     df["Team"] = df["team_key"].apply(lambda x: int("".join(filter(str.isdigit, x))))
