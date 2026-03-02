@@ -15,4 +15,5 @@ ROOT_TBA_URL = "https://www.thebluealliance.com/api/v3"
 TBA_API_KEY = st.secrets["TBA_API"]
 
 # Plotting
-PIXEL_PER_TEAM = 30
+PIXEL_PER_TEAM = 40
+MIN_HEIGHT = 200

@@ -9,7 +9,7 @@ def hbar(df, show_y_labels=True):
     fig.layout.xaxis.fixedrange = True
     fig.layout.yaxis.fixedrange = True
 
-    chart_height = len(df) * constants.PIXEL_PER_TEAM
+    chart_height = max(len(df) * constants.PIXEL_PER_TEAM, constants.MIN_HEIGHT)
 
     fig.update_traces(
         hovertemplate=None,
@@ -17,9 +17,8 @@ def hbar(df, show_y_labels=True):
     fig.update_yaxes(showticklabels=show_y_labels)
     fig.update_layout(
         hovermode="y unified",
-        height=chart_height,
         xaxis_title=None,
         yaxis_title=None,
         showlegend=False,
     )
-    st.plotly_chart(fig)
+    st.plotly_chart(fig, height=chart_height)
