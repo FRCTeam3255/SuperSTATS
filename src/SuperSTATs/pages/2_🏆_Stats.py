@@ -34,35 +34,23 @@ meanpoints = meanpoints.set_index("team_num_ranks").sort_values(
 meanpoints
 
 # ==== CHART 2: RANKINGS VS POINTS ====
-
-chart_df = (
-    meanpoints[gsheets.PHASES]
-    .reset_index()
-    .melt(id_vars="team_num_ranks", var_name="Phase", value_name="Points")
-)
-
 fig = px.bar(
-    chart_df,
-    x="Points",
+    meanpoints.reset_index(),
+    x=gsheets.PHASES,
     y="team_num_ranks",
-    color="Phase",
+    # color="Phase",
     title="Points by Phase",
     orientation="h",
-    hover_data={
-        "Points": ":.2f",
-        "team_num_ranks": False,
-        "Phase": True,
-    },
 )
-fig.update_yaxes(type="category")
+
 fig.layout.xaxis.fixedrange = True
 fig.layout.yaxis.fixedrange = True
 
-num_teams = chart_df["team_num_ranks"].nunique()
+num_teams = meanpoints.index.nunique()
 chart_height = num_teams * 30
 
-fig.update_layout(hovermode="y unified", height=chart_height)
-st.plotly_chart(
-    fig,
-    use_container_width=True,
+fig.update_traces(
+    hovertemplate=None,
 )
+fig.update_layout(hovermode="y unified", height=chart_height)
+st.plotly_chart(fig)
