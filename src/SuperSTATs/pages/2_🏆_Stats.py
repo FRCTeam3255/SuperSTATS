@@ -10,14 +10,17 @@ raw_sn_df = gsheets.get_stats_inputs(as_points=True)
 tba_rank = tba.get_rankings()
 
 # ==== UI for filtering =====
-show_team_numbers = st.toggle("Show Team Numbers", True)
-agg_type = st.radio(
+col1, col2, col3 = st.columns(3)
+show_team_numbers = col1.toggle("Show Team Numbers", True)
+chart_type = col2.segmented_control(
+    "View by:", gsheets.COLUMN_LEVELS, default=gsheets.COLUMN_LEVELS[0]
+)
+agg_type = col3.segmented_control(
     "Aggregation Type:",
     ["mean", "sum", "median"],
-    horizontal=True,
     format_func=str.capitalize,
+    default="mean",
 )
-chart_type = st.radio("View by:", gsheets.COLUMN_LEVELS, horizontal=True)
 selected_phases = st.multiselect("Phase:", gsheets.PHASES, default=gsheets.PHASES)
 metrics = raw_sn_df[selected_phases].columns.get_level_values("Metric").unique()
 selected_metrics = st.multiselect("Metric:", metrics, default=metrics)
