@@ -74,7 +74,8 @@ def aggregate_team_performance(
         df.T.groupby(level=level)
         .sum()
         .T.groupby("Team")
-        .agg(agg_type)
+        .describe([0.5, 0.75, 0.9, 0.95, 0.99])
+        .xs(agg_type, level=1, axis=1)
         .assign(
             sn_rank=lambda x: (
                 x.sum(axis=1).rank(ascending=False, method="dense").astype(int)
@@ -87,9 +88,13 @@ def aggregate_team_performance(
 def add_team_num_ranks(
     df: pd.DataFrame,
     tba_rank: pd.DataFrame,
-    emoji: pd.DataFrame,
+    emoji_or_name: pd.DataFrame,
 ) -> pd.DataFrame:
-    df = df.join(tba_rank["rank"], how="left").join(emoji, how="left").fillna("🟢")
+    df = (
+        df.join(tba_rank["rank"], how="left")
+        .join(emoji_or_name, how="left")
+        .fillna("🟢")
+    )
     df["team_num_ranks"] = (
         df["emoji"]
         + " "

@@ -81,3 +81,15 @@ def get_rankings(event_key: str = DEFAULT_EVENT_KEY) -> pd.DataFrame:
     df = df_utils.normalize_column(df, "record")
     df["Team"] = df["team_key"].apply(lambda x: int("".join(filter(str.isdigit, x))))
     return df.sort_values("rank").set_index("Team")
+
+
+def get_teams(
+    event_key: str = DEFAULT_EVENT_KEY, as_simple: bool = True
+) -> pd.DataFrame:
+    endpoint = f"/event/{event_key}/teams" + ("/simple" if as_simple else "")
+    data = get_data(endpoint, as_dataframe=False)
+    if data is None:
+        return pd.DataFrame(columns=["Team", "nickname"]).set_index("Team")
+    df = pd.DataFrame().from_dict(data)
+    df["Team"] = df["team_number"]
+    return df.set_index("Team")
