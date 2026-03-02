@@ -10,12 +10,14 @@ raw_sn_df = gsheets.get_stats_inputs(as_points=True)
 tba_rank = tba.get_rankings()
 
 # ==== UI for filtering =====
+show_team_numbers = st.toggle("Show Team Numbers", True)
 chart_type = st.radio("View by:", gsheets.COLUMN_LEVELS, horizontal=True)
 selected_phases = st.multiselect("Phase:", gsheets.PHASES, default=gsheets.PHASES)
 metrics = raw_sn_df[selected_phases].columns.get_level_values("Metric").unique()
 selected_metrics = st.multiselect("Metric:", metrics, default=metrics)
-idx = pd.IndexSlice
-sn_df = raw_sn_df.loc[:, idx[selected_phases, selected_metrics]]
+selected_phases_and_metrics = pd.IndexSlice[selected_phases, selected_metrics]
+
+sn_df = raw_sn_df.loc[:, selected_phases_and_metrics]
 
 
 def aggregate_team_performance(
@@ -57,7 +59,7 @@ agg_data_w_rank = add_team_num_ranks(tba_rank, agg_data)
 
 
 # ==== CHART ====
-plots.hbar(agg_data_w_rank)
+plots.hbar(agg_data_w_rank, show_y_labels=show_team_numbers)
 
 # ==== TABLE ====
 agg_data_w_rank
