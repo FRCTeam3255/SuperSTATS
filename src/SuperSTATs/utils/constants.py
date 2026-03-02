@@ -12,3 +12,6 @@ RAW_INPUT_SHEET_ID = st.secrets["GID_RAW"]
 # TBA API
 ROOT_TBA_URL = "https://www.thebluealliance.com/api/v3"
 TBA_API_KEY = st.secrets["TBA_API"]
+
+# Plotting
+PIXEL_PER_TEAM = 30
