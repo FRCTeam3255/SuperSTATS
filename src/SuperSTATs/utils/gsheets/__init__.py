@@ -45,12 +45,4 @@ def get_stats_inputs(as_points: bool = True) -> pd.DataFrame:
                 multiplier = int(subcol.split("_")[-1])
                 df[(col, subcol)] = df[(col, subcol)] * multiplier
 
-    # if as_points:
-    #     # Apply points multiplier to matching columns
-    #     for col in df.columns:
-    #         if any(phase in col for phase in PHASES):
-    #             parts = col.split("_")
-    #             multiplier = int(parts[-1])
-    #             df[col] = df[col] * multiplier
-
     return df

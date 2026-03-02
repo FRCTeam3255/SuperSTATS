@@ -11,6 +11,12 @@ tba_rank = tba.get_rankings()
 
 # ==== UI for filtering =====
 show_team_numbers = st.toggle("Show Team Numbers", True)
+agg_type = st.radio(
+    "Aggregation Type:",
+    ["mean", "sum", "median"],
+    horizontal=True,
+    format_func=str.capitalize,
+)
 chart_type = st.radio("View by:", gsheets.COLUMN_LEVELS, horizontal=True)
 selected_phases = st.multiselect("Phase:", gsheets.PHASES, default=gsheets.PHASES)
 metrics = raw_sn_df[selected_phases].columns.get_level_values("Metric").unique()
@@ -21,13 +27,15 @@ sn_df = raw_sn_df.loc[:, selected_phases_and_metrics]
 
 
 def aggregate_team_performance(
-    df: pd.DataFrame, level: Literal["Phase", "Metric"]
+    df: pd.DataFrame,
+    level: Literal["Phase", "Metric"],
+    agg_type: Literal["mean", "sum", "median"] = "mean",
 ) -> pd.DataFrame:
     grouped = (
         df.T.groupby(level=level)
         .sum()
         .T.groupby("Team")
-        .mean()
+        .agg(agg_type)
         .assign(
             sn_rank=lambda x: (
                 x.sum(axis=1).rank(ascending=False, method="dense").astype(int)
@@ -54,7 +62,7 @@ def add_team_num_ranks(tba_rank, df):
     )
 
 
-agg_data = aggregate_team_performance(sn_df, level=chart_type)
+agg_data = aggregate_team_performance(sn_df, level=chart_type, agg_type=agg_type)
 agg_data_w_rank = add_team_num_ranks(tba_rank, agg_data)
 
 
