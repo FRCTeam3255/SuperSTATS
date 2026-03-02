@@ -1,3 +1,5 @@
+from typing import Literal
+
 import pandas as pd
 
 from SuperSTATs.utils import constants
@@ -16,6 +18,9 @@ def _get_raw_sheet() -> pd.DataFrame:
     return df
 
 
+# ===========================================================
+#               Getting Data
+# ===========================================================
 def get_stats_inputs(as_points: bool = True) -> pd.DataFrame:
     df = _get_raw_sheet()
 
@@ -55,3 +60,48 @@ def get_available() -> pd.DataFrame:
     df.loc[df["Team"] == 3255, "Unavailable"] = "💎"
     df = df.astype({"Team": int})
     return df.set_index("Team")
+
+
+# ===========================================================
+#               Data Processing
+# ===========================================================
+def aggregate_team_performance(
+    df: pd.DataFrame,
+    level: Literal["Phase", "Metric"],
+    agg_type: Literal["mean", "sum", "median"] = "mean",
+) -> pd.DataFrame:
+    grouped = (
+        df.T.groupby(level=level)
+        .sum()
+        .T.groupby("Team")
+        .agg(agg_type)
+        .assign(
+            sn_rank=lambda x: (
+                x.sum(axis=1).rank(ascending=False, method="dense").astype(int)
+            )
+        )
+    )
+    return grouped
+
+
+def add_team_num_ranks(
+    df: pd.DataFrame,
+    tba_rank: pd.DataFrame,
+    sn_avail: pd.DataFrame,
+) -> pd.DataFrame:
+    df = df.join(tba_rank["rank"], how="left").join(sn_avail, how="left").fillna("🟢")
+    df["team_num_ranks"] = (
+        df["Unavailable"]
+        + " "
+        + df.index.astype(str)
+        + " | T"
+        + df["rank"].astype(str).str.zfill(2)
+        + " | S"
+        + df["sn_rank"].astype(str).str.zfill(2)
+    )
+
+    return (
+        df.set_index("team_num_ranks")
+        .sort_values("sn_rank", ascending=False)
+        .drop(columns=["rank", "sn_rank", "Unavailable"])
+    )

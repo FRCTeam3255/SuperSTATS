@@ -1,6 +1,3 @@
-from re import U
-from typing import Literal
-
 import pandas as pd
 
 import streamlit as st
@@ -11,78 +8,42 @@ if st.button("Update Page", type="primary", width="stretch"):
     st.rerun()
 st.divider()
 print("NURD Stats Page loaded")
-# ==== DATA PREP ====
-raw_sn_df = gsheets.get_stats_inputs(as_points=True)
-tba_rank = tba.get_rankings()
-sn_avail = gsheets.get_available()
-
-# ==== UI for filtering =====
-col1, col2, col3 = st.columns(3)
+# ==== Settings UI =====
+col1, col2, col3, col4 = st.columns(4)
 show_team_numbers = col1.toggle("Show Team Numbers", True)
 chart_type = col2.radio("View by:", gsheets.COLUMN_LEVELS, horizontal=True)
-agg_type = col3.selectbox(
+as_points = col3.radio("View as:", ["Points", "Counts"], horizontal=True) == "Points"
+agg_type = col4.selectbox(
     "Aggregation Type:",
     ["mean", "sum", "median"],
     format_func=str.capitalize,
 )
+
+# ==== DATA Download ====
+raw_sn_df = gsheets.get_stats_inputs(as_points=as_points)
+tba_rank = tba.get_rankings()
+sn_avail = gsheets.get_available()
+
+# ==== Filters UI ====
 selected_phases = st.multiselect("Phase:", gsheets.PHASES, default=gsheets.PHASES)
 metrics = raw_sn_df[selected_phases].columns.get_level_values("Metric").unique()
 selected_metrics = st.multiselect("Metric:", metrics, default=metrics)
 selected_phases_and_metrics = pd.IndexSlice[selected_phases, selected_metrics]
 
-st.divider()
 
+# ==== Data Processing ====
 sn_df = raw_sn_df.loc[:, selected_phases_and_metrics]
-
-
-def aggregate_team_performance(
-    df: pd.DataFrame,
-    level: Literal["Phase", "Metric"],
-    agg_type: Literal["mean", "sum", "median"] = "mean",
-) -> pd.DataFrame:
-    grouped = (
-        df.T.groupby(level=level)
-        .sum()
-        .T.groupby("Team")
-        .agg(agg_type)
-        .assign(
-            sn_rank=lambda x: (
-                x.sum(axis=1).rank(ascending=False, method="dense").astype(int)
-            )
-        )
-    )
-    return grouped
-
-
-def add_team_num_ranks(tba_rank, sn_avail, df):
-    df = df.join(tba_rank["rank"], how="left").join(sn_avail, how="left").fillna("🟢")
-    df["team_num_ranks"] = (
-        df["Unavailable"]
-        + " "
-        + df.index.astype(str)
-        + " | T"
-        + df["rank"].astype(str).str.zfill(2)
-        + " | S"
-        + df["sn_rank"].astype(str).str.zfill(2)
-    )
-
-    return (
-        df.set_index("team_num_ranks")
-        .sort_values("sn_rank", ascending=False)
-        .drop(columns=["rank", "sn_rank", "Unavailable"])
-    )
-
-
-agg_data = aggregate_team_performance(sn_df, level=chart_type, agg_type=agg_type)
-agg_data_w_rank = add_team_num_ranks(
+agg_data = gsheets.aggregate_team_performance(
+    df=sn_df,
+    level=chart_type,
+    agg_type=agg_type,
+)
+agg_data_w_rank = gsheets.add_team_num_ranks(
+    df=agg_data,
     tba_rank=tba_rank,
     sn_avail=sn_avail,
-    df=agg_data,
 )
 
-
-# ==== CHART ====
+# ==== Outputs ====
 plots.hbar(agg_data_w_rank, show_y_labels=show_team_numbers)
-
-# ==== TABLE ====
 agg_data_w_rank
