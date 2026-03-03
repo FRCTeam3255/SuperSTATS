@@ -56,6 +56,7 @@ def get_data(endpoint: str, as_dataframe: bool = False):
     Returns:
         JSON response as dict/list, pandas DataFrame, or None on error
     """
+    print(f"\t⬇️ Fetching TBA data from endpoint: {endpoint}")
     endpoint = endpoint.rstrip("/")
     url = f"{ROOT_TBA_URL}{endpoint}"
     try:

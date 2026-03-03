@@ -25,7 +25,6 @@ def get_matches(
     event_key: str = DEFAULT_EVENT_KEY, as_simple: bool = False
 ) -> pd.DataFrame:
     endpoint = f"/event/{event_key}/matches" + ("/simple" if as_simple else "")
-    print("endpoint", endpoint)
     df = get_data(endpoint, as_dataframe=True)
     if df is None or df.empty:
         return pd.DataFrame()  # Return empty DataFrame on error
