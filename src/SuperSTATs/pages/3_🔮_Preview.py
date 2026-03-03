@@ -77,28 +77,30 @@ red_col, blue_col = st.columns(2)
 
 with red_col:
     st.subheader("🔴 Red Alliance 🔴")
-    st.table(agg_data_w_rank_red["nickname"])
     sub_total_red = agg_data_w_rank_red.sum(numeric_only=True)
     st.metric("Projected Score", round(sub_total_red.sum()))
     st.write("Actual:", selected_match["🔴 Score"])
+    st.table(agg_data_w_rank_red["nickname"])
     st.expander("Projected Score Breakdown", expanded=False).dataframe(
         sub_total_red.reset_index(),
         column_config={"0": st.column_config.NumberColumn(format="%.2f")},
         hide_index=True,
     )
+    st.divider()
 
 
 with blue_col:
     st.subheader("🔵 Blue Alliance 🔵")
-    st.table(agg_data_w_rank_blue["nickname"])
     sub_total_blue = agg_data_w_rank_blue.sum(numeric_only=True)
     st.metric("Projected Score", round(sub_total_blue.sum()))
     st.write("Actual:", selected_match["🔵 Score"])
+    st.table(agg_data_w_rank_blue["nickname"])
     st.expander("Projected Score Breakdown", expanded=False).dataframe(
         sub_total_blue.reset_index(),
         column_config={"0": st.column_config.NumberColumn(format="%.2f")},
         hide_index=True,
     )
+    st.divider()
 
 
 agg_data_w_rank = pd.concat([agg_data_w_rank_red, agg_data_w_rank_blue]).drop(
