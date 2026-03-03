@@ -82,8 +82,9 @@ with red_col:
     st.metric("Projected Score", round(sub_total_red.sum()))
     st.write("Actual:", selected_match["🔴 Score"])
     st.expander("Projected Score Breakdown", expanded=False).dataframe(
-        sub_total_red,
+        sub_total_red.reset_index(),
         column_config={"0": st.column_config.NumberColumn(format="%.2f")},
+        hide_index=True,
     )
 
 
@@ -94,8 +95,9 @@ with blue_col:
     st.metric("Projected Score", round(sub_total_blue.sum()))
     st.write("Actual:", selected_match["🔵 Score"])
     st.expander("Projected Score Breakdown", expanded=False).dataframe(
-        sub_total_blue,
+        sub_total_blue.reset_index(),
         column_config={"0": st.column_config.NumberColumn(format="%.2f")},
+        hide_index=True,
     )
 
 
