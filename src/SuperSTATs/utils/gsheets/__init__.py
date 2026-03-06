@@ -89,17 +89,18 @@ def add_team_num_ranks(
     df: pd.DataFrame,
     tba_rank: pd.DataFrame,
     emoji_or_name: pd.DataFrame,
+    show_sn_rank: bool = True,
 ) -> pd.DataFrame:
     df = (
         df.join(tba_rank["rank"], how="left")
         .join(emoji_or_name, how="left")
         .fillna("🟢")
     )
+    sn_rank_str = df.index.astype(str) + " | T" if show_sn_rank else ""
     df["team_num_ranks"] = (
         df["emoji"]
         + " "
-        + df.index.astype(str)
-        + " | T"
+        + sn_rank_str
         + df["rank"].astype(str).str.zfill(2)
         + " | S"
         + df["sn_rank"].astype(str).str.zfill(2)

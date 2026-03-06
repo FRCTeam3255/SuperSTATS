@@ -77,48 +77,59 @@ agg_data = gsheets.aggregate_team_performance(
 red_agg_data = agg_data.loc[agg_data.index.isin(selected_match["🔴 Teams"])]
 blue_agg_data = agg_data.loc[agg_data.index.isin(selected_match["🔵 Teams"])]
 agg_data_w_rank_red = gsheets.add_team_num_ranks(
-    df=red_agg_data.assign(emoji="🔴"),
+    df=red_agg_data.assign(emoji=""),
     tba_rank=tba_rank,
     emoji_or_name=tba_team_info[["nickname"]],
+    show_sn_rank=False,
 )
 agg_data_w_rank_blue = gsheets.add_team_num_ranks(
-    df=blue_agg_data.assign(emoji="🔵"),
+    df=blue_agg_data.assign(emoji=""),
     tba_rank=tba_rank,
     emoji_or_name=tba_team_info[["nickname"]],
+    show_sn_rank=False,
 )
 
 # ==== Outputs ====
 red_col, blue_col = st.columns(2)
 
-with red_col:
-    st.subheader("🔴 Red Alliance 🔴")
-    sub_total_red = agg_data_w_rank_red.sum(numeric_only=True)
-    st.metric("Projected Score", round(sub_total_red.sum()))
-    st.write("Actual:", selected_match["🔴 Score"])
-    st.table(agg_data_w_rank_red["nickname"])
+
+def display_alliance_metrics(alliance_emoji, selected_match, agg_data_w_rank):
+    st.subheader(f"{alliance_emoji} Alliances {alliance_emoji}")
+    st.metric("Projected Score", round(agg_data_w_rank.sum(numeric_only=True).sum()))
+    st.write("Actual:", selected_match[f"{alliance_emoji} Score"])
+    average_score_by_team = (
+        agg_data_w_rank.reset_index()
+        .set_index(["team_num_ranks", "nickname"])
+        .sum(numeric_only=True, axis=1)
+        .rename("Avg Score")
+        .reset_index()
+        .rename(columns={"team_num_ranks": "", "nickname": "Team"})
+    )
+    average_score_by_team = average_score_by_team[["", "Avg Score", "Team"]]
+
+    st.dataframe(
+        average_score_by_team,
+        column_config={"0": st.column_config.NumberColumn(format="%.2f")},
+        hide_index=True,
+    )
     st.expander("Projected Score Breakdown", expanded=False).dataframe(
-        agg_data_w_rank_red,
+        agg_data_w_rank,
         column_config={"0": st.column_config.NumberColumn(format="%.2f")},
         # hide_index=True,
     )
-    st.divider()
+    plots.hbar(agg_data_w_rank.drop(columns="nickname"), show_y_labels=True)
+
+
+with red_col:
+    display_alliance_metrics("🔴", selected_match, agg_data_w_rank_red)
 
 
 with blue_col:
-    st.subheader("🔵 Blue Alliance 🔵")
-    sub_total_blue = agg_data_w_rank_blue.sum(numeric_only=True)
-    st.metric("Projected Score", round(sub_total_blue.sum()))
-    st.write("Actual:", selected_match["🔵 Score"])
-    st.table(agg_data_w_rank_blue["nickname"])
-    st.expander("Projected Score Breakdown", expanded=False).dataframe(
-        agg_data_w_rank_blue,
-        column_config={"0": st.column_config.NumberColumn(format="%.2f")},
-        # hide_index=True,
-    )
-    st.divider()
+    display_alliance_metrics("🔵", selected_match, agg_data_w_rank_blue)
 
 
-agg_data_w_rank = pd.concat([agg_data_w_rank_red, agg_data_w_rank_blue]).drop(
-    columns="nickname"
-)
-plots.hbar(agg_data_w_rank, show_y_labels=show_team_numbers)
+# TODO:
+# - [x] Remove S rank
+# - [x] Add Average Points per Match to team info and show in table
+# - [ ] Lookup chart (balls scored, balls passed, climb)
+# - [ ] One drop down per team: Auto balls, Auto Climb, Tele Balls, Tele Passes, End Climb
