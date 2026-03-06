@@ -17,8 +17,23 @@ matches = tba.get_matches(as_simple=True)
 matches = matches.set_index("Match Name")[
     ["🔴 Teams", "🔵 Teams", "🔴 Score", "🔵 Score", "🏆"]
 ]
-match_list = matches.index
-match_selection = st.selectbox("Select a Match:", match_list)
+# Add "All Teams" column for easier filtering
+matches["All Teams"] = matches["🔴 Teams"] + matches["🔵 Teams"]
+teams_matches = (
+    matches["All Teams"]
+    .explode()
+    .reset_index()
+    .groupby("All Teams")["Match Name"]
+    .apply(list)
+)
+# Filters
+col1, col2 = st.columns(2)
+team_selection = col1.selectbox(
+    "Select a Team:",
+    teams_matches.index,
+    index=teams_matches.index.get_loc(st.secrets["TEAM_NUMBER"]),
+)
+match_selection = col2.selectbox("Select a Match:", teams_matches[team_selection])
 selected_match = matches.loc[match_selection]
 team_subset = selected_match["🔴 Teams"] + selected_match["🔵 Teams"]
 st.divider()
@@ -82,9 +97,9 @@ with red_col:
     st.write("Actual:", selected_match["🔴 Score"])
     st.table(agg_data_w_rank_red["nickname"])
     st.expander("Projected Score Breakdown", expanded=False).dataframe(
-        sub_total_red.reset_index(),
+        agg_data_w_rank_red,
         column_config={"0": st.column_config.NumberColumn(format="%.2f")},
-        hide_index=True,
+        # hide_index=True,
     )
     st.divider()
 
@@ -96,9 +111,9 @@ with blue_col:
     st.write("Actual:", selected_match["🔵 Score"])
     st.table(agg_data_w_rank_blue["nickname"])
     st.expander("Projected Score Breakdown", expanded=False).dataframe(
-        sub_total_blue.reset_index(),
+        agg_data_w_rank_blue,
         column_config={"0": st.column_config.NumberColumn(format="%.2f")},
-        hide_index=True,
+        # hide_index=True,
     )
     st.divider()
 

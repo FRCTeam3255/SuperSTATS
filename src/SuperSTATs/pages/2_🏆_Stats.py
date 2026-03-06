@@ -20,7 +20,7 @@ settings_and_filter_expander = st.expander("Settings & Filters", expanded=False)
 with settings_and_filter_expander:
     col1, col2, col3, col4 = st.columns(4)
     show_team_numbers = col1.toggle("Show Team Numbers", True)
-    chart_type = col2.radio("View by:", gsheets.COLUMN_LEVELS, horizontal=True)
+    chart_type = col2.radio("View by:", gsheets.COLUMN_LEVELS, horizontal=True, index=1)
     as_points = (
         col3.radio("View as:", ["Points", "Counts"], horizontal=True) == "Points"
     )

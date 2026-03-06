@@ -4,6 +4,8 @@ import streamlit as st
 
 CURRENT_YEAR = pd.Timestamp.now().year
 
+DEFAULT_TEAM_NUMBER = st.secrets["TEAM_NUMBER"]
+
 # Google Sheets
 DEFAULT_GSHEET_DOC_ID = st.secrets["GSHEET_DOC_ID"]
 DEFAULT_EVENT_KEY = st.secrets["DEFAULT_EVENT_KEY"]
