@@ -41,7 +41,7 @@ def scouting_expander(
     Returns:
     None
     """
-    team_name = st.session_state.team_info[team_num]
+    team_name = ""  # = st.session_state.team_info[team_num]
 
     expander_name = f"[{team_num}] {team_name}"
 
@@ -131,11 +131,21 @@ def scouting_expander(
                             # Build a dict of pretty name -> formatted percentage string
                             bool_stats = {}
                             for col in bool_columns:
-                                series = pd.to_numeric(team_stats[col], errors="coerce").fillna(0)
+                                series = pd.to_numeric(
+                                    team_stats[col], errors="coerce"
+                                ).fillna(0)
                                 true_count = int(series.sum())
-                                percentage = (true_count / total_matches * 100) if total_matches > 0 else 0
-                                display_name = col.replace("_BOOL_", " - ").replace("_", " ")
-                                bool_stats[display_name] = f"{percentage:.1f}% ({true_count}/{total_matches})"
+                                percentage = (
+                                    (true_count / total_matches * 100)
+                                    if total_matches > 0
+                                    else 0
+                                )
+                                display_name = col.replace("_BOOL_", " - ").replace(
+                                    "_", " "
+                                )
+                                bool_stats[display_name] = (
+                                    f"{percentage:.1f}% ({true_count}/{total_matches})"
+                                )
 
                             for name, val in sorted(bool_stats.items()):
                                 st.text(f"{name}: {val}")
@@ -159,8 +169,6 @@ def scouting_expander(
                     )
         else:
             st.error("⚠️ No features")
-
-        
 
 
 def calc_projected(
@@ -646,7 +654,10 @@ def gen_bar(
         selected_phases = phases
         # Determine whether preset selected_filters are detailed or phases
         preset_sel = preset.get("selected_filters", [])
-        if all([isinstance(x, str) and "_" in x for x in preset_sel]) and len(preset_sel) > 0:
+        if (
+            all([isinstance(x, str) and "_" in x for x in preset_sel])
+            and len(preset_sel) > 0
+        ):
             filter_choices = preset_sel
         else:
             # If preset saved only phases, include all detailed metrics under those phases
@@ -674,7 +685,10 @@ def gen_bar(
         )
     else:
         # Use preset's selected_filters when they look like detailed metrics
-        if all([isinstance(x, str) and "_" in x for x in filter_choices]) and len(filter_choices) > 0:
+        if (
+            all([isinstance(x, str) and "_" in x for x in filter_choices])
+            and len(filter_choices) > 0
+        ):
             selected_detail_filters = filter_choices
         else:
             selected_detail_filters = filter_choices
@@ -913,7 +927,9 @@ def gen_bar(
             picked = (
                 "💎"
                 if team == st.secrets["TEAM_NUMBER"]
-                else "🚫" if team in picked["Team"].values else "🟢"
+                else "🚫"
+                if team in picked["Team"].values
+                else "🟢"
             )
         else:
             picked = ""
