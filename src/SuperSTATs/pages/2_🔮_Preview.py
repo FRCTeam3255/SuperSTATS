@@ -1,3 +1,4 @@
+import re
 import SuperSTATs.analytics as analytics
 import SuperSTATs.build as build
 import SuperSTATs.load as load
@@ -89,7 +90,14 @@ def display_team(
 
         if len(team_raw) > 0:
             match_count = len(team_raw)
-            team_score_df = team_raw[list(set(game_piece_cols))].sum()
+            raw_slice = team_raw[list(set(game_piece_cols))].copy()
+
+            for col in raw_slice.columns:
+                qty_match = re.search(r"QTY (\d+)", col)
+                if qty_match:
+                    raw_slice[col] = raw_slice[col] * int(qty_match.group(1))
+
+            team_score_df = raw_slice.sum()
 
             team_pieces_df[team] = team_score_df / match_count
             team_pieces = team_score_df.sum() / match_count
@@ -228,7 +236,6 @@ def main():
     load.app_init()
     analytics.collect_analytics("page_change", "preview")
 
-
     st.title("🔮 Match Preview 🔮")
 
     if st.button(
@@ -259,9 +266,7 @@ def main():
 
     # Determine relevant alliance columns without assuming alliance size yet
     alliance_cols_in_df = [
-        col
-        for col in df.columns
-        if (col.startswith("Red ") or col.startswith("Blue "))
+        col for col in df.columns if (col.startswith("Red ") or col.startswith("Blue "))
     ]
 
     if team != show_all:
@@ -282,9 +287,7 @@ def main():
         try:
             while True:
                 occurrences = len(
-                    st.session_state.df.loc[
-                        st.session_state.df["Match"] == last_match
-                    ]
+                    st.session_state.df.loc[st.session_state.df["Match"] == last_match]
                 )
                 if occurrences >= 6:
                     break
@@ -306,29 +309,27 @@ def main():
     else:
         default_index = 0
 
-    match_choice = columns[1].selectbox(
-        "Match:", match_options, index=default_index
-    )
+    match_choice = columns[1].selectbox("Match:", match_options, index=default_index)
 
     if match_choice == "Custom":
         alliance_columns = st.columns(2)
 
         red_alliance = alliance_columns[0].multiselect(
-            "🔴 Red Alliance teams:", 
-            st.session_state.team_info,
-            []
+            "🔴 Red Alliance teams:", st.session_state.team_info, []
         )
         blue_alliance = alliance_columns[1].multiselect(
-            "🔵 Blue Alliance teams:", 
-            st.session_state.team_info, 
-            []
+            "🔵 Blue Alliance teams:", st.session_state.team_info, []
         )
 
         if len(red_alliance) < load.ALLIANCE_SIZE:
-            alliance_columns[0].warning(f"⚠️ Select {load.ALLIANCE_SIZE} teams for red alliance")
+            alliance_columns[0].warning(
+                f"⚠️ Select {load.ALLIANCE_SIZE} teams for red alliance"
+            )
 
         if len(blue_alliance) < load.ALLIANCE_SIZE:
-            alliance_columns[1].warning(f"⚠️ Select {load.ALLIANCE_SIZE} teams for blue alliance")
+            alliance_columns[1].warning(
+                f"⚠️ Select {load.ALLIANCE_SIZE} teams for blue alliance"
+            )
 
     else:
         df_sort = df[df["Match"] == match_choice]
@@ -350,18 +351,22 @@ def main():
     # If an alliance has 4 robots, allow selecting one to ignore for projections.
     # Otherwise, use whatever robots are listed (typically 3) with no ignore UI.
     ignore_columns = st.columns(2)
-    
+
     if len(red_alliance) >= 4:
-        ignore_columns[0].caption("Red alliance has 4 robots. Pick one to ignore for projections.")
+        ignore_columns[0].caption(
+            "Red alliance has 4 robots. Pick one to ignore for projections."
+        )
         red_ignore = ignore_columns[0].selectbox(
             "Ignore Red Robot:", red_alliance, key="ignore_red"
         )
         red_alliance_display = [team for team in red_alliance if team != red_ignore]
     else:
         red_alliance_display = red_alliance
-    
+
     if len(blue_alliance) >= 4:
-        ignore_columns[1].caption("Blue alliance has 4 robots. Pick one to ignore for projections.")
+        ignore_columns[1].caption(
+            "Blue alliance has 4 robots. Pick one to ignore for projections."
+        )
         blue_ignore = ignore_columns[1].selectbox(
             "Ignore Blue Robot:", blue_alliance, key="ignore_blue"
         )
