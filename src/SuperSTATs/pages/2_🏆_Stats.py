@@ -1,13 +1,8 @@
 import pandas as pd
 
 import streamlit as st
-from SuperSTATs.utils import gsheets, tba
+from SuperSTATs.utils import gsheets, tables, tba
 from pathlib import Path
-
-from matplotlib import colormaps
-
-GREENS = colormaps["Greens"]
-REDS = colormaps["Reds"]
 
 page_name = Path(__file__).stem.split("_", 1)[1].replace("_", " ")
 st.title(page_name)
@@ -18,31 +13,9 @@ st.divider()
 print(f"{page_name} loaded:")
 
 
-def shade_column(column: pd.Series) -> list[str]:
-    """Green gradient for positives and red gradient for negatives, per column."""
-    max_positive = column.clip(lower=0).max()
-    max_negative = (-column).clip(lower=0).max()
-    styles = []
-    for value in column:
-        if value > 0 and max_positive > 0:
-            intensity, cmap = value / max_positive, GREENS
-        elif value < 0 and max_negative > 0:
-            intensity, cmap = -value / max_negative, REDS
-        else:
-            styles.append("")
-            continue
-        # Start past the near-white end of the colormap so small values stay visible
-        red, green, blue, _ = cmap(0.1 + 0.8 * intensity)
-        text = "white" if intensity > 0.6 else "black"
-        styles.append(
-            f"background-color: rgb({red * 255:.0f}, {green * 255:.0f}, {blue * 255:.0f}); "
-            f"color: {text}"
-        )
-    return styles
-
-
 # === Page Specific Data ===
 sn_avail = gsheets.get_available()
+tba_team_info = tba.get_teams()
 
 
 # ==== Settings UI =====
@@ -59,6 +32,9 @@ with settings_and_filter_expander:
         ["min", "mean", "50%", "75%", "90%", "95%", "99%", "max"],
         format_func=str.capitalize,
         index=1,
+    )
+    trend_matches = st.number_input(
+        "Trend window (matches):", min_value=1, max_value=20, value=3, step=1
     )
 
 # ==== DATA Download ====
@@ -81,48 +57,15 @@ agg_data = gsheets.aggregate_team_performance(
 )
 
 # ==== Outputs ====
-# Best team first; the team column stays pinned while the rest scrolls sideways
-metric_columns = list(agg_data.columns.drop("sn_rank"))
-display_data = (
-    agg_data.rename(columns={"sn_rank": "Our Rank"})
-    .join(tba_rank["rank"].rename("TBA Rank"), how="left")
-    .join(sn_avail["emoji"].rename("Avail"), how="left")
-    .rename_axis("Team")
-)
-display_data["Avail"] = display_data["Avail"].fillna("🟢")
-display_data["TBA Rank"] = display_data["TBA Rank"].astype("Int64")
-display_data.insert(0, "Total", display_data[metric_columns].sum(axis=1))
-display_data = display_data[
-    ["Avail", "Our Rank", "TBA Rank", "Total"] + metric_columns
-].sort_values("Our Rank")
-
-shaded_columns = ["Total"] + metric_columns
-styled_data = (
-    display_data.style.apply(shade_column, axis=0, subset=shaded_columns)
-    .format("{:.1f}", subset=shaded_columns)
-    .format("{:d}", subset=["Our Rank", "TBA Rank"], na_rep="–")
-    .set_properties(subset=["Total"], **{"font-weight": "bold"})
-)
-st.caption(
-    "Total is the sum of the metrics shown. Green is positive and red is "
-    "negative; darker means larger within each column. Swipe to see more metrics."
-)
-identifier_columns = ["Avail", "TBA Rank"]
-visible_columns = [
-    col
-    for col in display_data.columns
-    if not (hide_identifiers and col in identifier_columns)
-]
-st.dataframe(
-    styled_data,
-    hide_index=hide_identifiers,
-    column_order=visible_columns,
-    column_config={
-        "_index": st.column_config.Column("Team", width=60),
-        "Avail": st.column_config.Column("", width=40, alignment="center"),
-        "Our Rank": st.column_config.Column("SN", width=40, alignment="center"),
-        "TBA Rank": st.column_config.Column("TBA", width=48, alignment="center"),
-    },
-    width="stretch",
-    height="content",
+tables.team_stats_table(
+    agg_data=agg_data,
+    raw_sn_df=raw_sn_df,
+    sn_df=sn_df,
+    tba_rank=tba_rank,
+    sn_avail=sn_avail,
+    chart_type=chart_type,
+    trend_matches=trend_matches,
+    hide_identifiers=hide_identifiers,
+    selectable=True,
+    team_names=tba_team_info["nickname"],
 )

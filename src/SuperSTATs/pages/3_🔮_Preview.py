@@ -1,7 +1,7 @@
 import pandas as pd
 
 import streamlit as st
-from SuperSTATs.utils import gsheets, plots, tba
+from SuperSTATs.utils import gsheets, tables, tba
 from pathlib import Path
 
 page_name = Path(__file__).stem.split("_", 1)[1].replace("_", " ")
@@ -42,7 +42,7 @@ st.divider()
 settings_and_filter_expander = st.expander("Settings & Filters", expanded=False)
 with settings_and_filter_expander:
     col1, col2, col3, col4 = st.columns(4)
-    show_team_numbers = col1.toggle("Show Team Numbers", True)
+    hide_identifiers = col1.toggle("Hide Identifiers", False)
     chart_type = col2.radio("View by:", gsheets.COLUMN_LEVELS, horizontal=True)
     as_points = (
         col3.radio("View as:", ["Points", "Counts"], horizontal=True) == "Points"
@@ -53,9 +53,13 @@ with settings_and_filter_expander:
         format_func=str.capitalize,
         index=1,
     )
+    trend_matches = st.number_input(
+        "Trend window (matches):", min_value=1, max_value=20, value=3, step=1
+    )
 
 # ==== DATA Download ====
 raw_sn_df = gsheets.get_stats_inputs(as_points=as_points)
+sn_avail = gsheets.get_available()
 tba_rank = tba.get_rankings()
 
 # ==== Filters UI ====
@@ -73,59 +77,32 @@ agg_data = gsheets.aggregate_team_performance(
     agg_type=agg_type,
 )
 
-# Split red and blue teams for separate ranking
-red_agg_data = agg_data.loc[agg_data.index.isin(selected_match["🔴 Teams"])]
-blue_agg_data = agg_data.loc[agg_data.index.isin(selected_match["🔵 Teams"])]
-agg_data_w_rank_red = gsheets.add_team_num_ranks(
-    df=red_agg_data.assign(emoji=""),
-    tba_rank=tba_rank,
-    emoji_or_name=tba_team_info[["nickname"]],
-    show_sn_rank=False,
-)
-agg_data_w_rank_blue = gsheets.add_team_num_ranks(
-    df=blue_agg_data.assign(emoji=""),
-    tba_rank=tba_rank,
-    emoji_or_name=tba_team_info[["nickname"]],
-    show_sn_rank=False,
-)
-
 # ==== Outputs ====
-red_col, blue_col = st.columns(2)
+alliances = {"🔴": selected_match["🔴 Teams"], "🔵": selected_match["🔵 Teams"]}
+groups = {team: emoji for emoji, teams in alliances.items() for team in teams}
 
+tables.alliance_table(
+    alliance_data={
+        emoji: agg_data.loc[agg_data.index.isin(teams)]
+        for emoji, teams in alliances.items()
+    },
+    actual={emoji: selected_match[f"{emoji} Score"] for emoji in alliances},
+)
 
-def display_alliance_metrics(alliance_emoji, selected_match, agg_data_w_rank):
-    st.subheader(f"{alliance_emoji} Alliances {alliance_emoji}")
-    st.metric("Projected Score", round(agg_data_w_rank.sum(numeric_only=True).sum()))
-    st.write("Actual:", selected_match[f"{alliance_emoji} Score"])
-    average_score_by_team = (
-        agg_data_w_rank.reset_index()
-        .set_index(["team_num_ranks", "nickname"])
-        .sum(numeric_only=True, axis=1)
-        .rename("Avg Score")
-        .reset_index()
-        .rename(columns={"team_num_ranks": "", "nickname": "Team"})
-    )
-    average_score_by_team = average_score_by_team[["", "Avg Score", "Team"]]
-
-    st.dataframe(
-        average_score_by_team,
-        column_config={"0": st.column_config.NumberColumn(format="%.2f")},
-        hide_index=True,
-    )
-    st.expander("Projected Score Breakdown", expanded=False).dataframe(
-        agg_data_w_rank,
-        column_config={"0": st.column_config.NumberColumn(format="%.2f")},
-        # hide_index=True,
-    )
-    plots.hbar(agg_data_w_rank.drop(columns="nickname"), show_y_labels=True)
-
-
-with red_col:
-    display_alliance_metrics("🔴", selected_match, agg_data_w_rank_red)
-
-
-with blue_col:
-    display_alliance_metrics("🔵", selected_match, agg_data_w_rank_blue)
+tables.team_stats_table(
+    agg_data=agg_data.loc[agg_data.index.isin(groups)],
+    raw_sn_df=raw_sn_df,
+    sn_df=sn_df,
+    tba_rank=tba_rank,
+    sn_avail=sn_avail,
+    chart_type=chart_type,
+    trend_matches=trend_matches,
+    hide_identifiers=hide_identifiers,
+    selectable=True,
+    groups=groups,
+    team_names=tba_team_info["nickname"],
+    key="preview_table",
+)
 
 
 # TODO:

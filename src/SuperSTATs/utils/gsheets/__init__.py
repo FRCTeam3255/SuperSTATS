@@ -6,7 +6,7 @@ import streamlit as st
 from SuperSTATs.utils import constants
 from SuperSTATs.utils.gsheets import _api
 
-PHASES = ["INFO", "AUTO", "TELE", "END"]
+PHASES = ["AUTO", "TELE", "END", "INFO"]
 COLUMN_LEVELS = ["Phase", "Metric"]
 
 
@@ -73,7 +73,10 @@ def aggregate_team_performance(
     level: Literal["Phase", "Metric"],
     agg_type: Literal["min", "mean", "50%", "75%", "90%", "95%", "99%", "max"] = "mean",
 ) -> pd.DataFrame:
-    team_totals = df.T.groupby(level=level).sum().T
+    # Columns follow the universal PHASES order, keeping sheet order within a phase
+    phase_position = df.columns.get_level_values("Phase").map(PHASES.index)
+    df = df.iloc[:, phase_position.argsort(kind="stable")]
+    team_totals = df.T.groupby(level=level, sort=False).sum().T
     grouped = team_totals.groupby("Team")
 
     if agg_type.endswith("%"):
