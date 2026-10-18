@@ -3,5 +3,6 @@
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff"
     },
-    "editor.defaultFormatter": "charliermarsh.ruff"
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "remote.localPortHost": "allInterfaces"
 }
