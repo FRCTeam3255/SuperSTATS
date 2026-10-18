@@ -4,14 +4,8 @@
         {
             "label": "Activate Streamlit",
             "type": "shell",
-            "command": "cmd",
-            "args": [
-                "/k",
-                ".\\.venv\\Scripts\\activate && streamlit run src\\SuperSTATs\\Main.py"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
+            "command": "streamlit run src/SuperSTATs/Main.py",
+
             "group": {
                 "kind": "build",
                 "isDefault": true

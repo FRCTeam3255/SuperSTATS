@@ -58,7 +58,9 @@ def get_matches(
     )
     df["Match Day"] = df["time"].dt.strftime("%D")
     df["Match Time"] = df["time"].dt.strftime("%I:%M %p")
-    df["🏆"] = df["winning_alliance"].replace({"red": "🔴", "blue": "🔵", "": "🟪"})
+    df["red.score"] = df["red.score"].replace({-1: None})
+    df["blue.score"] = df["blue.score"].replace({-1: None})
+    df["🏆"] = df["winning_alliance"].replace({"red": "🔴", "blue": "🔵", "": None})
     df = df.rename(
         columns={
             "red.team_keys": "🔴 Teams",
