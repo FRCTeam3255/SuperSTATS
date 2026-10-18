@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pandas as pd
 import streamlit as st
 
@@ -19,3 +21,6 @@ TBA_API_KEY = st.secrets["TBA_API"]
 # Plotting
 PIXEL_PER_TEAM = 40
 MIN_HEIGHT = 200
+
+# Caching
+GSHEET_DATA_CACHE_TTL = timedelta(minutes=2, seconds=30)

@@ -1,6 +1,7 @@
 from typing import Literal
 
 import pandas as pd
+import streamlit as st
 
 from SuperSTATs.utils import constants
 from SuperSTATs.utils.gsheets import _api
@@ -21,6 +22,7 @@ def _get_raw_sheet() -> pd.DataFrame:
 # ===========================================================
 #               Getting Data
 # ===========================================================
+@st.cache_data(ttl=constants.GSHEET_DATA_CACHE_TTL, show_spinner=False)
 def get_stats_inputs(as_points: bool = True) -> pd.DataFrame:
     df = _get_raw_sheet()
 
@@ -53,6 +55,7 @@ def get_stats_inputs(as_points: bool = True) -> pd.DataFrame:
     return df
 
 
+@st.cache_data(ttl=constants.GSHEET_DATA_CACHE_TTL, show_spinner=False)
 def get_available() -> pd.DataFrame:
     df = _api.get_data(constants.RAW_PICKED_SHEET_ID)
     df["Unavailable"] = df["Unavailable"].str.lower()
@@ -68,21 +71,28 @@ def get_available() -> pd.DataFrame:
 def aggregate_team_performance(
     df: pd.DataFrame,
     level: Literal["Phase", "Metric"],
-    agg_type: Literal["mean", "sum", "median"] = "mean",
+    agg_type: Literal["min", "mean", "50%", "75%", "90%", "95%", "99%", "max"] = "mean",
 ) -> pd.DataFrame:
-    grouped = (
-        df.T.groupby(level=level)
-        .sum()
-        .T.groupby("Team")
-        .describe([0.5, 0.75, 0.9, 0.95, 0.99])
-        .xs(agg_type, level=1, axis=1)
-        .assign(
-            sn_rank=lambda x: (
-                x.sum(axis=1).rank(ascending=False, method="dense").astype(int)
-            )
+    team_totals = df.T.groupby(level=level).sum().T
+    grouped = team_totals.groupby("Team")
+
+    if agg_type.endswith("%"):
+        aggregation = grouped.quantile(float(agg_type.removesuffix("%")) / 100)
+    else:
+        aggregation = grouped.agg(agg_type)
+
+    return aggregation.astype(float).assign(
+        sn_rank=lambda x: (
+            x.sum(axis=1).rank(ascending=False, method="dense").astype(int)
         )
     )
-    return grouped
+
+
+def clear_cache() -> None:
+    """Clear cached Sheets data after a user-initiated refresh."""
+    _api.get_data.clear()
+    get_stats_inputs.clear()
+    get_available.clear()
 
 
 def add_team_num_ranks(

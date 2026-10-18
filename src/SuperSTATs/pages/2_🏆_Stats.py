@@ -7,6 +7,7 @@ from pathlib import Path
 page_name = Path(__file__).stem.split("_", 1)[1].replace("_", " ")
 st.title(page_name)
 if st.button("Update Page", type="primary", width="stretch"):
+    gsheets.clear_cache()
     st.rerun()
 st.divider()
 print(f"{page_name} loaded:")

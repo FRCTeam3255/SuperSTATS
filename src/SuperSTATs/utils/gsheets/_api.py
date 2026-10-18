@@ -1,8 +1,10 @@
 import pandas as pd
+import streamlit as st
 
-from SuperSTATs.utils.constants import DEFAULT_GSHEET_DOC_ID
+from SuperSTATs.utils.constants import GSHEET_DATA_CACHE_TTL, DEFAULT_GSHEET_DOC_ID
 
 
+@st.cache_data(ttl=GSHEET_DATA_CACHE_TTL, show_spinner=False)
 def get_data(sheet_id: str, doc_id: str = DEFAULT_GSHEET_DOC_ID):
     """
     Downloads a Google Sheets document as a pandas DataFrame.
