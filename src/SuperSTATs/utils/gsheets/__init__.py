@@ -55,7 +55,6 @@ def get_stats_inputs(as_points: bool = True) -> pd.DataFrame:
     return df
 
 
-@st.cache_data(ttl=constants.GSHEET_DATA_CACHE_TTL, show_spinner=False)
 def get_available() -> pd.DataFrame:
     df = _api.get_data(constants.RAW_PICKED_SHEET_ID)
     df["Unavailable"] = df["Unavailable"].str.lower()
@@ -63,6 +62,20 @@ def get_available() -> pd.DataFrame:
     df.loc[df["Team"] == 3255, "Unavailable"] = "💎"
     df = df.astype({"Team": int})
     return df.set_index("Team").rename(columns={"Unavailable": "emoji"})
+
+
+def get_configs() -> dict[str, list[str]]:
+    df = _api.get_data(constants.CONFIG_SHEET_ID)
+    return {
+        row["Config"]: str(row["Value"]).split(", ") for _, row in df.iterrows()
+    }
+
+
+def get_scouts() -> tuple[list[str], list[str]]:
+    """Returns (all scouts, assigned scouts) sorted by name."""
+    df = _api.get_data(constants.SCOUTS_SHEET_ID).sort_values(by="Name")
+    return df["Name"].tolist(), df.loc[df["Assigned"] == "x", "Name"].tolist()
+
 
 
 # ===========================================================
@@ -93,9 +106,8 @@ def aggregate_team_performance(
 
 def clear_cache() -> None:
     """Clear cached Sheets data after a user-initiated refresh."""
-    _api.get_data.clear()
+    _api.clear()
     get_stats_inputs.clear()
-    get_available.clear()
 
 
 def add_team_num_ranks(

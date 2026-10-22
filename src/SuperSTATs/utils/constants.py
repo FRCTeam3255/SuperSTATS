@@ -13,10 +13,18 @@ DEFAULT_GSHEET_DOC_ID = st.secrets["GSHEET_DOC_ID"]
 DEFAULT_EVENT_KEY = st.secrets["DEFAULT_EVENT_KEY"]
 RAW_INPUT_SHEET_ID = st.secrets["GID_RAW"]
 RAW_PICKED_SHEET_ID = st.secrets["GID_PICKED"]
+CONFIG_SHEET_ID = st.secrets["GID_CONFIG"]
+SCOUTS_SHEET_ID = st.secrets["GID_SCOUTS"]
+
+# Google Forms
+STATS_FORM_URL = st.secrets["STATS_FORM"]
 
 # TBA API
 ROOT_TBA_URL = "https://www.thebluealliance.com/api/v3"
 TBA_API_KEY = st.secrets["TBA_API"]
+
+# Scouting
+ALLIANCE_SIZE = 3
 
 # Plotting
 PIXEL_PER_TEAM = 40
