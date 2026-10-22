@@ -18,7 +18,7 @@ PHASE_TITLES = {
 }
 FORM_PHASES = (*gsheets.PHASES, "COMMENT")
 ALLIANCE = constants.ALLIANCE_SIZE
-UPCOMING_MATCHES = 5
+UPCOMING_MATCHES = 3
 
 # Big tap targets, no column stacking on phones, and a header that stays on screen
 st.markdown(
@@ -197,18 +197,9 @@ if photo_expander.open:
             st.warning("⚠️ No robot photo available")
 
 if not practice_mode:
-    with st.expander("Upcoming scouts", False):
-        search = st.text_input("Find match:", "", placeholder="e.g. Quals 12").lower()
-        if search:
-            shown = [m for m in match_list if search in m.lower()]
-        else:
-            shown = unplayed[:UPCOMING_MATCHES]
-        for match in shown:
-            row = []
-            for icon, part in (("🔴", slice(0, ALLIANCE)), ("🔵", slice(ALLIANCE, None))):
-                pairs = zip(all_match_scouts[match][part], match_teams.loc[match][part])
-                row.append(icon + " " + " · ".join(f"{s} ({t})" for s, t in pairs))
-            st.markdown(f"**{match}**  \n" + "  \n".join(row))
+    upcoming = [m for m in unplayed if name in all_match_scouts[m]][:UPCOMING_MATCHES]
+    if upcoming:
+        st.caption("Your next matches: " + ", ".join(upcoming))
 else:
     st.error("⚠️ Practice mode enabled")
 

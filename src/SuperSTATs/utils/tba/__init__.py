@@ -61,6 +61,13 @@ def get_matches(
     )
     df["Match Day"] = df["time"].dt.strftime("%D")
     df["Match Time"] = df["time"].dt.strftime("%I:%M %p")
+    # Best known start: actual if played, else TBA's prediction, else the schedule
+    best = pd.Series(pd.NaT, index=df.index, dtype="datetime64[ns, UTC]")
+    for col in ("actual_time", "predicted_time"):
+        if col in df.columns:
+            best = best.fillna(pd.to_datetime(df[col], unit="s", utc=True))
+    best = best.fillna(df["time"].dt.tz_convert("UTC"))
+    df["Start Time"] = best.dt.tz_convert("US/Pacific").dt.strftime("%I:%M %p").str.lstrip("0")
     df["red.score"] = df["red.score"].replace({-1: None})
     df["blue.score"] = df["blue.score"].replace({-1: None})
     df["🏆"] = df["winning_alliance"].replace({"red": "🔴", "blue": "🔵", "": None})
