@@ -23,7 +23,7 @@ settings_and_filter_expander = st.expander("Settings & Filters", expanded=False)
 with settings_and_filter_expander:
     col1, col2, col3, col4 = st.columns(4)
     hide_identifiers = col1.toggle("Hide Identifiers", False)
-    chart_type = col2.radio("View by:", gsheets.COLUMN_LEVELS, horizontal=True, index=1)
+    chart_type = col2.radio("View by:", gsheets.COLUMN_LEVELS, horizontal=True, index=0)
     as_points = (
         col3.radio("View as:", ["Points", "Counts"], horizontal=True) == "Points"
     )
