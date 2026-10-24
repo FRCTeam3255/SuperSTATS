@@ -1,4 +1,5 @@
 """Shared mobile-first team stats table used by the Stats and Preview pages."""
+from typing import Literal
 
 import altair as alt
 import pandas as pd
@@ -59,10 +60,11 @@ def team_stats_table(
     groups: dict[int, str] | None = None,
     team_names: pd.Series | None = None,
     key: str | None = None,
+    selection_mode: Literal["single-row", "multi-row"] = "single-row",
 ) -> None:
     """Render the shaded team table for the teams in `agg_data`.
 
-    With `selectable`, tapping a row shows a match-by-match breakdown below it.
+    With `selectable`, selecting rows shows their match-by-match breakdowns below.
     `groups` maps team -> label (e.g. an alliance emoji); rows are kept together
     by group, in the order the groups first appear, ranked within each group.
     """
@@ -139,7 +141,7 @@ def team_stats_table(
         styled_data,
         key=key,
         on_select="rerun" if selectable else "ignore",
-        selection_mode="single-row",
+        selection_mode=selection_mode,
         hide_index=hide_identifiers,
         column_order=visible_columns,
         column_config={
@@ -162,12 +164,13 @@ def team_stats_table(
         return
     selected_rows = selection.selection.rows
     if selected_rows:
-        team = display_data.index[selected_rows[0]]
         match_totals_by_level = ordered_sn_df.T.groupby(level=chart_type).sum().T
-        name = team_names.get(team) if team_names is not None else None
-        _team_breakdown(
-            match_totals_by_level.xs(team, level="Team"), team, name, chart_type
-        )
+        for row in selected_rows:
+            team = display_data.index[row]
+            name = team_names.get(team) if team_names is not None else None
+            _team_breakdown(
+                match_totals_by_level.xs(team, level="Team"), team, name, chart_type
+            )
 
 
 def _team_breakdown(

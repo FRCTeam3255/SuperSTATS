@@ -68,4 +68,5 @@ tables.team_stats_table(
     hide_identifiers=hide_identifiers,
     selectable=True,
     team_names=tba_team_info["nickname"],
+    selection_mode="multi-row",
 )
