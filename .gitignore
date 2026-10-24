@@ -167,3 +167,4 @@ src/setup/streamlit/secrets.toml
 # Cache
 *_cache/
 *_cache.sqlite
+.DS_Store

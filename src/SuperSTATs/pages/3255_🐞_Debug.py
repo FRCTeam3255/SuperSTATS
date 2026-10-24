@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from SuperSTATs.utils import constants, gsheets, scouting, tba
+from SuperSTATs.utils import constants, forms, gsheets, scouting, tba
 
 page_name = Path(__file__).stem.split("_", 1)[1].replace("_", " ")
 st.title(page_name)
@@ -57,6 +57,39 @@ for label, fetch in sources.items():
             st.dataframe(data.astype(str), width="stretch")
         except Exception as e:
             st.error(f"Failed: {e}")
+
+# ==== Stats Form Entries ====
+with st.expander("Stats Form Entries", expanded=False):
+    try:
+        set_entries, phase_entries = forms.get_stats_form_entries(
+            (*gsheets.PHASES, "COMMENT")
+        )
+        st.caption(
+            "Scraped from the Google Form and cached until restart. "
+            "Identifier entries are filled by the app, phase entries come from the form inputs."
+        )
+        st.markdown("**Identifier entries**")
+        st.dataframe(
+            pd.DataFrame(
+                {"Question": list(set_entries), "Entry ID": list(set_entries.values())}
+            ),
+            hide_index=True,
+            width="stretch",
+        )
+        st.markdown("**Phase entries**")
+        st.dataframe(
+            pd.DataFrame(
+                {
+                    "Question": list(phase_entries),
+                    "Phase": [q.split("_")[0] for q in phase_entries],
+                    "Entry ID": list(phase_entries.values()),
+                }
+            ),
+            hide_index=True,
+            width="stretch",
+        )
+    except Exception as e:
+        st.error(f"Failed: {e}")
 
 # ==== Submissions ====
 with st.expander("Submissions", expanded=False):
