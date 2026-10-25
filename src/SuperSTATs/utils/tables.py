@@ -2,6 +2,7 @@
 from typing import Literal
 
 import altair as alt
+import numpy as np
 import pandas as pd
 import streamlit as st
 from matplotlib import colormaps
@@ -18,10 +19,14 @@ def format_trend(value: float) -> str:
     return "–"
 
 
-def shade_column(column: pd.Series) -> list[str]:
-    """Green gradient for positives and red gradient for negatives, per column."""
-    max_positive = column.clip(lower=0).max()
-    max_negative = (-column).clip(lower=0).max()
+def shade_column(column: pd.Series, scale: pd.Series | None = None) -> list[str]:
+    """Green gradient for positives and red gradient for negatives, per column.
+
+    `scale` (default: the column itself) sets the range the shading is relative to.
+    """
+    scale = column if scale is None else scale
+    max_positive = scale.clip(lower=0).max()
+    max_negative = (-scale).clip(lower=0).max()
     styles = []
     for value in column:
         if value > 0 and max_positive > 0:
@@ -110,19 +115,45 @@ def team_stats_table(
     table_data.index = (
         display_data["Avail"] + " " + display_data.index.astype(str)
     ).rename("Team")
-    styled_data = (
-        table_data.style.apply(shade_column, axis=0, subset=shaded_columns)
-        .format("{:.1f}", subset=shaded_columns)
-        .format("{:d}", subset=["Our Rank", "TBA Rank"], na_rep="–")
-        .format(format_trend, subset=["Trend"], na_rep="–")
-        .map(
-            lambda value: (
-                "color: #2ca02c" if value > 0 else "color: #d62728" if value < 0 else ""
-            ),
-            subset=["Trend"],
+    def style_rows(rows: pd.DataFrame):
+        return (
+            rows.style.apply(
+                lambda col: shade_column(col, table_data[col.name]),
+                axis=0,
+                subset=shaded_columns,
+            )
+            .format("{:.1f}", subset=shaded_columns)
+            .format("{:d}", subset=["Our Rank", "TBA Rank"], na_rep="–")
+            .format(format_trend, subset=["Trend"], na_rep="–")
+            .map(
+                lambda value: (
+                    "color: #2ca02c"
+                    if value > 0
+                    else "color: #d62728" if value < 0 else ""
+                ),
+                subset=["Trend"],
+            )
+            .set_properties(subset=["Total"], **{"font-weight": "bold"})
         )
-        .set_properties(subset=["Total"], **{"font-weight": "bold"})
-    )
+
+    styled_data = style_rows(table_data)
+    column_config = {
+        "_index": st.column_config.Column("Team", width=80),
+        "Group": st.column_config.Column("", width=40, alignment="center"),
+        "Our Rank": st.column_config.Column("SN", width=40, alignment="center"),
+        "TBA Rank": st.column_config.Column("TBA", width=48, alignment="center"),
+        "Trend": st.column_config.Column(
+            "Trend",
+            width=64,
+            alignment="center",
+            help=f"Average of the last {trend_matches} matches vs. the team's overall average",
+        ),
+    }
+    visible_columns = [
+        col
+        for col in table_data.columns
+        if not (hide_identifiers and col == "TBA Rank")
+    ]
 
     caption = (
         "Total is the sum of the metrics shown. Green is positive and red is "
@@ -132,11 +163,6 @@ def team_stats_table(
         caption += " Tap a row for a match-by-match breakdown."
     st.caption(caption)
 
-    visible_columns = [
-        col
-        for col in table_data.columns
-        if not (hide_identifiers and col == "TBA Rank")
-    ]
     selection = st.dataframe(
         styled_data,
         key=key,
@@ -144,18 +170,7 @@ def team_stats_table(
         selection_mode=selection_mode,
         hide_index=hide_identifiers,
         column_order=visible_columns,
-        column_config={
-            "_index": st.column_config.Column("Team", width=80),
-            "Group": st.column_config.Column("", width=40, alignment="center"),
-            "Our Rank": st.column_config.Column("SN", width=40, alignment="center"),
-            "TBA Rank": st.column_config.Column("TBA", width=48, alignment="center"),
-            "Trend": st.column_config.Column(
-                "Trend",
-                width=64,
-                alignment="center",
-                help=f"Average of the last {trend_matches} matches vs. the team's overall average",
-            ),
-        },
+        column_config=column_config,
         width="stretch",
         height="content",
     )
@@ -165,43 +180,93 @@ def team_stats_table(
     selected_rows = selection.selection.rows
     if selected_rows:
         match_totals_by_level = ordered_sn_df.T.groupby(level=chart_type).sum().T
-        for row in selected_rows:
-            team = display_data.index[row]
-            name = team_names.get(team) if team_names is not None else None
+        selected_teams = [display_data.index[row] for row in selected_rows]
+        breakdowns = [
+            (
+                team,
+                team_names.get(team) if team_names is not None else None,
+                match_totals_by_level.xs(team, level="Team"),
+            )
+            for team in selected_teams
+        ]
+        values = pd.concat([matches.stack() for _, _, matches in breakdowns]).dropna()
+        low = min(float(values.min()), 0) if not values.empty else 0
+        high = max(float(values.max()), 0) if not values.empty else 0
+        if low == high:
+            low, high = low - 1, high + 1
+        y_domain = [low, high]
+        for team, name, matches in breakdowns:
             _team_breakdown(
-                match_totals_by_level.xs(team, level="Team"), team, name, chart_type
+                matches,
+                team,
+                name,
+                chart_type,
+                y_domain,
+                lambda position=display_data.index.get_loc(team): st.dataframe(
+                    style_rows(table_data.iloc[[position]]),
+                    column_order=visible_columns,
+                    column_config=column_config,
+                    hide_index=True,
+                    width="stretch",
+                    height="content",
+                ),
             )
 
 
 def _team_breakdown(
-    team_matches: pd.DataFrame, team: int, name: str | None, chart_type: str
+    team_matches: pd.DataFrame,
+    team: int,
+    name: str | None,
+    chart_type: str,
+    y_domain: list[float],
+    show_row,
 ) -> None:
     st.subheader(f"{team} {name}" if name else f"Team {team}")
-    st.caption("Match by match")
+    show_row()
     chart_data = team_matches.reset_index().melt(
         id_vars="Match Name", var_name=chart_type, value_name="Points"
     )
-    st.altair_chart(
+    match_order = team_matches.index.to_list()
+    y_scale = alt.Scale(domain=y_domain)
+    x_axis = alt.X(
+        "Match Name:N", sort=match_order, title=None, axis=alt.Axis(labelAngle=-45)
+    )
+    bars = (
         alt.Chart(chart_data)
         .mark_bar()
         .encode(
-            x=alt.X(
-                "Match Name:N", sort=None, title=None, axis=alt.Axis(labelAngle=-45)
-            ),
-            y=alt.Y("Points:Q", title=None),
+            x=x_axis,
+            y=alt.Y("Points:Q", title=None, scale=y_scale),
             color=alt.Color(
                 f"{chart_type}:N", legend=alt.Legend(orient="bottom", title=None)
             ),
             tooltip=["Match Name", chart_type, "Points"],
         )
-        .properties(height=280),
-        width="stretch",
     )
-    st.dataframe(
-        team_matches.assign(Total=team_matches.sum(axis=1)).style.format("{:.1f}"),
-        width="stretch",
-        height="content",
+    # Fitted linear trend through each match's total
+    totals = team_matches.sum(axis=1).rename("Total").reset_index()
+    if len(totals) > 1:
+        slope, intercept = np.polyfit(range(len(totals)), totals["Total"], 1)
+        totals["Trend"] = intercept + slope * np.arange(len(totals))
+    else:
+        totals["Trend"] = totals["Total"]
+    trend_line = (
+        alt.Chart(totals)
+        .mark_line(color="#e6a817", size=3)
+        .encode(x=x_axis, y=alt.Y("Trend:Q", scale=y_scale))
     )
+    with st.expander("Chart", expanded=False):
+        st.altair_chart(
+            (bars + trend_line).properties(height=280),
+            width="stretch",
+        )
+        st.caption("Gold: trend line through match totals")
+    with st.expander("Data", expanded=False):
+        st.dataframe(
+            team_matches.assign(Total=team_matches.sum(axis=1)).style.format("{:.1f}"),
+            width="stretch",
+            height="content",
+        )
 
 
 def alliance_table(alliance_data: dict[str, pd.DataFrame], actual: dict[str, int]) -> None:

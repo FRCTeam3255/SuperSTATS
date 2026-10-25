@@ -77,6 +77,37 @@ def get_scouts() -> tuple[list[str], list[str]]:
     return df["Name"].tolist(), df.loc[df["Assigned"] == "x", "Name"].tolist()
 
 
+@st.cache_resource
+def _pending_submissions() -> dict[str, set[int]]:
+    """Submissions made through this app that may not be in the sheet yet."""
+    return {}
+
+
+def record_submission(match_name: str, team: int) -> None:
+    _pending_submissions().setdefault(match_name, set()).add(int(team))
+
+
+def get_pending_submissions() -> dict[str, list[int]]:
+    """Submissions made through the app that the sheet hasn't shown yet."""
+    return {m: sorted(t) for m, t in _pending_submissions().items()}
+
+
+def get_submission_counts() -> dict[str, int]:
+    """Teams scouted per match name (e.g. 'Quals 5'): sheet rows plus pending submissions."""
+    df = _get_raw_sheet().astype({"Match": int, "Team": int})
+    df["Match Name"] = df["Match Type"] + " " + df["Match"].astype(str)
+    teams = df.groupby("Match Name")["Team"].apply(set).to_dict()
+    pending = _pending_submissions()
+    for match, pending_teams in list(pending.items()):
+        # Sheet has caught up; stop tracking those
+        pending[match] = pending_teams - teams.get(match, set())
+        if not pending[match]:
+            del pending[match]
+    return {
+        m: len(teams.get(m, set()) | pending.get(m, set()))
+        for m in teams.keys() | pending.keys()
+    }
+
 
 # ===========================================================
 #               Data Processing
