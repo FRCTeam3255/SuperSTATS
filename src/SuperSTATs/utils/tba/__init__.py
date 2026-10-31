@@ -86,10 +86,11 @@ def get_matches(
 def get_rankings(event_key: str = DEFAULT_EVENT_KEY) -> pd.DataFrame:
     endpoint = f"/event/{event_key}/rankings"
     data = get_data(endpoint, as_dataframe=False)
-    if data is None:
+    if data is None or not data.get("rankings"):
         return pd.DataFrame(columns=["Team", "rank"]).set_index("Team")
     df = pd.DataFrame().from_dict(data["rankings"])
-    df = df_utils.normalize_column(df, "record")
+    if "record" in df.columns:
+        df = df_utils.normalize_column(df, "record")
     df["Team"] = df["team_key"].apply(lambda x: int("".join(filter(str.isdigit, x))))
     return df.sort_values("rank").set_index("Team")
 
